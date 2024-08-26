@@ -122,6 +122,14 @@ use BLST utility functions \href{https://github.com/supranational/blst/blob/mast
 \href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L131}{\texttt{redc\_mont\_256}}, and 
 \href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L132}{\texttt{mul\_mont\_sparse\_256}}.
 
+Finally, while both the Python spec and the c-kzg implementation have a function named \texttt{reverse\_bits}, the c-kzg function does not 
+match the spec. The spec for \texttt{reverse\_bits} defines the computation as reversing the bits of a value for some specified bit length. The c-kzg 
+function defines the computation as reversing all the bits of the value as defined by the size of the memory representation (in this case a 64-bit integer). The 
+c-kzg implementation has a separate function, \texttt{reverse\_bits\_limited} that does match the Python spec. It should be noted that this spec 
+equivalent function is not used in the implementation of \texttt{bit\_reversal\_permutation}. Instead \texttt{bit\_reversal\_permutation} calls the 
+non-equivalent \texttt{reverse\_bits} function, but it handles the result in a way that conforms to the Python spec, so that the overall computation 
+is equivalent.
+
 \newpage
 \subsection{Table 1: Comparing c-kzg vs. Python KZG Specification}
 \begin{center}
