@@ -1,0 +1,49 @@
+// The functions in this module are derived from the consensus-specs:
+// @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#helper-functions
+
+module permutations where
+
+// Check if `value` is a power of two integer
+// NOTE: `n` defines the bit length of `value`
+// @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#is_power_of_two
+is_power_of_two : {n} (fin n, n >= 1) => [n] -> Bit
+is_power_of_two value = (value > 0) && ((value && (value - 1)) == 0)
+
+// Reverse the bits of an integer of lenth `n`
+// NOTE: The Python spec only reverses the low-order bits
+// @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#reverse_bits
+reverse_bits : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
+    => [n] -> [n]
+reverse_bits value = zero # reverse (drop`{n - order} value) // `reverse` is a Cryptol primitive function
+
+// Return the bit-reversed permutation, which is an involution (inverts itself)
+// Standard algorithm: https://en.wikipedia.org/wiki/Bit-reversal_permutation
+// @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bit_reversal_permutation
+bit_reversal_permutation : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
+    => [len][size] -> [len][size]
+bit_reversal_permutation array = 
+    [array@(reverse_bits`{size, width (len - 1)} i) | i <- [0 .. (len-1)]]
+
+// ===============
+// Unit test suite
+// ===============
+
+test_suite : Bit
+test_suite = True
+    && test_reverse_bits
+    && test_bit_reversal_permutation
+
+// Unit tests for `reverse_bits`
+test_reverse_bits : Bit
+test_reverse_bits = result where
+    result = (reverse_bits`{16, 16} 0x18C3 == 0xC318)
+        && (reverse_bits`{16, 16} 0x00AA == 0x5500)
+        && (reverse_bits`{16, 8} 0x00A5 == 0x00A5)
+
+// Unit tests for `bit_reversal_permutation`
+test_bit_reversal_permutation : Bit
+test_bit_reversal_permutation = result where
+    val = [0x18, 0xC3, 0xD5, 0x02, 0x40, 0xAB, 0xC3, 0x18]
+    permutation = [0x18, 0x40, 0xd5, 0xc3, 0xc3, 0xab, 0x02, 0x18]
+    result = (bit_reversal_permutation`{8, 8} val == permutation)
+        && (bit_reversal_permutation`{8, 8} (bit_reversal_permutation`{8, 8} val) == val)
