@@ -79,13 +79,18 @@ Thanh-Hai Tran \texttt{thanh-hai.tran@consensys.net}
 \newpage
 
 \section{Audit Report}
-The goal of this audit report is to determine the adherence of the c-kzg implementation to its stated reference,
-the Python consensus specification defined in the EIP-4844 feature of the Deneb specification.
-This specification describes the use of the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
+The goal of this audit report is to determine the adherence of the structure of the c-kzg implementation to the structure of its stated reference,
+the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md}{Polynomial Commitments section of the Python Deneb consensus specification} (Python KZG Specification, hereafter) which encodes the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
+
+Identifying similarities and possible discrepancies between the two structures is key to the next two phases of this project.
+This comparison will guide us in structuring the Cryptol version of the Python KZG Specification in a way that enables subsequent verification against both the Python KZG specification itself and the c-kzg implementation.
+
+It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document
+
 
 \subsection{Audit of the c-kzg Implementation}
 
-The Python consensus specification (EIP-4844) entails 28 functions from four categories: 
+The Python KZG Specification entails 28 functions from four categories: 
 Bit-reversal permutation, BLS12-381 helpers, Polynomials, and KZG. 
 The following table identifies all of these functions, according to their category, 
 with the GitHub references to Python specification and the c-kzg implementation. 
@@ -118,11 +123,11 @@ use BLST utility functions \href{https://github.com/supranational/blst/blob/mast
 \href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L132}{\texttt{mul\_mont\_sparse\_256}}.
 
 \newpage
-\subsection{Table 1: Comparing c-kzg vs. EIP-4844}
+\subsection{Table 1: Comparing c-kzg vs. Python KZG Specification}
 \begin{center}
     \begin{tabular}{ |c|c|c| }
         \hline
-        \textbf{Category} & \textbf{Python specification} & \textbf{c-kzg implementation} \\ 
+        \textbf{Category} & \textbf{Python KZG Specification} & \textbf{c-kzg implementation} \\ 
         \hline
         \multirow{3}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-reversal permutation}}
             & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#is_power_of_two}{is\_power\_of\_two}
@@ -198,7 +203,7 @@ use BLST utility functions \href{https://github.com/supranational/blst/blob/mast
 
 \newpage
 \section{Next Steps}
-The next phase of this grant's work is to create a Cryptol specification that matches EIP-4844 and thus the Python specification.
+The next phase of this grant's work is to create a Cryptol specification that matches the Python KZG Specification.
 
 After this second milestone, we will create a test bench that will verify the Cryptol specification against the Python specification, 
 using the Python as the oracle for property based testing of the Cryptol. We will also verify properties for KZG correct construction,
@@ -206,7 +211,7 @@ e.g. calling \texttt{compute\_kzg\_proof} with valid inputs for \texttt{blob} an
 verification when the output proof is passed to \texttt{verify\_kzg\_proof}.
 
 After this third milestone, we will create a script using the Software Analysis Workbench (SAW) to attempt to formally verify and 
-prove one or more of the EIP-4844 functions as implemented in c-kzg is functionally equivalent to the corresponding Cryptol 
+prove one or more of the Python KZG Specification functions as implemented in c-kzg is functionally equivalent to the corresponding Cryptol 
 specification function, as well as memory safe.
 
 After this fourth milestone, we will deliver a final report with our results and conclusions.
