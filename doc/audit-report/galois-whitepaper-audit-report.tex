@@ -1,0 +1,220 @@
+\documentclass[12pt]{galois-whitepaper}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{xspace}
+\usepackage{color}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{verbatim}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+\usepackage{multirow}
+\let\verbatiminput=\verbatimtabinput
+\VerbatimFootnotes
+\DefineVerbatimEnvironment{code}{Verbatim}{}
+\DefineVerbatimEnvironment{pseudoCode}{Verbatim}{}
+%\hyphenation{Saw-Script}
+%\newcommand{\sawScript}{{\sc SawScript}\xspace}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\floatpagefraction}{0.35}
+\setcounter{totalnumber}{5}
+\definecolor{MyGray}{rgb}{0.9,0.9,0.9}
+\makeatletter\newenvironment{graybox}{%
+   \begin{lrbox}{\@tempboxa}\begin{minipage}{\columnwidth}}{\end{minipage}\end{lrbox}%
+   \colorbox{MyGray}{\usebox{\@tempboxa}}
+}\makeatother
+
+\setlength{\parskip}{0.6em}
+\setlength{\abovecaptionskip}{0.5em}
+
+\lstset{
+         basicstyle=\footnotesize\ttfamily, % Standardschrift
+         %numbers=left,               % Ort der Zeilennummern
+         numberstyle=\tiny,          % Stil der Zeilennummern
+         %stepnumber=2,               % Abstand zwischen den Zeilennummern
+         numbersep=5pt,              % Abstand der Nummern zum Text
+         tabsize=2,                  % Groesse von Tabs
+         extendedchars=true,         %
+         breaklines=true,            % Zeilen werden Umgebrochen
+         keywordstyle=\color{red},
+                frame=lrtb,         % left, right, top, bottom frames.
+ %        keywordstyle=[1]\textbf,    % Stil der Keywords
+ %        keywordstyle=[2]\textbf,    %
+ %        keywordstyle=[3]\textbf,    %
+ %        keywordstyle=[4]\textbf,   \sqrt{\sqrt{}} %
+         stringstyle=\color{white}\ttfamily, % Farbe der String
+         showspaces=false,           % Leerzeichen anzeigen ?
+         showtabs=false,             % Tabs anzeigen ?
+         xleftmargin=10pt, % was 17
+         xrightmargin=5pt,
+         framexleftmargin=5pt, % was 17
+         framexrightmargin=-1pt, % was 5pt
+         framexbottommargin=4pt,
+         %backgroundcolor=\color{lightgray},
+         showstringspaces=false      % Leerzeichen in Strings anzeigen ?
+}
+
+\author{Brett Decker \texttt{decker@galois.com}\\
+Ryan McCleeary \texttt{mccleeary@galois.com}\\
+Roberto Saltini \texttt{roberto.saltini@consensys.net}\\
+Thanh-Hai Tran \texttt{thanh-hai.tran@consensys.net}
+}
+
+\title{Formal Verification of the c-kzg library: Establishing the Basis}
+
+\date{August 22, 2024}
+\begin{document}
+\maketitle
+
+\vspace*{2cm}
+%\begin{abstract}
+%\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Audit Report}
+The goal of this audit report is to determine the adherence of the structure of the c-kzg implementation to the structure of its stated reference,
+the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md}{Polynomial Commitments section of the Python Deneb consensus specification} (Python KZG Specification, hereafter) which encodes the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
+
+Identifying similarities and possible discrepancies between the two structures is key to the next two phases of this project.
+This comparison will guide us in structuring the Cryptol version of the Python KZG Specification in a way that enables subsequent verification against both the Python KZG specification itself and the c-kzg implementation.
+
+It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document
+
+
+\subsection{Audit of the c-kzg Implementation}
+
+The Python KZG Specification entails 28 functions from four categories: 
+Bit-reversal permutation, BLS12-381 helpers, Polynomials, and KZG. 
+The following table identifies all of these functions, according to their category, 
+with the GitHub references to Python specification and the c-kzg implementation. 
+
+In most cases the names of the functions in the Python specification match the c-kzg implementation. 
+The differences include:
+\begin{enumerate}
+    \item The Python function \texttt{multi\_exp} is represented in the c-kzg implementaion 
+by splitting multiplication into two functions, \texttt{g1\_mul} and \texttt{g2\_mul}, to have separate functions 
+handle multiplication for the two groups, G1 and G2, separately, followed by a call to \texttt{blst\_doub};
+    \item A naming convention difference between the Python function \texttt{bls\_field\_to\_bytes} and the c-kzg 
+implementation function \texttt{bytes\_from\_bls\_field};
+    \item Two instances where the c-kzg implementation provides two implementing functions (for speed reasons) with 
+\texttt{g1\_lincomb\_naive} and \texttt{g1\_lincomb\_fast} for Python function \texttt{g1\_lincomb}, and 
+similarly in the case of functions \texttt{blst\_fr\_inverse} and \texttt{blst\_fr\_eucl\_inverse} for Python function 
+\texttt{blst\_modular\_inverse} (though there appears currently to be no difference between these two BLST imported 
+functions as defined in the 
+\href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L135}{BLST repository}). 
+\end{enumerate}
+
+In addition, there are a couple of other slight differences. The computation specified in the Python function 
+\texttt{compute\_quotient\_eval\_within\_domain} is handled inside the c-kzg implementation of the 
+function \texttt{compute\_kzg\_proof\_impl} instead of as a subroutine.
+
+Another difference is that the function \texttt{blst\_modular\_inverse} uses the builtin Python function 
+\href{https://docs.python.org/3/library/functions.html#pow}{\texttt{pow}}, whereas the corresponding BLST functions, as implented in 
+\href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L122}{\texttt{reciprocal\_fr}}, 
+use BLST utility functions \href{https://github.com/supranational/blst/blob/master/src/vect.h#L142}{\texttt{ct\_inverse\_mod\_256}}, 
+\href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L131}{\texttt{redc\_mont\_256}}, and 
+\href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L132}{\texttt{mul\_mont\_sparse\_256}}.
+
+\newpage
+\subsection{Table 1: Comparing c-kzg vs. Python KZG Specification}
+\begin{center}
+    \begin{tabular}{ |c|c|c| }
+        \hline
+        \textbf{Category} & \textbf{Python KZG Specification} & \textbf{c-kzg implementation} \\ 
+        \hline
+        \multirow{3}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-reversal permutation}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#is_power_of_two}{is\_power\_of\_two}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c\#L35}{is\_power\_of\_two} \\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#reverse_bits}{reverse\_bits} 
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c\#L64}{reverse\_bits} \\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit_reversal_permutation}{bit\_reversal\_permutation}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c\#L102}{bit\_reversal\_permutation} \\
+        \hline
+        \multirow{14}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls12-381-helpers}{BLS12-381 helpers}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#multi_exp}{multi\_exp}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/ec.c\#L42}{g1\_mul}
+            , \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L124}{g2\_mul}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#hash_to_bls_field}{hash\_to\_bls\_field}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L123}{hash\_to\_bls\_field}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_bls_field}{bytes\_to\_bls\_field}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L64}{bytes\_to\_bls\_field}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls_field_to_bytes}{bls\_field\_to\_bytes}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L52}{bytes\_from\_bls\_field}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#validate_kzg_g1}{validate\_kzg\_g1}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L81}{validate\_kzg\_g1}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_commitment}{bytes\_to\_kzg\_commitment}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L103}{bytes\_to\_kzg\_commitment}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_proof}{bytes\_to\_kzg\_proof}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/bytes.c\#L113}{bytes\_to\_kzg\_proof}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_polynomial}{blob\_to\_polynomial}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/blob.c\#L29}{blob\_to\_polynomial}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_challenge}{compute\_challenge}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L156}{compute\_challenge}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls_modular_inverse}{bls\_modular\_inverse}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/bindings/go/blst_headers/blst.h\#L100}{blst\_fr\_inverse}
+            , \href{https://github.com/ethereum/c-kzg-4844/blob/main/bindings/go/blst_headers/blst.h\#L99}{blst\_fr\_eucl\_inverse}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#div}{div}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c\#L75}{div}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#g1_lincomb}{g1\_lincomb}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/lincomb.c\#L30}{g1\_lincomb\_naive}
+            , \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/lincomb.c\#L64}{g1\_lincomb\_fast}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_powers}{compute\_powers}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c\#L143}{compute\_powers}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_roots_of_unity}{compute\_roots\_of\_unity}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/setup/setup.c\#L93}{compute\_roots\_of\_unity}\\
+        \hline
+        \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#polynomials}{Polynomials}}
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#evaluate_polynomial_in_evaluation_form}{evaluate\_polynomial\\\_in\_evaluation\_form}}
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L201}{evaluate\_polynomial\\\_in\_evaluation\_form}}\\
+            & & \\ %blank so that we can get a second row used by the really long function names above
+        \hline
+        \multirow{11}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#kzg}{KZG}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_kzg_commitment}{blob\_to\_kzg\_commitment}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L275}{blob\_to\_kzg\_commitment}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof}{verify\_kzg\_proof}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L308}{verify\_kzg\_proof}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_impl}{verify\_kzg\_proof\_impl}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L349}{verify\_kzg\_proof\_impl}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_batch}{verify\_kzg\_proof\_batch}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L674}{verify\_kzg\_proof\_batch}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof}{compute\_kzg\_proof}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L392}{compute\_kzg\_proof}\\
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_quotient_eval_within_domain}{compute\_quotient\\\_eval\_within\_domain}}
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L469}{compute\_kzg\_proof\_impl}}\\
+            & & \\ %blank so that we can get a second row used by the really long function names above
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof_impl}{compute\_kzg\_proof\_impl}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L424}{compute\_kzg\_proof\_impl}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_blob_kzg_proof}{compute\_blob\_kzg\_proof}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L516}{compute\_blob\_kzg\_proof}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof}{verify\_blob\_kzg\_proof}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L551}{verify\_blob\_kzg\_proof}\\
+            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof_batch}{verify\_blob\_kzg\_proof\_batch}
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L752}{verify\_blob\_kzg\_proof\_batch}\\
+        \hline
+    \end{tabular}
+\end{center}
+
+\newpage
+\section{Next Steps}
+The next phase of this grant's work is to create a Cryptol specification that matches the Python KZG Specification.
+
+After this second milestone, we will create a test bench that will verify the Cryptol specification against the Python specification, 
+using the Python as the oracle for property based testing of the Cryptol. We will also verify properties for KZG correct construction,
+e.g. calling \texttt{compute\_kzg\_proof} with valid inputs for \texttt{blob} and \texttt{z\_bytes} always results in successful 
+verification when the output proof is passed to \texttt{verify\_kzg\_proof}.
+
+After this third milestone, we will create a script using the Software Analysis Workbench (SAW) to attempt to formally verify and 
+prove one or more of the Python KZG Specification functions as implemented in c-kzg is functionally equivalent to the corresponding Cryptol 
+specification function, as well as memory safe.
+
+After this fourth milestone, we will deliver a final report with our results and conclusions.
+
+
+\end{document}
