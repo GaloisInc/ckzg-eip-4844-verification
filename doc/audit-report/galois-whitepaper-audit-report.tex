@@ -109,6 +109,7 @@ similarly in the case of functions \texttt{blst\_fr\_inverse} and \texttt{blst\_
 \texttt{blst\_modular\_inverse} (though there appears currently to be no difference between these two BLST imported 
 functions as defined in the 
 \href{https://github.com/supranational/blst/blob/415d4f0e2347a794091836a3065206edfd9c72f3/src/recip.c#L135}{BLST repository}). 
+    \item One instance where the c-kzg implementaion has the prefix \texttt{fr\_}, for \texttt{fr\_div}
 \end{enumerate}
 
 In addition, there are a couple of other slight differences. The computation specified in the Python function 
@@ -169,7 +170,7 @@ is equivalent.
             & \href{https://github.com/ethereum/c-kzg-4844/blob/main/bindings/go/blst_headers/blst.h\#L100}{blst\_fr\_inverse}
             , \href{https://github.com/ethereum/c-kzg-4844/blob/main/bindings/go/blst_headers/blst.h\#L99}{blst\_fr\_eucl\_inverse}\\
             & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#div}{div}
-            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c\#L75}{div}\\
+            & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c\#L75}{fr\_div}\\
             & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#g1_lincomb}{g1\_lincomb}
             & \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/lincomb.c\#L30}{g1\_lincomb\_naive}
             , \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/common/lincomb.c\#L64}{g1\_lincomb\_fast}\\
