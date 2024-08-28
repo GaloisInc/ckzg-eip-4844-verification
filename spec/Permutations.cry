@@ -16,9 +16,9 @@ is_power_of_two value = (value > 0) && ((value && (value - 1)) == 0)
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#reverse_bits
  * NOTE: The Python spec only reverses the low-order bits
  */
-reverse_bits : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
+reverse_bits : {n, order_bit_length} (fin n, n >= 1, fin order_bit_length, order_bit_length >= 1, order_bit_length <= n)
     => [n] -> [n]
-reverse_bits value = zero # reverse (drop`{n - order} value) // `reverse` is a Cryptol primitive function
+reverse_bits value = zero # reverse (drop`{n - order_bit_length} value) // `reverse` is a Cryptol primitive function
 
 /**
  * Return the bit-reversed permutation, which is an involution (inverts itself).
