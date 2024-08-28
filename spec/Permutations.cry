@@ -41,6 +41,7 @@ bit_reversal_permutation sequence =
  * ```repl
  * :prove test_reverse_bits
  * ```
+ * NOTE: we just chose these values at "random"
  */
 test_reverse_bits : Bit
 test_reverse_bits = result where
