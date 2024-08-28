@@ -18,7 +18,7 @@ is_power_of_two value = (value > 0) && ((value && (value - 1)) == 0)
  */
 reverse_bits : {n, order_bit_length} (fin n, n >= 1, fin order_bit_length, order_bit_length >= 1, order_bit_length <= n)
     => [n] -> [n]
-reverse_bits value = zero # reverse (drop`{n - order_bit_length} value) // `reverse` is a Cryptol primitive function
+reverse_bits value = zero # reverse (drop`{n - order_bit_length} value)
 
 /**
  * Return the bit-reversed permutation, which is an involution (inverts itself).
