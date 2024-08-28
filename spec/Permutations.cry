@@ -1,0 +1,113 @@
+/**
+ * The functions in this module are derived from the consensus-specs.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#helper-functions
+ */
+module Permutations where
+
+/**
+ * Check if `value` is a power of two integer.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#is_power_of_two
+ */
+is_power_of_two : {n} (fin n, n >= 1) => [n] -> Bit
+is_power_of_two value = (value > 0) && ((value && (value - 1)) == 0)
+
+/**
+ * Reverse the bits of an integer of length `n`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#reverse_bits
+ * NOTE: The Python spec only reverses the low-order bits
+ */
+reverse_bits : {n, order_bit_length} (fin n, n >= 1, fin order_bit_length, order_bit_length >= 1, order_bit_length <= n)
+    => [n] -> [n]
+reverse_bits value = zero # reverse (drop`{n - order_bit_length} value)
+
+/**
+ * Return the bit-reversed permutation, which is an involution (inverts itself).
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bit_reversal_permutation
+ * Standard algorithm: https://en.wikipedia.org/wiki/Bit-reversal_permutation
+ */
+bit_reversal_permutation : {size, len} (fin size, size >= 1, len >= 2, size >= width (len - 1))
+    => [len][size] -> [len][size]
+bit_reversal_permutation sequence =
+    [sequence@(reverse_bits`{size, width (len - 1)} i) | i <- [0 .. (len-1)]]
+
+/*
+ * ===============
+ * Unit test suite
+ * ===============
+ */
+
+/**
+ * Unit tests for `reverse_bits`.
+ * ```repl
+ * :prove test_reverse_bits
+ * ```
+ * NOTE: we just chose these values at "random"
+ */
+test_reverse_bits : Bit
+property test_reverse_bits = result where
+    result = (reverse_bits`{16, 16} 0x18C3 == 0xC318)
+        && (reverse_bits`{16, 16} 0x00AA == 0x5500)
+        && (reverse_bits`{16, 8} 0x00A5 == 0x00A5)
+
+/**
+ * Unit tests for `bit_reversal_permutation`.
+ * ```repl
+ * :prove test_bit_reversal_permutation
+ * ```
+ */
+test_bit_reversal_permutation : Bit
+property test_bit_reversal_permutation = reversal_works && reversal_inverts where
+    val = [0x18, 0xC3, 0xD5, 0x02, 0x40, 0xAB, 0xC3, 0x18]
+    expected_permutation = [0x18, 0x40, 0xd5, 0xc3, 0xc3, 0xab, 0x02, 0x18]
+    permuted_val = bit_reversal_permutation`{8, 8} val
+    reversal_works = permuted_val == expected_permutation
+    reversal_inverts = val == (bit_reversal_permutation`{8, 8} permuted_val)
+
+/*
+ *  ==========
+ *  Properties
+ *  ==========
+ */
+
+/**
+ * Function `is_power_of_two` should be true for all powers of two.
+ * ```repl
+ * :prove check_is_power_of_two
+ * ```
+ * NOTE: We'll just prove up to 2^^4096 --- that seems plenty and is still fast.
+ */
+property check_is_power_of_two = all is_power_of_two`{4096} [ 2^^n | n <- [0 .. 4096-1]]
+
+/**
+ * Property: calling `reverse_bits` twice on an value should return that value.
+ * Assumes the same bit size of the input and the same desired low-order bits.
+ * ```repl
+ * :prove check_reverse_bits_involution`{256, 8}
+ * :prove check_reverse_bits_involution`{256, 16}
+ * :prove check_reverse_bits_involution`{256, 32}
+ * :prove check_reverse_bits_involution`{256, 64}
+ * :prove check_reverse_bits_involution`{256, 128}
+ * :prove check_reverse_bits_involution`{256, 256}
+ * ```
+ */
+check_reverse_bits_involution : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
+    => [n] -> Bit
+property check_reverse_bits_involution val = precondition ==> statement where
+    precondition = lg2 val < `order
+    statement = (reverse_bits`{n, order} (reverse_bits`{n, order} val)) == val
+
+/**
+ * Property: calling `bit_reversal_permutation` twice on an value should return that value.
+ * ```repl
+ * :prove check_bit_reversal_permutation_involution`{256, 8}
+ * :prove check_bit_reversal_permutation_involution`{256, 16}
+ * :prove check_bit_reversal_permutation_involution`{256, 32}
+ * :prove check_bit_reversal_permutation_involution`{256, 64}
+ * :prove check_bit_reversal_permutation_involution`{256, 128}
+ * :prove check_bit_reversal_permutation_involution`{256, 256}
+ * ```
+ */
+check_bit_reversal_permutation_involution : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
+    => [len][size] -> Bit
+property check_bit_reversal_permutation_involution val =
+    (bit_reversal_permutation`{size, len} (bit_reversal_permutation`{size, len} val)) == val
