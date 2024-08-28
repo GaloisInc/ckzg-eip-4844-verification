@@ -79,6 +79,14 @@ property check_is_power_of_two = all is_power_of_two`{4096} [ 2^^n | n <- [0 .. 
 /**
  * Property: calling `reverse_bits` twice on an value should return that value.
  * Assumes the same bit size of the input and the same desired low-order bits.
+ * ```repl
+ * :prove reverse_bits_twice_is_value`{256, 8}
+ * :prove reverse_bits_twice_is_value`{256, 16}
+ * :prove reverse_bits_twice_is_value`{256, 32}
+ * :prove reverse_bits_twice_is_value`{256, 64}
+ * :prove reverse_bits_twice_is_value`{256, 128}
+ * :prove reverse_bits_twice_is_value`{256, 256}
+ * ```
  */
 reverse_bits_twice_is_value : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
     => [n] -> Bit
@@ -87,38 +95,18 @@ property reverse_bits_twice_is_value val = precondition ==> statement where
     statement = (reverse_bits`{n, order} (reverse_bits`{n, order} val)) == val
 
 /**
- * We will verify the `reverse_bits` property for several monomorphic types.
- * ```repl
- * :prove check_reverse_bits_twice_is_value
- * ```
- */
-property check_reverse_bits_twice_is_value val = True
-    && reverse_bits_twice_is_value`{256, 8} val
-    && reverse_bits_twice_is_value`{256, 16} val
-    && reverse_bits_twice_is_value`{256, 32} val
-    && reverse_bits_twice_is_value`{256, 64} val
-    && reverse_bits_twice_is_value`{256, 128} val
-    && reverse_bits_twice_is_value`{256, 256} val
-
-/**
  * Property: calling `bit_reversal_permutation` twice on an value should return that value.
+ * ```repl
+ * :prove bit_reversal_permutation_twice_is_value`{256, 8}
+ * :prove bit_reversal_permutation_twice_is_value`{256, 16}
+ * :prove bit_reversal_permutation_twice_is_value`{256, 32}
+ * :prove bit_reversal_permutation_twice_is_value`{256, 64}
+ * :prove bit_reversal_permutation_twice_is_value`{256, 128}
+ * :prove bit_reversal_permutation_twice_is_value`{256, 256}
+ * ```
  */
 bit_reversal_permutation_twice_is_value : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
     => [len][size] -> Bit
 property bit_reversal_permutation_twice_is_value val = precondition ==> statement where
     precondition = True
     statement = (bit_reversal_permutation`{size, len} (bit_reversal_permutation`{size, len} val)) == val
-
-/**
- * We will verify the `bit_reversal_permutation` property for several monomorphic types.
- * ```repl
- * :prove check_bit_reversal_permutation_twice_is_value
- * ```
- */
-property check_bit_reversal_permutation_twice_is_value (val1, val2, val3, val4, val5, val6) = True
-    && bit_reversal_permutation_twice_is_value`{256, 8} val1
-    && bit_reversal_permutation_twice_is_value`{256, 16} val2
-    && bit_reversal_permutation_twice_is_value`{256, 32} val3
-    && bit_reversal_permutation_twice_is_value`{256, 64} val4
-    && bit_reversal_permutation_twice_is_value`{256, 128} val5
-    && bit_reversal_permutation_twice_is_value`{256, 256} val6
