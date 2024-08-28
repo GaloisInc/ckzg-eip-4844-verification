@@ -36,13 +36,11 @@ bit_reversal_permutation array =
  * ===============
  */
 
-test_suite : Bit
-test_suite = True
-    && test_reverse_bits
-    && test_bit_reversal_permutation
-
 /**
  * Unit tests for `reverse_bits`.
+ * ```repl
+ * :prove test_reverse_bits
+ * ```
  */
 test_reverse_bits : Bit
 test_reverse_bits = result where
@@ -52,6 +50,9 @@ test_reverse_bits = result where
 
 /**
  * Unit tests for `bit_reversal_permutation`.
+ * ```repl
+ * :prove test_bit_reversal_permutation
+ * ```
  */
 test_bit_reversal_permutation : Bit
 test_bit_reversal_permutation = result where
