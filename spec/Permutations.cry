@@ -44,7 +44,7 @@ bit_reversal_permutation sequence =
  * NOTE: we just chose these values at "random"
  */
 test_reverse_bits : Bit
-test_reverse_bits = result where
+property test_reverse_bits = result where
     result = (reverse_bits`{16, 16} 0x18C3 == 0xC318)
         && (reverse_bits`{16, 16} 0x00AA == 0x5500)
         && (reverse_bits`{16, 8} 0x00A5 == 0x00A5)
@@ -56,7 +56,7 @@ test_reverse_bits = result where
  * ```
  */
 test_bit_reversal_permutation : Bit
-test_bit_reversal_permutation = result where
+property test_bit_reversal_permutation = result where
     val = [0x18, 0xC3, 0xD5, 0x02, 0x40, 0xAB, 0xC3, 0x18]
     permutation = [0x18, 0x40, 0xd5, 0xc3, 0xc3, 0xab, 0x02, 0x18]
     result = (bit_reversal_permutation`{8, 8} val == permutation)
