@@ -27,7 +27,7 @@ reverse_bits value = zero # reverse (drop`{n - order} value) // `reverse` is a C
  */
 bit_reversal_permutation : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
     => [len][size] -> [len][size]
-bit_reversal_permutation array = 
+bit_reversal_permutation array =
     [array@(reverse_bits`{size, width (len - 1)} i) | i <- [0 .. (len-1)]]
 
 /*
