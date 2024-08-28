@@ -1,7 +1,7 @@
 // The functions in this module are derived from the consensus-specs:
 // @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#helper-functions
 
-module permutations where
+module Permutations where
 
 // Check if `value` is a power of two integer
 // NOTE: `n` defines the bit length of `value`
