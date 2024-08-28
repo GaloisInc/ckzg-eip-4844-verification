@@ -61,7 +61,6 @@ test_bit_reversal_permutation = result where
     result = (bit_reversal_permutation`{8, 8} val == permutation)
         && (bit_reversal_permutation`{8, 8} (bit_reversal_permutation`{8, 8} val) == val)
 
-
 /*
  *  ==========
  *  Properties
