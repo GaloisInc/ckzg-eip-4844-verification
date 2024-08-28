@@ -56,11 +56,12 @@ property test_reverse_bits = result where
  * ```
  */
 test_bit_reversal_permutation : Bit
-property test_bit_reversal_permutation = result where
+property test_bit_reversal_permutation = reversal_works && reversal_inverts where
     val = [0x18, 0xC3, 0xD5, 0x02, 0x40, 0xAB, 0xC3, 0x18]
-    permutation = [0x18, 0x40, 0xd5, 0xc3, 0xc3, 0xab, 0x02, 0x18]
-    result = (bit_reversal_permutation`{8, 8} val == permutation)
-        && (bit_reversal_permutation`{8, 8} (bit_reversal_permutation`{8, 8} val) == val)
+    expected_permutation = [0x18, 0x40, 0xd5, 0xc3, 0xc3, 0xab, 0x02, 0x18]
+    permuted_val = bit_reversal_permutation`{8, 8} val
+    reversal_works = permuted_val == expected_permutation
+    reversal_inverts = val == (bit_reversal_permutation`{8, 8} permuted_val)
 
 /*
  *  ==========
