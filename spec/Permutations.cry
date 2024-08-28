@@ -81,33 +81,33 @@ property check_is_power_of_two = all is_power_of_two`{4096} [ 2^^n | n <- [0 .. 
  * Property: calling `reverse_bits` twice on an value should return that value.
  * Assumes the same bit size of the input and the same desired low-order bits.
  * ```repl
- * :prove reverse_bits_twice_is_value`{256, 8}
- * :prove reverse_bits_twice_is_value`{256, 16}
- * :prove reverse_bits_twice_is_value`{256, 32}
- * :prove reverse_bits_twice_is_value`{256, 64}
- * :prove reverse_bits_twice_is_value`{256, 128}
- * :prove reverse_bits_twice_is_value`{256, 256}
+ * :prove check_reverse_bits_involution`{256, 8}
+ * :prove check_reverse_bits_involution`{256, 16}
+ * :prove check_reverse_bits_involution`{256, 32}
+ * :prove check_reverse_bits_involution`{256, 64}
+ * :prove check_reverse_bits_involution`{256, 128}
+ * :prove check_reverse_bits_involution`{256, 256}
  * ```
  */
-reverse_bits_twice_is_value : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
+check_reverse_bits_involution : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
     => [n] -> Bit
-property reverse_bits_twice_is_value val = precondition ==> statement where
+property check_reverse_bits_involution val = precondition ==> statement where
     precondition = lg2 val < `order
     statement = (reverse_bits`{n, order} (reverse_bits`{n, order} val)) == val
 
 /**
  * Property: calling `bit_reversal_permutation` twice on an value should return that value.
  * ```repl
- * :prove bit_reversal_permutation_twice_is_value`{256, 8}
- * :prove bit_reversal_permutation_twice_is_value`{256, 16}
- * :prove bit_reversal_permutation_twice_is_value`{256, 32}
- * :prove bit_reversal_permutation_twice_is_value`{256, 64}
- * :prove bit_reversal_permutation_twice_is_value`{256, 128}
- * :prove bit_reversal_permutation_twice_is_value`{256, 256}
+ * :prove check_bit_reversal_permutation_involution`{256, 8}
+ * :prove check_bit_reversal_permutation_involution`{256, 16}
+ * :prove check_bit_reversal_permutation_involution`{256, 32}
+ * :prove check_bit_reversal_permutation_involution`{256, 64}
+ * :prove check_bit_reversal_permutation_involution`{256, 128}
+ * :prove check_bit_reversal_permutation_involution`{256, 256}
  * ```
  */
-bit_reversal_permutation_twice_is_value : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
+check_bit_reversal_permutation_involution : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
     => [len][size] -> Bit
-property bit_reversal_permutation_twice_is_value val = precondition ==> statement where
+property check_bit_reversal_permutation_involution val = precondition ==> statement where
     precondition = True
     statement = (bit_reversal_permutation`{size, len} (bit_reversal_permutation`{size, len} val)) == val
