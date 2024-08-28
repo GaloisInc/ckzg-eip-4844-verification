@@ -12,7 +12,7 @@ is_power_of_two : {n} (fin n, n >= 1) => [n] -> Bit
 is_power_of_two value = (value > 0) && ((value && (value - 1)) == 0)
 
 /**
- * Reverse the bits of an integer of lenth `n`.
+ * Reverse the bits of an integer of length `n`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#reverse_bits
  * NOTE: The Python spec only reverses the low-order bits
  */
