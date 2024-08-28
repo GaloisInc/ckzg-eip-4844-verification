@@ -25,7 +25,7 @@ reverse_bits value = zero # reverse (drop`{n - order_bit_length} value)
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bit_reversal_permutation
  * Standard algorithm: https://en.wikipedia.org/wiki/Bit-reversal_permutation
  */
-bit_reversal_permutation : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
+bit_reversal_permutation : {size, len} (fin size, size >= 1, len >= 2, size >= width (len - 1))
     => [len][size] -> [len][size]
 bit_reversal_permutation array =
     [array@(reverse_bits`{size, width (len - 1)} i) | i <- [0 .. (len-1)]]
