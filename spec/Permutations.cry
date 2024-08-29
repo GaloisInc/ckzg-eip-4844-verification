@@ -110,11 +110,11 @@ property check_is_power_of_two = all is_power_of_two_bit`{4096} [ 2^^n | n <- [0
  * :prove check_reverse_bits_involution`{256, 256}
  * ```
  */
-check_reverse_bits_involution : {n, order} (fin n, n >= 1, fin order, order >= 1, order <= n)
+check_reverse_bits_involution : {n, order_bit_length} (fin n, n >= 1, order_bit_length >= 1, order_bit_length <= n)
     => [n] -> Bit
 property check_reverse_bits_involution val = precondition ==> statement where
-    precondition = lg2 val < `order
-    statement = (reverse_bits`{n, order} (reverse_bits`{n, order} val)) == val
+    precondition = lg2 val < `order_bit_length
+    statement = (reverse_bits`{n, order_bit_length} (reverse_bits`{n, order_bit_length} val)) == val
 
 /**
  * Property: Both implementations for "reverse_bits" are equivalent for 64-bit values.
