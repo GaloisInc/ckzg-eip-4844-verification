@@ -1,4 +1,4 @@
-/**
+/*
  * The functions in this module are derived from the consensus-specs.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#helper-functions
  */
