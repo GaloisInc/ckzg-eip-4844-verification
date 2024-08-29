@@ -15,3 +15,15 @@ uint64_t reverse_bits(uint64_t n) {
     }
     return result;
 }
+
+uint64_t log2_pow2(uint64_t n) {
+    uint64_t position = 0;
+    while (n >>= 1)
+        position++;
+    return position;
+}
+
+uint64_t reverse_bits_limited(uint64_t n, uint64_t value) {
+    size_t unused_bit_len = 64 - log2_pow2(n);
+    return reverse_bits(value) >> unused_bit_len;
+}

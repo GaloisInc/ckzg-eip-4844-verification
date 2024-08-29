@@ -30,4 +30,15 @@ let reverse_bits_ok = do {
     llvm_return (llvm_term {{ reverse (vspec) }});
 };
 
-llvm_verify m "reverse_bits" [] true reverse_bits_ok (z3_solver []);
+reverse_bits_ov <- llvm_verify m "reverse_bits" [] true reverse_bits_ok (z3_solver []);
+
+let reverse_bits_limited_ok = do {
+    (vimpl, vspec) <- (setup_tuple uint64_t "v");
+    (oimpl, ospec) <- (setup_tuple uint64_t "order");
+    llvm_precond {{ Permutations::is_power_of_two_bit (ospec)}};
+    llvm_precond {{ (ospec > 1) }};
+    llvm_execute_func[oimpl, vimpl];
+    llvm_return (llvm_term {{ Permutations::reverse_bits_limited (ospec) (vspec) }});
+};
+
+llvm_verify m "reverse_bits_limited" [reverse_bits_ov] true reverse_bits_limited_ok (z3_solver []);
