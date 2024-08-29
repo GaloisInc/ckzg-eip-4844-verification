@@ -27,7 +27,7 @@ is_power_of_two_bit value = (value > 0) && ((value && (value - 1)) == 0)
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#reverse_bits
  * NOTE: The Python spec only reverses the low-order bits
  */
-reverse_bits : {n, order_bit_length} (fin n, n >= 1, fin order_bit_length, order_bit_length >= 1, order_bit_length <= n)
+reverse_bits : {n, order_bit_length} (fin n, n >= 1, order_bit_length >= 1, order_bit_length <= n)
     => [n] -> [n]
 reverse_bits value = zero # reverse (drop`{n - order_bit_length} value)
 
@@ -139,7 +139,7 @@ property check_reverse_bits_equiv order val = precondition ==> statement where
  * :prove check_bit_reversal_permutation_involution`{256, 256}
  * ```
  */
-check_bit_reversal_permutation_involution : {size, len} (fin size, size >= 1, fin len, len >= 2, size >= width (len - 1))
+check_bit_reversal_permutation_involution : {size, len} (fin size, size >= 1, len >= 2, size >= width (len - 1))
     => [len][size] -> Bit
 property check_bit_reversal_permutation_involution val =
     (bit_reversal_permutation`{size, len} (bit_reversal_permutation`{size, len} val)) == val
