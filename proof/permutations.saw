@@ -17,7 +17,7 @@ m <- llvm_load_module "permutations.bc"; // Need the compiled C code equiv
 
 let is_power_of_two_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
-    llvm_precond {{vspec >= 1}};
+    llvm_precond {{ vspec >= 1 }};
     llvm_execute_func[vimpl];
     llvm_return (llvm_term {{ Permutations::is_power_of_two (vspec) }});
 };
