@@ -15,6 +15,11 @@ let setup_tuple (type : LLVMType) (name : String) = do {
 // TODO get the .bc file by submoduling in https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c
 m <- llvm_load_module "permutations.bc"; // Need the compiled C code equiv
 
+// Prove that the following are equivalent:
+//  1) C function: `is_power_of_two`
+//     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L35
+//  2) Cryptol spec: `reverse_bits_limited`
+//     See: ../spec/Permutations.cry#L15
 let is_power_of_two_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
     llvm_precond {{ vspec >= 1 }};
@@ -24,6 +29,11 @@ let is_power_of_two_ok = do {
 
 llvm_verify m "is_power_of_two" [] true is_power_of_two_ok (z3_solver []);
 
+// Prove that the following are equivalent:
+//  1) C function: `reverse_bits`
+//     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L64
+//  2) Cryptol spec: built in `reverse`
+//     See: https://github.com/GaloisInc/cryptol/blob/master/lib/Cryptol.cry#L825C11-L825C18
 let reverse_bits_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
     llvm_execute_func[vimpl];
@@ -32,6 +42,11 @@ let reverse_bits_ok = do {
 
 reverse_bits_ov <- llvm_verify m "reverse_bits" [] true reverse_bits_ok (z3_solver []);
 
+// Prove that the following are equivalent:
+//  1) C function: `reverse_bits_limited`
+//     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L84
+//  2) Cryptol spec: `reverse_bits_limited`
+//     See: ../spec/Permutations.cry#L39
 let reverse_bits_limited_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
     (oimpl, ospec) <- (setup_tuple uint64_t "order");
