@@ -26,6 +26,15 @@ reverse_bits : {n, order_bit_length} (fin n, n >= 1, fin order_bit_length, order
 reverse_bits value = zero # reverse (drop`{n - order_bit_length} value)
 
 /**
+ * Reverse the low-order bits of a 64-bit integer.
+ * This function matches the `reverse_bits_limited` function in c-kzg
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L84
+ */
+reverse_bits_limited : [64] -> [64] -> [64]
+reverse_bits_limited order value = (reverse value) >> unused_bit_len where
+    unused_bit_len = 64 - lg2 order
+
+/**
  * Return the bit-reversed permutation, which is an involution (inverts itself).
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bit_reversal_permutation
  * Standard algorithm: https://en.wikipedia.org/wiki/Bit-reversal_permutation
@@ -101,6 +110,18 @@ check_reverse_bits_involution : {n, order} (fin n, n >= 1, fin order, order >= 1
 property check_reverse_bits_involution val = precondition ==> statement where
     precondition = lg2 val < `order
     statement = (reverse_bits`{n, order} (reverse_bits`{n, order} val)) == val
+
+/**
+ * Property: Both implementations for "reverse_bits" are equivalent for 64-bit values.
+ * ```repl
+ * :prove check_reverse_bits_equiv`{64}
+ * ```
+ */
+check_reverse_bits_equiv : {order_bit_length} (order_bit_length >= 1, order_bit_length <= 64)
+    => [64] -> [64] -> Bit
+property check_reverse_bits_equiv order val = precondition ==> statement where
+    precondition = lg2 order == `order_bit_length
+    statement = reverse_bits`{64, order_bit_length} val == reverse_bits_limited order val
 
 /**
  * Property: calling `bit_reversal_permutation` twice on an value should return that value.
