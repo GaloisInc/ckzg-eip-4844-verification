@@ -8,13 +8,19 @@ import Utils
 
 /**
  * Check if `value` is a power of two integer.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#is_power_of_two
+ * Return `1:[1]` if true and `0:[1]` otherwise.
  * NOTE: We use the `Utils::bit_to_bool` function because SAW cannot
  *  convert the `Bit` type internally to an LLVM integer type.
  */
 is_power_of_two : {n} (fin n, n >= 1) => [n] -> [1]
-is_power_of_two value = bit_to_bool b where
-    b = (value > 0) && ((value && (value - 1)) == 0)
+is_power_of_two value = bit_to_bool (is_power_of_two_bit value)
+
+/**
+ * Check if `value` is a power of two integer.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#is_power_of_two
+ */
+is_power_of_two_bit : {n} (fin n, n >= 1) => [n] -> Bit
+is_power_of_two_bit value = (value > 0) && ((value && (value - 1)) == 0)
 
 /**
  * Reverse the bits of an integer of length `n`.
@@ -84,14 +90,13 @@ property test_bit_reversal_permutation = reversal_works && reversal_inverts wher
  */
 
 /**
- * Function `is_power_of_two` should be true for all powers of two.
+ * Function `is_power_of_two_bit` should be true for all powers of two.
  * ```repl
  * :prove check_is_power_of_two
  * ```
  * NOTE: We'll just prove up to 2^^4096 --- that seems plenty and is still fast.
  */
-property check_is_power_of_two = all is_power_of_two_bit [ 2^^n | n <- [0 .. 4096-1]] where
-    is_power_of_two_bit = \x -> bool_to_bit (is_power_of_two`{4096} x)
+property check_is_power_of_two = all is_power_of_two_bit`{4096} [ 2^^n | n <- [0 .. 4096-1]]
 
 /**
  * Property: calling `reverse_bits` twice on an value should return that value.
