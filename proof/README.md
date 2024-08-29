@@ -8,6 +8,8 @@ You will also need to install the Java Runtime Environment (this is required for
 
 You will also need to have Clang installed.
 
+You may also need to install [Yices](https://yices.csl.sri.com).
+
 ### MacOS
 
 For mac users, make sure to install `llvm` from Homebrew.
