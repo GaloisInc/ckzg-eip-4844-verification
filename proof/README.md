@@ -32,6 +32,21 @@ So we need to generate the LLVM bit-code for the C code we want to verify. That 
 clang -g -O1 -c -emit-llvm file.c -o file.bc
 ```
 
+For convenience, we have a Makefile in the `bitcode` subfolder that can autogenerate the needed LLVM bitcode. Run the following:
+
+```bash
+make bc
+```
+
+You'll see the following output:
+
+```text
+cp ckzg-src-makefile.patch ../../c-kzg-4844/src/makefile.patch
+cd ../../c-kzg-4844/src && git apply makefile.patch && /.../usr/bin/make bc
+[+] generating bitcode
+cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
+```
+
 ## Running the proofs
 
 To execute a SAW script and check the proofs, run the following command:

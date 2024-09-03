@@ -12,8 +12,7 @@ let setup_tuple (type : LLVMType) (name : String) = do {
   return (setupVal, cfvTerm);
 };
 
-// TODO get the .bc file by submoduling in https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c
-m <- llvm_load_module "permutations.bc"; // Need the compiled C code equiv
+m <- llvm_load_module "bitcode/ckzg.bc";
 
 // Prove that the following are equivalent:
 //  1) C function: `is_power_of_two`
