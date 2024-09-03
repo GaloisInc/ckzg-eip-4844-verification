@@ -29,3 +29,41 @@ So we need to generate the LLVM bit-code for the C code we want to verify. That 
 ```bash
 clang -g -O1 -c -emit-llvm file.c -o file.bc
 ```
+
+## Running the proofs
+
+To execute a SAW script and check the proofs, run the following command:
+
+```bash
+saw file.saw
+```
+
+Any dependent Cryptol modules will be compiled first, and any errors will immediately end the executation and be reported.
+
+### Example SAW run
+
+Running the following command:
+
+```bash
+saw permutations.saw
+```
+
+Results in output similar to:
+
+```text
+[14:45:20.052] Loading file ".../proof/permutations.saw"
+[14:45:20.194] Verifying is_power_of_two ...
+[14:45:20.204] Simulating is_power_of_two ...
+[14:45:20.232] Checking proof obligations is_power_of_two ...
+[14:45:20.333] Proof succeeded! is_power_of_two
+[14:45:20.359] Verifying reverse_bits ...
+[14:45:20.366] Simulating reverse_bits ...
+[14:45:20.381] Checking proof obligations reverse_bits ...
+[14:45:20.409] Proof succeeded! reverse_bits
+[14:45:20.478] Verifying reverse_bits_limited ...
+[14:45:20.484] Simulating reverse_bits_limited ...
+[14:45:20.492] Registering overrides for `reverse_bits`
+[14:45:20.492]   variant `Symbol "reverse_bits"`
+[14:45:20.631] Checking proof obligations reverse_bits_limited ...
+[14:45:20.857] Proof succeeded! reverse_bits_limited
+```
