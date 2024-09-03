@@ -38,11 +38,20 @@ For convenience, we have a Makefile in the `bitcode` subfolder that can autogene
 make bc
 ```
 
-You'll see the following output:
+The first time you run this command you'll see the following output:
 
 ```text
-cp ckzg-src-makefile.patch ../../c-kzg-4844/src/makefile.patch
-cd ../../c-kzg-4844/src && git apply makefile.patch && /.../usr/bin/make bc
+[+] applying patch file
+cd ../../c-kzg-4844/src && /path-to/usr/bin/make bc
+[+] generating bitcode
+cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
+```
+
+Afterward, you'll see the following output:
+
+```text
+[+] patch file already applied
+cd ../../c-kzg-4844/src && /path-to/usr/bin/make bc
 [+] generating bitcode
 cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
 ```
