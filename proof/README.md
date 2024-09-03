@@ -12,13 +12,15 @@ You may also need to install [Yices](https://yices.csl.sri.com).
 
 ### MacOS
 
-For mac users, make sure to install `llvm` from Homebrew.
+For mac users, make sure to install `llvm@16` from Homebrew.
 
 ```bash
 
- $> brew install llvm
+ $> brew install llvm@16
 
 ```
+
+You also need to ensure that your CC environment variable is pointing to the installed version above.
 
 ## Generating the Bit-code
 
