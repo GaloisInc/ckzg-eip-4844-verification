@@ -1,0 +1,26 @@
+/*
+ * This module contains helper functions unrelated to the consensus-specs.
+ */
+module Utils where
+
+/**
+ * Convert a `Bit` to a 1-bit value.
+ * We use this function because SAW cannot convert
+ *  the `Bit` type internally to an LLVM integer type.
+ * ```repl
+ * :prove bit_to_bool True == 1
+ * :prove bit_to_bool False == 0
+ * ```
+ */
+bit_to_bool : Bit -> [1]
+bit_to_bool b = if b then 1 else 0
+
+/**
+ * Convert a 1-bit value to a `Bit`.
+ * ```repl
+ * :prove bool_to_bit 1 == True
+ * :prove bool_to_bit 0 == False
+ * ```
+ */
+bool_to_bit : [1] -> Bit
+bool_to_bit b = if b == 1 then True else False
