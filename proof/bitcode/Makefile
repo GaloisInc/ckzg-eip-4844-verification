@@ -15,4 +15,5 @@ bc:
 
 .PHONY: clean
 clean:
+	@echo "[+] clean: remove bitcode file"
 	rm -f *.bc
