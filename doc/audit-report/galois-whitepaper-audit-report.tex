@@ -85,8 +85,20 @@ the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polyn
 Identifying similarities and possible discrepancies between the two structures is key to the next two phases of this project.
 This comparison will guide us in structuring the Cryptol version of the Python KZG Specification in a way that enables subsequent verification against both the Python KZG specification itself and the c-kzg implementation.
 
-It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document
+It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document.
 
+Moreover, determining the accuracy of the Python KZG Specification against the pseudocodes in the KZG paper is outside the scope of this project.
+
+\subsection{The Python KZG Specification in a Nutshell}
+
+The Python KZG Specification follows the ideas in the polynomial commitment scheme $\texttt{PolyCommit}_{\texttt{DL}}$ introduced in the KZG paper and has modifications for optimization.
+The differences include:
+\begin{enumerate}
+    \item The BLS12-381 asymmetric pairing is applied.
+    \item Polynomials are represented in the evaluation form.
+    \item Polynomial evaluation and operations are written for the evaluation form, e.g., by using Barycentric evaluation.
+    \item The Fiat-Shamir challenge is used to compute a challenge.
+\end{enumerate}
 
 \subsection{Audit of the c-kzg Implementation}
 
