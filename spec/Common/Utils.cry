@@ -1,7 +1,9 @@
 /*
  * This module contains helper functions unrelated to the consensus-specs.
  */
-module Utils where
+module Common::Utils where
+
+type BYTE_WIDTH = 8
 
 /**
  * Convert a `Bit` to a 1-bit value.

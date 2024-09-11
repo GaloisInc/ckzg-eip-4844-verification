@@ -2,9 +2,9 @@
  * The functions in this module are derived from the consensus-specs.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#helper-functions
  */
-module Permutations where
+module Spec::Permutations where
 
-import Utils
+import Common::Utils
 
 /**
  * Check if `value` is a power of two integer.

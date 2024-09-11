@@ -1,6 +1,6 @@
 enable_experimental;
 
-Permutations <- cryptol_load "../spec/Permutations.cry";
+Permutations <- cryptol_load "../spec/Spec/Permutations.cry";
 
 let z3_solver = w4_unint_z3;
 
