@@ -1,0 +1,110 @@
+/**
+ * The functions in this module are written to more closely match the LLVM
+ * generated for the C code we are trying to prove equivalent to our other
+ * Cryptol specs. So this is an intermediate step along our proof trail.
+ */
+module LLVM::Permutations where
+
+import Common::Utils
+import Spec::Permutations
+
+/**
+ * Return the bit-reversed permutation, which is an involution (inverts itself).
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L102
+ * Standard algorithm: https://en.wikipedia.org/wiki/Bit-reversal_permutation
+ */
+bit_reversal_permutation_fast : {size, n}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
+    => [n][size * BYTE_WIDTH] -> [n][size * BYTE_WIDTH]
+bit_reversal_permutation_fast sequence =
+    bit_reversal_permutation_fast_rec`{size, n, width (n - 1)} sequence unused_bit_len 0
+    where
+        unused_bit_len = 64 - lg2 `(n)
+
+/**
+ * Recursive helper function for `bit_reversal_permutation_fast`.
+ */
+bit_reversal_permutation_fast_rec : {size, n, nbits}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n, nbits == width (n - 1))
+    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size * BYTE_WIDTH]
+bit_reversal_permutation_fast_rec sequence unused_bit_len i =
+    // 1) base case
+    if i >= `(n) then sequence
+    // 2) recursive case
+    else if r > i
+        then bit_reversal_permutation_fast_rec`{size, n, nbits} sequence' unused_bit_len (i + 1)
+        else bit_reversal_permutation_fast_rec`{size, n, nbits} sequence unused_bit_len (i + 1)
+    where
+    r = (reverse i) >> unused_bit_len
+    sequence' = swap`{size, n} sequence i r
+
+/**
+ * Helper function for `bit_reversal_permutation_fast`.
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L122
+ */
+swap : {size, n}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
+    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size  * BYTE_WIDTH]
+swap values i r =
+    [swap_elem j | j <- [0 .. (n-1)]]
+    where
+        swap_elem j =
+            if j == r then values@i
+            else if j == i then values@r
+            else values@j
+
+/*
+ * ===============
+ * Unit test suite
+ * ===============
+ */
+
+/**
+ * Unit tests for `swap`.
+ * ```repl
+ * :prove test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 1 2 [0x01, 0x03, 0x02, 0x04]
+ * :prove test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 2 1 [0x01, 0x03, 0x02, 0x04]
+ * :prove test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 3 3 [0x01, 0x02, 0x03, 0x04]
+ * ```
+ * NOTE: we just chose these values at "random"
+ */
+test_swap : {size, n}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
+    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size  * BYTE_WIDTH] -> Bit
+property test_swap input i r expected =
+    expected == swap`{size, n} input i r
+
+/**
+ * Unit tests for `bit_reversal_permutation_fast_rec`.
+ * ```repl
+ * :prove test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 3 [0x01, 0x03, 0x02, 0x04]
+ * :prove test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 2 [0x01, 0x03, 0x02, 0x04]
+ * :prove test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 1 [0x01, 0x03, 0x02, 0x04]
+ * :prove test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 0 [0x01, 0x03, 0x02, 0x04]
+ * ```
+ */
+test_bit_reversal_permutation_fast_rec : {size, n, nbits}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n, nbits == width (n - 1))
+    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size * BYTE_WIDTH] -> Bit
+property test_bit_reversal_permutation_fast_rec input unused_bit_len i expected =
+    expected == bit_reversal_permutation_fast_rec`{size, n, nbits} input unused_bit_len i
+
+/*
+ *  ==========
+ *  Properties
+ *  ==========
+ */
+
+/**
+ * Unit tests for `bit_reversal_permutation_fast_rec`.
+ * ```repl
+ * :prove check_bit_reversal_permutations_equiv`{1, 4}
+ * :prove check_bit_reversal_permutations_equiv`{4, 8}
+ * :prove check_bit_reversal_permutations_equiv`{8, 256}
+ * ```
+ */
+check_bit_reversal_permutations_equiv : {size, n}
+    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
+    => [n][size * BYTE_WIDTH] -> Bit
+property check_bit_reversal_permutations_equiv seq =
+    bit_reversal_permutation`{size * BYTE_WIDTH, n} seq == bit_reversal_permutation_fast`{size, n} seq
