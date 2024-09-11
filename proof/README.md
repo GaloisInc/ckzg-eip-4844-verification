@@ -12,13 +12,15 @@ You may also need to install [Yices](https://yices.csl.sri.com).
 
 ### MacOS
 
-For mac users, make sure to install `llvm` from Homebrew.
+For mac users, make sure to install `llvm@16` from Homebrew.
 
 ```bash
 
- $> brew install llvm
+ $> brew install llvm@16
 
 ```
+
+You also need to ensure that your CC environment variable is pointing to the installed version above.
 
 ## Generating the Bit-code
 
@@ -28,6 +30,30 @@ So we need to generate the LLVM bit-code for the C code we want to verify. That 
 
 ```bash
 clang -g -O1 -c -emit-llvm file.c -o file.bc
+```
+
+For convenience, we have a Makefile in the `bitcode` subfolder that can autogenerate the needed LLVM bitcode. Run the following:
+
+```bash
+make bc
+```
+
+The first time you run this command you'll see the following output:
+
+```text
+[+] applying patch file
+cd ../../c-kzg-4844/src && /path-to/usr/bin/make bc
+[+] generating bitcode
+cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
+```
+
+Afterward, you'll see the following output:
+
+```text
+[+] patch file already applied
+cd ../../c-kzg-4844/src && /path-to/usr/bin/make bc
+[+] generating bitcode
+cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
 ```
 
 ## Running the proofs
