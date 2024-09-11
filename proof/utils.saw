@@ -1,9 +1,18 @@
 let z3_solver = w4_unint_z3;
 
 let uint64_t = llvm_int 64;
+let uint8_t = llvm_int 8;
 
 let setup_tuple (type : LLVMType) (name : String) = do {
     cfvTerm <- llvm_fresh_var name type;
     let setupVal = llvm_term cfvTerm;
     return (setupVal, cfvTerm);
+};
+
+let setup_array (type : LLVMType) (size : Int) (name : String) = do {
+    ptr <- llvm_alloc (llvm_array size type);
+    cfvTerm <- llvm_fresh_var name (llvm_array size type);
+    let setupVal = llvm_term cfvTerm;
+    llvm_points_to ptr setupVal;
+    return (ptr, setupVal, cfvTerm);
 };
