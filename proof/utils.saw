@@ -1,0 +1,9 @@
+let z3_solver = w4_unint_z3;
+
+let uint64_t = llvm_int 64;
+
+let setup_tuple (type : LLVMType) (name : String) = do {
+    cfvTerm <- llvm_fresh_var name type;
+    let setupVal = llvm_term cfvTerm;
+    return (setupVal, cfvTerm);
+};
