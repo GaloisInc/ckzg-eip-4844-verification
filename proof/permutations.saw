@@ -1,24 +1,17 @@
 enable_experimental;
 
-Permutations <- cryptol_load "../spec/Permutations.cry";
+include "utils.saw";
 
-let z3_solver = w4_unint_z3;
-
-let uint64_t = llvm_int 64;
-
-let setup_tuple (type : LLVMType) (name : String) = do {
-  cfvTerm <- llvm_fresh_var name type;
-  let setupVal = llvm_term cfvTerm;
-  return (setupVal, cfvTerm);
-};
+Permutations <- cryptol_load "../spec/Spec/Permutations.cry";
+PermutationsLLVM <- cryptol_load "../spec/LLVM/Permutations.cry";
 
 m <- llvm_load_module "bitcode/ckzg.bc";
 
 // Prove that the following are equivalent:
 //  1) C function: `is_power_of_two`
 //     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L35
-//  2) Cryptol spec: `reverse_bits_limited`
-//     See: ../spec/Permutations.cry#L15
+//  2) Cryptol spec: `is_power_of_two`
+//     See: https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/Permutations.cry#L15
 let is_power_of_two_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
     llvm_precond {{ vspec >= 1 }};
@@ -26,7 +19,7 @@ let is_power_of_two_ok = do {
     llvm_return (llvm_term {{ Permutations::is_power_of_two (vspec) }});
 };
 
-llvm_verify m "is_power_of_two" [] true is_power_of_two_ok (z3_solver []);
+is_power_of_two_ov <- llvm_verify m "is_power_of_two" [] true is_power_of_two_ok (z3_solver []);
 
 // Prove that the following are equivalent:
 //  1) C function: `reverse_bits`
@@ -45,7 +38,7 @@ reverse_bits_ov <- llvm_verify m "reverse_bits" [] true reverse_bits_ok (z3_solv
 //  1) C function: `reverse_bits_limited`
 //     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L84
 //  2) Cryptol spec: `reverse_bits_limited`
-//     See: ../spec/Permutations.cry#L39
+//     See: https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/Permutations.cry#L39
 let reverse_bits_limited_ok = do {
     (vimpl, vspec) <- (setup_tuple uint64_t "v");
     (oimpl, ospec) <- (setup_tuple uint64_t "order");
@@ -56,3 +49,31 @@ let reverse_bits_limited_ok = do {
 };
 
 llvm_verify m "reverse_bits_limited" [reverse_bits_ov] true reverse_bits_limited_ok (z3_solver []);
+
+// Prove that the following are equivalent:
+//  1) C function: `bit_reversal_permutation`
+//     See: https://github.com/ethereum/c-kzg-4844/blob/main/src/common/utils.c#L102
+//  2) Cryptol spec: `bit_reversal_permutation_fast`
+//     See: https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/LLVM/Permutations.cry#L16
+// NOTE: the Cryptol spec that matches the consensus-spec Deneb Python specs is found here:
+//     https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/LLVM/Permutations.cry#L48
+//     The two Cryptol specs have been proven equivalent here:
+//     https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/LLVM/Permutations.cry#L106
+let bit_reversal_permutation_ok size n bytes = do {
+    llvm_precond {{ `(bytes) == `(size * n) }};
+    (qptr, qimpl, qspec) <- (setup_array uint8_t bytes "sequence");
+    (simpl, sspec) <- (setup_tuple uint64_t "size");
+    llvm_precond {{ (sspec == `(size)) }};
+    (nimpl, nspec) <- (setup_tuple uint64_t "n");
+    llvm_precond {{ Permutations::is_power_of_two_bit (nspec) }};
+    llvm_precond {{ (nspec == `(n)) }};
+    llvm_execute_func[qptr, simpl, nimpl];
+    let result = (llvm_term {{ PermutationsLLVM::bit_reversal_permutation_fast`{1, n} (qspec) }});
+    llvm_points_to qptr result;
+};
+
+let bit_reversal_permutation_1x4_ok = (bit_reversal_permutation_ok 1 4 4);
+
+// This proof does not complete --- we need to decompose it into smaller parts / more overrides
+//  Look into handling all the C memory allocations and the branching from checks L#108
+//llvm_verify m "bit_reversal_permutation" [is_power_of_two_ov, reverse_bits_ov] true bit_reversal_permutation_1x4_ok (z3_solver []);
