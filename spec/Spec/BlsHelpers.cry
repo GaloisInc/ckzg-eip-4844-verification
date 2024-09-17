@@ -39,6 +39,16 @@ bls_modular_inverse x = pow`{BlsFieldSize} x NEGATIVE_ONE BLS_MODULUS
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
 bls_div x y = (x * (bls_modular_inverse y)) % BLS_MODULUS
 
+/**
+ * Return x to power of [0, n-1].
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_powers
+ * NOTE: this Cryptol function requires n >= 1, which is not the same constraint on the Python function,
+ *  whose constraint is n >= 0.
+ */
+compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
+compute_powers x = powers where
+        powers = [x] # [(powers@(i-1) * x) % BLS_MODULUS | i <- [1 .. n-1]]
+
 /*
  * ===============
  * Unit test suite
@@ -70,3 +80,15 @@ property test_bls_modular_inverse x expectedY =
 test_bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement -> Bit
 property test_bls_div x y expected =
     bls_div x y == expected
+
+/**
+ * Unit tests for `bls_modular_inverse`.
+ * ```repl
+ * :prove test_compute_powers`{2} 13 [13, 13^^2]
+ * :prove test_compute_powers`{5} 13 [13, 13^^2, 13^^3, 13^^4, 13^^5]
+ * ```
+ * NOTE: we just chose these values at "random"
+ */
+test_compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement -> Bit
+property test_compute_powers x expected =
+    join (compute_powers`{n} x) == join expected
