@@ -28,6 +28,8 @@ NEGATIVE_ONE = -1
  *  i.e. return y such that x * y % BLS_MODULUS == 1
  * Precondition: x != 0
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
+ * NOTE: Cryptol can not perform exponentiation with negative exponents,
+ *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
 bls_modular_inverse x = fromInteger (modular_inverse x' modulus) where
