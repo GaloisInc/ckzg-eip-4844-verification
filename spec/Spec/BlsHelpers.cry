@@ -30,14 +30,14 @@ NEGATIVE_ONE = -1
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
-bls_modular_inverse x = pow`{BlsFieldSize} x NEGATIVE_ONE BLS_MODULUS
+bls_modular_inverse x = modular_inverse x BLS_MODULUS
 
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
-bls_div x y = (x * (bls_modular_inverse y)) % BLS_MODULUS
+bls_div x y = div x y BLS_MODULUS
 
 /**
  * Return x to power of [0, n-1].
@@ -59,10 +59,10 @@ compute_powers x = powers where
  * Unit tests for `bls_modular_inverse`.
  * ```repl
  * :prove test_bls_modular_inverse 1 1
- * :prove test_bls_modular_inverse 2 0
- * :prove test_bls_modular_inverse 3 0x36bd0357810d2d627770d2a2a108d2a556ed06a7aaac4eabaaaaaaabaaaaaaaa
+ * :prove test_bls_modular_inverse 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :prove test_bls_modular_inverse 3 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
  * ```
- * NOTE: we just chose the last value at "random"
+ * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
  */
 test_bls_modular_inverse : BlsFieldElement -> BlsFieldElement -> Bit
 property test_bls_modular_inverse x expectedY =
@@ -71,9 +71,9 @@ property test_bls_modular_inverse x expectedY =
 /**
  * Unit tests for `bls_modular_inverse`.
  * ```repl
- * :prove test_bls_div 1 2 0
+ * :prove test_bls_div 1 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
  * :prove test_bls_div 13 1 13
- * :prove test_bls_div 57 13 0x15eaf636af000c906a5000958036c58484dfe5d59d8b7c9e89d89d8ad89d89dc
+ * :prove test_bls_div 57 13 0x636268ba4b0e583e5fbfb3f1c6efb371c1e92eb51363bdf8276275f82762765b
  * ```
  * NOTE: we just chose the last value at "random"
  */
