@@ -1,0 +1,226 @@
+/**
+ * This module contains functions that perform ECC Point operations.
+ * These functions are specific to the BLS curve, and specifially G1.
+ *
+ * The Deneb Python specs use the py_ecc library for the same operations.
+ * This modules functions are based off of py_ecc.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
+ */
+module Spec::BlsEC where
+
+import Common::Utils
+
+/**
+ * Size of a G1 point
+ */
+type G1Bits = 384
+
+/**
+ * Serialized G1 point
+ */
+type Bytes48 = [G1Bits]
+
+/**
+ * G1 elliptic curve point
+ */
+type G1Point =
+    { xCoord : Bytes48
+    , yCoord : Bytes48
+    }
+
+/**
+ * G1 generator
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L35
+ */
+G1 : G1Point
+G1 =
+    { xCoord = 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
+    , yCoord = 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569
+    }
+
+/**
+ * The BLS12-384 curve is defined as: y^^2 = x^^3 + 4 over the
+ *  finite field Fp, where p is the prime defined below.
+ * @see https://hackmd.io/@Wimet/S1dvK2NBh#The-Curve
+ */
+Fp : Bytes48
+Fp = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+
+/**
+ * Determines whether or not the given point is on the G1 curve.
+ * The point must satisfy the EC equation: y^^2 = x^^3 + 4
+ * ```repl
+ * :prove g1_is_valid_point G1
+ * :prove g1_is_valid_point G1_2P
+ * :prove g1_is_valid_point G1_3P
+ * :prove g1_is_valid_point G1_4P
+ * :prove g1_is_valid_point G1_5P
+ * :prove g1_is_valid_point G1_6P
+ * ```
+ */
+g1_is_valid_point : G1Point -> Bit
+g1_is_valid_point point =
+    (y^^2 - x^^3) % modulus == 4
+    where
+        x = toInteger point.xCoord
+        y = toInteger point.yCoord
+        modulus = toInteger Fp
+
+/**
+ * Double a G1 point
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
+ */
+g1_double : G1Point -> G1Point
+g1_double point = newPoint where
+    x = toInteger point.xCoord
+    y = toInteger point.yCoord
+    modulus = toInteger Fp
+    m = div (3 * x^^2) (2 * y) modulus
+    newX = m^^2 - (2 * x)
+    newY = m * (x - newX) - y
+    newPoint =
+        { xCoord = fromInteger (newX % modulus)
+        , yCoord = fromInteger (newY % modulus)
+        }
+
+/**
+ * Add two G1 points
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
+ */
+g1_add : G1Point -> G1Point -> G1Point
+g1_add p1 p2 =
+    if (x2 == x1) && (y2 == y1) then
+        g1_double p1
+    else
+        { xCoord = fromInteger (newX % modulus)
+        , yCoord = fromInteger (newY % modulus)
+        }
+    where
+    x1 = toInteger p1.xCoord
+    y1 = toInteger p1.yCoord
+    x2 = toInteger p2.xCoord
+    y2 = toInteger p2.yCoord
+    modulus = toInteger Fp
+    m = div (y2 - y1) (x2 - x1) modulus
+    newX = m^^2 - x1 - x2
+    newY = m * (x1 - newX) - y1
+
+/**
+ * Multiply a G1 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ */
+g1_multi : G1Point -> UInt64 -> G1Point
+g1_multi point scalar =
+    if scalar == 1 then
+        point
+    else if scalar % 2 == 0 then
+        // If scalar is even, just double
+        g1_multi (g1_double point) (scalar / 2)
+    else
+        // If scalar is odd, double and add
+        g1_add ((g1_multi (g1_double point) (scalar / 2))) point
+
+/*
+ * ===============
+ * Unit test suite
+ * ===============
+ */
+
+// All of these points were generated from: http://www.christelbach.com/eccalculator.aspx
+
+G1_2P : G1Point
+G1_2P =
+    { xCoord = 838589206289216005799424730305866328161735431124665289961769162861615689790485775997575391185127590486775437397838
+    , yCoord = 3450209970729243429733164009999191867485184320918914219895632678707687208996709678363578245114137957452475385814312
+    }
+
+G1_3P : G1Point
+G1_3P =
+    { xCoord = 1527649530533633684281386512094328299672026648504329745640827351945739272160755686119065091946435084697047221031460
+    , yCoord = 487897572011753812113448064805964756454529228648704488481988876974355015977479905373670519228592356747638779818193
+    }
+
+G1_4P : G1Point
+G1_4P =
+    { xCoord = 1940386630589042756063486004190165295069185078823041184114464346315715796897349637805088429212932248421554491972448
+    , yCoord = 3114296198575988357603748217414299058449850389627766458803888308926785677746356789015548793127623382888106859156543
+    }
+
+G1_5P : G1Point
+G1_5P =
+    { xCoord = 2601793266141653880357945339922727723793268013331457916525213050197274797722760296318099993752923714935161798464476
+    , yCoord = 3498096627312022583321348410616510759186251088555060790999813363211667535344132702692445545590448314959259020805858
+    }
+
+G1_6P : G1Point
+G1_6P =
+    { xCoord = 0x06e82f6da4520f85c5d27d8f329eccfa05944fd1096b20734c894966d12a9e2a9a9744529d7212d33883113a0cadb909
+    , yCoord = 0x17d81038f7d60bee9110d9c0d6d1102fe2d998c957f28e31ec284cc04134df8e47e8f82ff3af2e60a6d9688a4563477c
+    }
+
+/**
+ * Helper function for unit tests.
+ */
+g1_point_eq : G1Point -> G1Point -> Bit
+g1_point_eq p1 p2 =
+    (p1.xCoord == p2.xCoord) && (p1.yCoord == p2.yCoord)
+
+/**
+ * Unit tests for `g1_is_valid_point`.
+ * ```repl
+ * :prove test_g1_is_valid_point G1
+ * :prove test_g1_is_valid_point G1_2P
+ * :prove test_g1_is_valid_point G1_3P
+ * :prove test_g1_is_valid_point G1_4P
+ */
+test_g1_is_valid_point : G1Point -> Bit
+property test_g1_is_valid_point point = g1_is_valid_point point
+
+/**
+ * Unit tests for `g1_double`.
+ * ```repl
+ * :prove test_g1_double G1 G1_2P
+ * :prove test_g1_double G1_2P G1_4P
+ * :prove test_g1_double G1_3P G1_6P
+ * :prove test_g1_double (g1_double G1) G1_4P
+ * ```
+ */
+test_g1_double : G1Point -> G1Point -> Bit
+property test_g1_double p1 p2 =
+    g1_point_eq (g1_double p1) p2
+
+/**
+ * Unit tests for `g1_add`.
+ * ```repl
+ * :prove test_g1_add G1 G1 G1_2P
+ * :prove test_g1_add G1 G1_2P G1_3P
+ * :prove test_g1_add G1_2P G1 G1_3P
+ * :prove test_g1_add G1 G1_3P G1_4P
+ * :prove test_g1_add G1_3P G1 G1_4P
+ * :prove test_g1_add G1_2P G1_2P G1_4P
+ * :prove test_g1_add G1 G1_4P G1_5P
+ * :prove test_g1_add G1_4P G1 G1_5P
+ * :prove test_g1_add G1_2P G1_3P G1_5P
+ * :prove test_g1_add G1_3P G1_2P G1_5P
+ * :prove test_g1_add G1_2P G1_4P G1_6P
+ * :prove test_g1_add G1_4P G1_2P G1_6P
+ * ```
+ */
+test_g1_add : G1Point -> G1Point -> G1Point -> Bit
+property test_g1_add p1 p2 p3 =
+    g1_point_eq (g1_add p1 p2) p3
+
+/**
+ * Unit tests for `g1_multi`.
+ * ```repl
+ * :prove test_g1_multi G1 1 G1
+ * :prove test_g1_multi G1 2 G1_2P
+ * :prove test_g1_multi G1 3 G1_3P
+ * :prove test_g1_multi G1 6 G1_6P
+ * :prove test_g1_multi G1_2P 3 G1_6P
+ * :prove test_g1_multi G1_3P 2 G1_6P
+ * ```
+ */
+test_g1_multi : G1Point -> UInt64 -> G1Point -> Bit
+property test_g1_multi point scalar expected =
+    g1_point_eq (g1_multi point scalar) expected
