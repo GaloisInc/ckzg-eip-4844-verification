@@ -53,7 +53,7 @@ xgcd a b s1 s2 t1 t2 =
     // if r == 0, then b will be the gcd and
     //    s2, t2 the Bezout coefficients
     else if r == 0 then
-        (abs (b), fromInteger s2, fromInteger t2)
+        (abs (b), s2, t2)
     else
         xgcd b r s2 s3 t2 t3
     where
