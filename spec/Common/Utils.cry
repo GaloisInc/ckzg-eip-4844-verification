@@ -37,3 +37,71 @@ bool_to_bit b = if b == 1 then True else False
  */
 pow : {n} (fin n, n >= 1) => [n] -> [n] -> [n] -> [n]
 pow base exp modulus = (base ^^ exp) % modulus
+
+/**
+ * Calculates the gcd and Bezout coefficients,
+ *   using the Extended Euclidean Algorithm (recursive).
+ *   (Source: https://extendedeuclideanalgorithm.com/code)
+ * ```repl
+ * :prove xgcd 7 5 1 0 0 1 == (1, -2, 3)
+ * ```
+ */
+xgcd : Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> (Integer, Integer, Integer)
+xgcd a b s1 s2 t1 t2 =
+    if b == 0 then
+        (abs (a), 1, 0)
+    // if r == 0, then b will be the gcd and
+    //    s2, t2 the Bezout coefficients
+    else if r == 0 then
+        (abs (b), fromInteger s2, fromInteger t2)
+    else
+        xgcd b r s2 s3 t2 t3
+    where
+        q = a / b
+        r = a - q * b
+        s3 = s1 - q * s2
+        t3 = t1 - q * t2
+
+/**
+ * Calculates the multiplicative inverse of a number 'x' mod 'm',
+ *  using the Extended Euclidean Algorithm. If 'x' does not have a
+ *  multiplicative inverse mod 'm', then return 0.
+ *  (Source: https://extendedeuclideanalgorithm.com/code)
+ * ```repl
+ * :prove multinv 3 7 == 5
+ * :prove multinv 88831 319 == 167
+ * ```
+ */
+multinv : Integer -> Integer -> Integer
+multinv x m =
+    // 'b' only has a multiplicative inverse if the 'gcd' is 1
+    if gcd == 1
+    then t % m
+    else 0
+    // Get the 'gcd' and the second Bezout coefficient 't' from
+    //  the Extended Euclidean Algorithm. Note that 's' is unused.
+    //  Default values for the last four parameters are standard.
+    where (gcd, s, t) = xgcd m x 1 0 0 1
+
+/**
+ * Compute the modular inverse of x
+ *  i.e. return y such that x * y % modulus == 1
+ * Precondition: x != 0
+ * ```repl
+ * :prove modular_inverse`{32} 7492 319 == 177
+ * ```
+ */
+modular_inverse : {n} (fin n, n >= 1) => [n] -> [n] -> [n]
+modular_inverse x modulus = inverse where
+    inverse = fromInteger (multinv x' modulus')
+    x' = toInteger x
+    modulus' = toInteger modulus
+
+/**
+ * Divide two field elements: x by y
+ * ```repl
+ * :prov div`{32} 3 7492 319 == 212
+ * ```
+ */
+div : {n} (fin n, n >= 1) => [n] -> [n] -> [n] -> [n]
+div x y modulus = (x * (modular_inverse`{n} y modulus)) % modulus
