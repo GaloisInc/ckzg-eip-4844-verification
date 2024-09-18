@@ -29,26 +29,11 @@ bool_to_bit b = if b == 1 then True else False
 
 /**
  * Exponentiation in the specified modulo field.
- *
  * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
+ * ```repl
+ * :prove pow`{8} 3 2 7 == 2
+ * :prove pow`{32} 1 18 2 == 1
+ * :prove pow`{256} 0 5 3 == 0
  */
 pow : {n} (fin n, n >= 1) => [n] -> [n] -> [n] -> [n]
 pow base exp modulus = (base ^^ exp) % modulus
-
-/*
- * ===============
- * Unit test suite
- * ===============
- */
-
-/**
- * Unit tests for `pow`.
- * ```repl
- * :prove test_pow`{8} 3 2 7 2
- * :prove test_pow`{32} 1 18 2 1
- * :prove test_pow`{256} 0 5 3 0
- * ```
- */
-test_pow : {n} (fin n, n >= 1) => [n] -> [n] -> [n] -> [n] -> Bit
-property test_pow base exp modulus expected =
-    pow base exp modulus == expected
