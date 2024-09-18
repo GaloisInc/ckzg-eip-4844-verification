@@ -30,14 +30,19 @@ NEGATIVE_ONE = -1
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
-bls_modular_inverse x = modular_inverse x BLS_MODULUS
+bls_modular_inverse x = fromInteger (modular_inverse x' modulus) where
+    x' = toInteger x
+    modulus = toInteger BLS_MODULUS
 
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
-bls_div x y = div x y BLS_MODULUS
+bls_div x y = fromInteger (div x' y' modulus) where
+    x' = toInteger x
+    y' = toInteger y
+    modulus = toInteger BLS_MODULUS
 
 /**
  * Return x to power of [0, n-1].
@@ -73,7 +78,7 @@ property test_bls_modular_inverse x expectedY =
  * ```repl
  * :prove test_bls_div 1 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
  * :prove test_bls_div 13 1 13
- * :prove test_bls_div 57 13 0x636268ba4b0e583e5fbfb3f1c6efb371c1e92eb51363bdf8276275f82762765b
+ * :prove test_bls_div 57 13 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
  * ```
  * NOTE: we just chose the last value at "random"
  */
