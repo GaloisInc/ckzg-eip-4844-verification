@@ -20,9 +20,6 @@ type BlsFieldElement = [BlsFieldSize]
 BLS_MODULUS : BlsFieldElement
 BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
-NEGATIVE_ONE : BlsFieldElement
-NEGATIVE_ONE = -1
-
 /**
  * Compute the modular inverse of x
  *  i.e. return y such that x * y % BLS_MODULUS == 1
