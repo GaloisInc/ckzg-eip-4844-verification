@@ -193,6 +193,9 @@ g1_point_eq p1 p2 =
  * :prove test_g1_is_valid_point G1_2P
  * :prove test_g1_is_valid_point G1_3P
  * :prove test_g1_is_valid_point G1_4P
+ * :prove test_g1_is_valid_point G1_5P
+ * :prove test_g1_is_valid_point G1_6P
+ * :prove test_g1_is_valid_point G1_7P
  */
 test_g1_is_valid_point : G1Point -> Bit
 property test_g1_is_valid_point point = g1_is_valid_point point
