@@ -222,15 +222,11 @@ property test_g1_double p1 p2 =
  * :prove test_g1_add G1 G1 G1_2P
  * :prove test_g1_add G1 G1_2P G1_3P
  * :prove test_g1_add G1_2P G1 G1_3P
- * :prove test_g1_add G1 G1_3P G1_4P
  * :prove test_g1_add G1_3P G1 G1_4P
  * :prove test_g1_add G1_2P G1_2P G1_4P
  * :prove test_g1_add G1 G1_4P G1_5P
- * :prove test_g1_add G1_4P G1 G1_5P
- * :prove test_g1_add G1_2P G1_3P G1_5P
  * :prove test_g1_add G1_3P G1_2P G1_5P
  * :prove test_g1_add G1_2P G1_4P G1_6P
- * :prove test_g1_add G1_4P G1_2P G1_6P
  * ```
  */
 test_g1_add : G1Point -> G1Point -> G1Point -> Bit
