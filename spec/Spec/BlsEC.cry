@@ -29,6 +29,15 @@ type G1Point =
     }
 
 /**
+ * Representation of G1 point at infinity.
+ */
+G1_INFINITY : G1Point
+G1_INFINITY =
+    { xCoord = 0
+    , yCoord = 0
+    }
+
+/**
  * G1 generator
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L35
  */
@@ -89,7 +98,9 @@ g1_double point = newPoint where
  */
 g1_add : G1Point -> G1Point -> G1Point
 g1_add p1 p2 =
-    if (x2 == x1) && (y2 == y1) then
+    if g1_point_eq p1 G1_INFINITY then p2
+    else if g1_point_eq p2 G1_INFINITY then p1
+    else if (x2 == x1) && (y2 == y1) then
         g1_double p1
     else
         { xCoord = fromInteger (newX % modulus)
@@ -159,7 +170,7 @@ G1_6P =
     }
 
 /**
- * Helper function for unit tests.
+ * Helper function for testing point equality.
  */
 g1_point_eq : G1Point -> G1Point -> Bit
 g1_point_eq p1 p2 =
@@ -192,6 +203,9 @@ property test_g1_double p1 p2 =
 /**
  * Unit tests for `g1_add`.
  * ```repl
+ * :prove test_g1_add G1 G1_INFINITY G1
+ * :prove test_g1_add G1_INFINITY G1_3P G1_3P
+ * :prove test_g1_add G1_INFINITY G1_INFINITY G1_INFINITY
  * :prove test_g1_add G1 G1 G1_2P
  * :prove test_g1_add G1 G1_2P G1_3P
  * :prove test_g1_add G1_2P G1 G1_3P
