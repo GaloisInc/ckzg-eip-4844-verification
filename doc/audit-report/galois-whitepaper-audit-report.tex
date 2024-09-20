@@ -85,17 +85,83 @@ the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polyn
 Identifying similarities and possible discrepancies between the two structures is key to the next two phases of this project.
 This comparison will guide us in structuring the Cryptol version of the Python KZG Specification in a way that enables subsequent verification against both the Python KZG specification itself and the c-kzg implementation.
 
-It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document
+It is important to note that determining the correctness of the c-kzg implementation with respect to the Python KZG Specification is beyond the scope of this document.
 
+Moreover, determining the accuracy of the Python KZG Specification against the pseudocodes in the KZG paper is outside the scope of this project.
 
-\subsection{Audit of the c-kzg Implementation}
+\subsection{Audit of the Python KZG Specification against the algorithm in the KZG paper}
+
+The Python KZG Specification follows the ideas in the polynomial commitment scheme $\textsf{PolyCommit}_{\textsf{DL}}$ introduced in the KZG paper to commit data blobs. 
+However, the Python KZG Specification has modifications for optimization, and the differences include:
+\begin{enumerate}
+    \item Instead of using coefficient vectors, polynomials in the Python KZG Specification are represented in evaluation form, i.e., a vector of evaluations of the polynomial at the various \texttt{FIELD\_ELEMENTS\_PER\_BLOB}(4096)-th roots of unity.
+    Blobs are of Python Blob type and can be transformed to polynomials in evaluation form by calling the Python function \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_polynomial}{\texttt{blob\_to\_polynomial}}.
+
+    \item Polynomial evaluation and operations are also specified for the evaluation form, e.g., by using the Barycentric evaluation.
+    
+    \item $\textsf{PolyCommit}_{\textsf{DL}}$ consists of six algorithms: \textsf{Setup}, \textsf{Commit}, \textsf{Open}, \textsf{VerifyPoly}, \textsf{CreateWitness}, and \textsf{VerifyEval}.
+    
+    \begin{enumerate}
+    
+    \item \textsf{Setup} is not formalized in the Python KZG Specification.
+    The trusted setup is part of the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_batch}{\texttt{preset}} 
+    and the setup information is stored in constants: 
+    \texttt{KZG\_SETUP\_G1}, 
+    \texttt{KZG\_SETUP\_G2\_LENGTH}, 
+    \texttt{KZG\_SETUP\_G2}, 
+    and \texttt{KZG\_SETUP\_LAGRANGE}.
+    
+    \item \textsf{Commit} is to output a commitment of a polynomial and potentially decommitment information to be used by the \textsf{Open} algorithm.
+    In the Python KZG Specification, 
+    the commitment of a blob is computed by the Python function \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_kzg_commitment}{blob\_to\_kzg\_commitment}.
+    No decommitment information is output by the Python KZG Specification.
+    
+    \item \textsf{Open} is not included in the Python KZG Specification.
+    
+    \item \textsf{VerifyPoly} is not also included in the Python KZG Specification.
+    
+    \item \textsf{CreateWitness} is to output the KZG proof for the evaluation of a polynomial at a specific point.
+    It takes as input an evaluation point and a polynomial.
+    It outputs a triple comprising the evaluation point, the evaluation of the polynomial at this point and the so called witness. 
+    The direct equivalent of  \textsf{CreateWitness} in the Python KZG Specification is the function  \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof_impl}{compute\_kzg\_proof\_impl}.
+    A minor difference is that the proof output by \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof_impl}{compute\_kzg\_proof\_impl}, compared to the one output by \textsf{CreateWitness}, does not include the evaluation point provided as input.
+    Also, in terms of terminology, the Python KZG Specification uses \texttt{proof} to refer to the witness part of the triple.
+
+    The Python KZG Specification also provides the function \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof}{\texttt{compute\_kzg\_proof}} which takes as input a blob rather than a polynomial.
+    
+    Additianally, the Python KZG Specification provides the function
+    \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_blob_kzg_proof}{\texttt{compute\_blob\_kzg\_proof}}.
+    This function applies the Fiat-Shamir transformation and the hash function to randomly compute a point called \texttt{evaluation\_challenge}, and then computes the KZG proof at this point.
+    Such proof only includes the witness.
+
+    Note that all of these functions deal with polynomials in evaluation form.
+    
+    \item \textsf{VerifyEval} is the verification algorithm.
+    It takes as input a commitment $\mathcal{C}$, an evaluation point $z$, the evaluation $\phi(z)$ of a polynomial $\phi$ and a witness.
+    It outputs whether the polynomial with commitment $\mathcal{C}$ evaluates to $\phi(z)$ on input $z$.
+
+    The direct equivalent of  \textsf{CreateWitness} in the Python KZG Specification is the function \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_impl}{verify\_kzg\_proof\_impl}.
+    
+    The Python KZG Specification also provides the functions \href{https://github.com/ethereum/c-kzg-4844/blob/main/src/eip4844/eip4844.c\#L551}{\texttt{verify\_blob\_kzg\_proof}} where, in the input parameters of the function, the evaluation point and the evaluation are replaced by a blob.
+
+    \sloppy{In addition, the Python KZG Specification also provides the functions \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_batch}{\texttt{verify\_kzg\_proof\_batch}}
+    and \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof_batch}{\texttt{verify\_blob\_kzg\_proof\_batch}}
+    to verify multiple KZG proofs.} 
+    \end{enumerate}
+        
+    % \item The commitment scheme $\textsf{PolyCommit}_{\textsf{DL}}$ is designed with numbers in mathematics in mind, but the Python KZG Specification is with Python types, e.g., \texttt{uint256}.
+
+    \item In the KZG paper, the authors use symmetric pairings; however, the BLS12-381 asymmetric pairing is applied in the Python KZG Specification.
+\end{enumerate}
+
+\subsection{Audit of the c-kzg Implementation against the Python KZG Specification}
 
 The Python KZG Specification entails 28 functions from four categories: 
 Bit-reversal permutation, BLS12-381 helpers, Polynomials, and KZG. 
-The following table identifies all of these functions, according to their category, 
-with the GitHub references to Python specification and the c-kzg implementation. 
+Table \ref{table:c-kzg-vs-python} identifies all of these functions, according to their category, 
+with the GitHub references to Python KZG Specification and the c-kzg implementation. 
 
-In most cases the names of the functions in the Python specification match the c-kzg implementation. 
+In most cases the names of the functions in the Python KZG Specification match the c-kzg implementation. 
 The differences include:
 \begin{enumerate}
     \item The Python function \texttt{multi\_exp} is represented in the c-kzg implementaion 
@@ -131,8 +197,13 @@ equivalent function is not used in the implementation of \texttt{bit\_reversal\_
 non-equivalent \texttt{reverse\_bits} function, but it handles the result in a way that conforms to the Python spec, so that the overall computation 
 is equivalent.
 
-\newpage
-\subsection{Table 1: Comparing c-kzg vs. Python KZG Specification}
+\clearpage
+\begin{table}
+
+\textbf{
+    \caption{Comparing c-kzg vs. Python KZG Specification}
+    \label{table:c-kzg-vs-python}
+}
 \begin{center}
     \begin{tabular}{ |c|c|c| }
         \hline
@@ -209,12 +280,14 @@ is equivalent.
         \hline
     \end{tabular}
 \end{center}
+\end{table}
 
-\newpage
+\clearpage
+
 \section{Next Steps}
 The next phase of this grant's work is to create a Cryptol specification that matches the Python KZG Specification.
 
-After this second milestone, we will create a test bench that will verify the Cryptol specification against the Python specification, 
+After this second milestone, we will create a test bench that will verify the Cryptol specification against the Python KZG Specification, 
 using the Python as the oracle for property based testing of the Cryptol. We will also verify properties for KZG correct construction,
 e.g. calling \texttt{compute\_kzg\_proof} with valid inputs for \texttt{blob} and \texttt{z\_bytes} always results in successful 
 verification when the output proof is passed to \texttt{verify\_kzg\_proof}.
