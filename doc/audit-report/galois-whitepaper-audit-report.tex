@@ -137,7 +137,7 @@ However, the Python KZG Specification has modifications for optimization, and th
     Note that all of these functions deal with polynomials in evaluation form.
     
     \item \textsf{VerifyEval} is the verification algorithm.
-    It takes in input a commitment $\mathcal{C}$, an evaluation point $z$, the evaluation $\phi(z)$ of a polynomial $\phi$ and a witness.
+    It takes as input a commitment $\mathcal{C}$, an evaluation point $z$, the evaluation $\phi(z)$ of a polynomial $\phi$ and a witness.
     It outputs whether the polynomial with commitment $\mathcal{C}$ evaluates to $\phi(z)$ on input $z$.
 
     The direct equivalent of  \textsf{CreateWitness} in the Python KZG Specification is the function \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_impl}{verify\_kzg\_proof\_impl}.
