@@ -62,6 +62,34 @@ g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt64 -> G1Poi
 g1_multi_exp points scalars = results!0 where
     results = [G1_INFINITY] # [g1_add (results@i) (g1_multi (points@i) (scalars@i)) | i <- [0 .. len-1]]
 
+/**
+ * Helper function for decompressing a G1 or G2 compresed point.
+ *
+ * The most-significant three bits of a G1 or G2 encoding should be masked away before
+ * the coordinate(s) are interpreted.
+ * These bits are used to unambiguously represent the underlying element.
+ * The format: (cFlag, bFlag, aFlag, x)
+ *  - cFlag: is '1' to indicated a compressed point, '0' otherwise.
+ *  - bFlag: is '1' to indicate a point at infinity, '0' otherwise.
+ *     - NOTE: the cFlag must also be set to indicate an intentionally
+ *             compressed infinity point.
+ *  - aFlag: is used to store the most significant bit of the y-coordinate.
+ *  - x: is the x-coordinate of the point.
+ *
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
+ *
+ * ```repl
+ * :prove get_flags`{8} 0xC0 == (True, True, False)
+ * :prove get_flags`{384} (0xE0 # (zero:[384-8])) == (True, True, True)
+ * ```
+ */
+get_flags : {n} (fin n, n >= 3) => [n] -> (Bit, Bit, Bit)
+get_flags z = (c_flag, b_flag, a_flag) where
+    c_flag = int_to_bit`{n} ((z >> (`n - 1)) && 1)  // The most significant bit
+    b_flag = int_to_bit`{n} ((z >> (`n - 2)) && 1)  // The second-most significant bit
+    a_flag = int_to_bit`{n} ((z >> (`n - 3)) && 1)  // The third-most significant bit
+
+
 /*
  * ===============
  * Unit test suite
