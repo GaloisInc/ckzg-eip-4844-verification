@@ -40,6 +40,16 @@ int_to_bit : {n} (fin n, n >= 1) => [n] -> Bit
 int_to_bit b = if b == 1 then True else False
 
 /**
+ * Convert an Integral value of 'n' bits to a `Bit`.
+ * ```repl
+ * :prove bit_to_integer True == 1
+ * :prove bit_to_integer False == 0
+ * ```
+ */
+bit_to_integer : Bit -> Integer
+bit_to_integer b = if b then 1 else 0
+
+/**
  * Calculates the gcd and Bezout coefficients,
  *   using the Extended Euclidean Algorithm (recursive).
  *   (Source: https://extendedeuclideanalgorithm.com/code)

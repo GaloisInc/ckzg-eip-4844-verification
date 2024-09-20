@@ -89,6 +89,58 @@ get_flags z = (c_flag, b_flag, a_flag) where
     b_flag = int_to_bit`{n} ((z >> (`n - 2)) && 1)  // The second-most significant bit
     a_flag = int_to_bit`{n} ((z >> (`n - 3)) && 1)  // The third-most significant bit
 
+/**
+ * Decompress the G1 compressed point
+ *
+ * Recovers x and y coordinates from the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
+ */
+decompress_G1 : Bytes48 -> (Integer, Integer)
+decompress_G1 z =
+    // cFlag == 1 indicates the compressed form
+    // MSB should be 1
+    if ~cFlag then
+        error "decompress_G1: cFlag must be 1"
+    else if bFlag then
+        // 3 MSBs should be b110
+        if aFlag then
+            error "decompress_G1: a point at infinity should have aFlag == 0"
+        else (0, 0)
+    // Else, not point at infinity
+    // 3 MSBs should be b100 or b101
+    else if x >= q then
+        error "decompress_G1: point value should be less than field modulus"
+    else if (y^^2 % q) != (x^^3 + b) % q then
+        error "The given point is not on G1: y^^2 = x^^3 + 4"
+    // Choose the y whose leftmost bit is equal to the aFlag
+    else if ((y * 2) / q) != (bit_to_integer aFlag) then
+        (x, y')
+    else
+        (x, y)
+    where
+        (cFlag, bFlag, aFlag) = get_flags z
+        x = (toInteger z) % (2^^381)
+        q = toInteger Fp
+        b = 4 // Our elliptic curve equation is y^^2 = x^^3 + 4
+        // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
+        y = pow`{FP} base exp
+        base = (x^^3 + b) % q
+        exp = ((q + 1) / 4 ) % q
+        y' = q - y
+
+/**
+ * Compressed G1 point at infinity
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+G1_POINT_AT_INFINITY : Bytes48
+G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
+
+/**
+ * Deserialize the G1 bytes into a G1 point
+ */
+bytes48_to_g1_point : Bytes48 -> G1Point
+bytes48_to_g1_point bytes = { xCoord = fromInteger x, yCoord = fromInteger y} where
+    (x, y) = decompress_G1 bytes
 
 /*
  * ===============
@@ -146,3 +198,58 @@ property test_compute_powers x expected =
 test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt64 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_INFINITY_COMPRESSED : Bytes48
+G1_INVALID_INFINITY_COMPRESSED = cFlag + bFlag + aFlag where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (1 << 382) // is infinity
+    aFlag = (1 << 381) // invalid aFlag when infinity
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_TO_BIG_COMPRESSED : Bytes48
+G1_INVALID_TO_BIG_COMPRESSED = cFlag + Fp + 1 where
+    cFlag = (1 << 383) // is compressed
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_POINT_COMPRESSED : Bytes48
+G1_INVALID_POINT_COMPRESSED = cFlag + bFlag + aFlag + 13 where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // doesn't matter since invalid point
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_2P_COMPRESSED : Bytes48
+G1_2P_COMPRESSED = cFlag + bFlag + aFlag + G1_2P.xCoord where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_7P_COMPRESSED : Bytes48
+G1_7P_COMPRESSED = cFlag + bFlag + aFlag + G1_7P.xCoord where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'
+
+/**
+ * Unit tests for `bytes48_to_g1_point`.
+ * ```repl
+ * :prove test_bytes48_to_g1_point G1_POINT_AT_INFINITY G1_INFINITY
+ * :prove test_bytes48_to_g1_point G1_2P_COMPRESSED G1_2P
+ * :prove test_bytes48_to_g1_point G1_7P_COMPRESSED G1_7P
+ * ```
+ */
+test_bytes48_to_g1_point : Bytes48 -> G1Point -> Bit
+property test_bytes48_to_g1_point bytes point =
+    bytes48_to_g1_point bytes == point
