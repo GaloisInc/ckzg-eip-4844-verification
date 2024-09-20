@@ -98,3 +98,14 @@ modular_inverse x modulus = multinv x' modulus where
  */
 div : Integer -> Integer -> Integer -> Integer
 div x y modulus = (x * (modular_inverse y modulus)) % modulus
+
+/**
+ * Exponentiation in the specified modulo field `n`.
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
+ * ```repl
+ * :prove pow`{7} 3 2 == 2
+ * :prove pow`{2} 1 18 == 1
+ * :prove pow`{3} 0 5 == 0
+ */
+pow : {n} (fin n, n >= 1) => Integer -> Integer -> Integer
+pow base exp = fromZ (((fromInteger base) : Z n) ^^ exp)
