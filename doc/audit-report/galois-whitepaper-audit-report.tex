@@ -131,7 +131,7 @@ However, the Python KZG Specification has modifications for optimization, and th
     
     Additianally, the Python KZG Specification provides the function
     \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_blob_kzg_proof}{\texttt{compute\_blob\_kzg\_proof}}.
-    This function applies the Fiat-Shamir challenge and the hash function to randomly compute a point called \texttt{evaluation\_challenge}, and then computes the KZG proof at this point.
+    This function applies the Fiat-Shamir transformation and the hash function to randomly compute a point called \texttt{evaluation\_challenge}, and then computes the KZG proof at this point.
     Such proof only includes the witness.
 
     Note that all of these functions deal with polynomials in evaluation form.
