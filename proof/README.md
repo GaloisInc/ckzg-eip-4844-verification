@@ -4,6 +4,8 @@
 
 Download the SAW binary from the [SAW website](https://saw.galois.com).
 
+The minimum required version of SAW is [1.2](https://github.com/GaloisInc/saw-script/releases/tag/v1.2).
+
 You will also need to install the Java Runtime Environment (this is required for running SAW with Java even if this feature is not used).
 
 You will also need to have Clang installed.
