@@ -96,36 +96,34 @@ multinv x m =
 
 /**
  * Compute the modular inverse of x
- *  i.e. return y such that x * y % modulus == 1
- * Precondition: x != 0 mod modulus
+ *  i.e. return y such that x * y % n == 1
+ * Precondition: x != 0 mod n
  * ```repl
- * :prove modular_inverse 7492 319 == 177
- * :prove modular_inverse (-3) 319 == 106
+ * :prove modular_inverse`{319} (fromInteger 7492) == 177
+ * :prove modular_inverse`{319} (fromInteger (-3)) == 106
  * ```
  * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
  */
-modular_inverse : Integer -> Integer -> Integer
-modular_inverse x modulus = multinv x' modulus where
-    x' = if x < 0 then x % modulus
-         else x
+modular_inverse : {n} (fin n, n >= 1) => Z n -> Z n
+modular_inverse x = fromInteger (multinv (fromZ x) `n)
 
 /**
  * Divide two field elements: x by y
  * ```repl
- * :prov div_mod 3 7492 319 == 212
- * :prov div_mod 3 (-7492) 319 == 107
+ * :prov div_mod (3 : Z 319) (fromInteger 7492) == 212
+ * :prov div_mod (3 : Z 319) (fromInteger (-7492))== 107
  * ```
  */
-div_mod : Integer -> Integer -> Integer -> Integer
-div_mod x y modulus = (x * (modular_inverse y modulus)) % modulus
+div_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
+div_mod x y = x * (modular_inverse y)
 
 /**
  * Exponentiation in the specified modulo field `n`.
  * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
  * ```repl
- * :prove pow_mod`{7} 3 2 == 2
- * :prove pow_mod`{2} 1 18 == 1
- * :prove pow_mod`{3} 0 5 == 0
+ * :prove pow_mod (3 : Z 7) (2 : Z 7) == 2
+ * :prove pow_mod`{2} (fromInteger 1) (fromInteger 18) == 1
+ * :prove pow_mod`{3} (0 : Z 3) (fromInteger 5) == 0
  */
-pow_mod : {n} (fin n, n >= 1) => Integer -> Integer -> Integer
-pow_mod base exp = fromZ (((fromInteger base) : Z n) ^^ exp)
+pow_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
+pow_mod base exp = base ^^ (fromZ exp)

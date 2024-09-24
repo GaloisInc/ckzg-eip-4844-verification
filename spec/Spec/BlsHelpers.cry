@@ -19,7 +19,8 @@ type BlsFieldElement = [BlsFieldSize]
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
  */
 BLS_MODULUS : BlsFieldElement
-BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
+BLS_MODULUS = `BLS_MOD
+type BLS_MOD = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 /**
  * Compute the modular inverse of x
@@ -30,19 +31,17 @@ BLS_MODULUS = 524358751751261904794477405081859658376905525005276378226036586999
  *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
-bls_modular_inverse x = fromInteger (modular_inverse x' modulus) where
-    x' = toInteger x
-    modulus = toInteger BLS_MODULUS
+bls_modular_inverse x = fromInteger (fromZ (modular_inverse`{BLS_MOD} x')) where
+    x' = fromInteger (toInteger x)
 
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
-bls_div x y = fromInteger (div_mod x' y' modulus) where
-    x' = toInteger x
-    y' = toInteger y
-    modulus = toInteger BLS_MODULUS
+bls_div x y = fromInteger (fromZ (div_mod`{BLS_MOD} x' y')) where
+    x' = fromInteger (toInteger x)
+    y' = fromInteger (toInteger y)
 
 /**
  * Return x to power of [0, n-1].
@@ -123,7 +122,7 @@ decompress_G1 z =
         q = toInteger Fp
         b = 4 // Our elliptic curve equation is y^^2 = x^^3 + 4
         // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
-        y = pow_mod`{FP} base exp
+        y = fromZ (pow_mod`{FP} (fromInteger base) (fromInteger exp))
         base = (x^^3 + b) % q
         exp = ((q + 1) / 4 ) % q
         y' = q - y
