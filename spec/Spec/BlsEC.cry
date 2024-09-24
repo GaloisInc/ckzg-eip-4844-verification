@@ -30,6 +30,10 @@ type G1Point =
 
 /**
  * Representation of G1 point at infinity.
+ *
+ * Note: (0,0) isn't actually the point at infinity, but since we
+ *  can't use enums here and (0, 0) is not on the curve, it's an
+ *  acceptable substitute.
  */
 G1_INFINITY : G1Point
 G1_INFINITY =
