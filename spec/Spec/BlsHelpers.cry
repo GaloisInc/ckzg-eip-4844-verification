@@ -1,0 +1,98 @@
+/**
+ * The module contains functions that perform BLS operations.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls12-381-helpers
+ */
+module Spec::BlsHelpers where
+
+import Common::Utils
+
+/**
+ * BLS field elements are 256-bits long.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type BlsFieldSize = 256
+type BlsFieldElement = [BlsFieldSize]
+
+/**
+ * Specified by the consensus-specs.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+BLS_MODULUS : BlsFieldElement
+BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
+
+/**
+ * Compute the modular inverse of x
+ *  i.e. return y such that x * y % BLS_MODULUS == 1
+ * Precondition: x != 0
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
+ * NOTE: Cryptol can not perform exponentiation with negative exponents,
+ *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
+ */
+bls_modular_inverse : BlsFieldElement -> BlsFieldElement
+bls_modular_inverse x = fromInteger (modular_inverse x' modulus) where
+    x' = toInteger x
+    modulus = toInteger BLS_MODULUS
+
+/**
+ * Divide two field elements: x by y
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
+ */
+bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
+bls_div x y = fromInteger (div x' y' modulus) where
+    x' = toInteger x
+    y' = toInteger y
+    modulus = toInteger BLS_MODULUS
+
+/**
+ * Return x to power of [0, n-1].
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_powers
+ * NOTE: this Cryptol function requires n >= 1, which is not the same constraint on the Python function,
+ *  whose constraint is n >= 0.
+ */
+compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
+compute_powers x = powers where
+        powers = [x] # [(powers@(i-1) * x) % BLS_MODULUS | i <- [1 .. n-1]]
+
+/*
+ * ===============
+ * Unit test suite
+ * ===============
+ */
+
+/**
+ * Unit tests for `bls_modular_inverse`.
+ * ```repl
+ * :prove test_bls_modular_inverse 1 1
+ * :prove test_bls_modular_inverse 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :prove test_bls_modular_inverse 3 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
+ * ```
+ * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
+ */
+test_bls_modular_inverse : BlsFieldElement -> BlsFieldElement -> Bit
+property test_bls_modular_inverse x expectedY =
+    bls_modular_inverse x == expectedY
+
+/**
+ * Unit tests for `bls_modular_inverse`.
+ * ```repl
+ * :prove test_bls_div 1 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :prove test_bls_div 13 1 13
+ * :prove test_bls_div 57 13 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
+ * ```
+ * NOTE: we just chose the last value at "random"
+ */
+test_bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement -> Bit
+property test_bls_div x y expected =
+    bls_div x y == expected
+
+/**
+ * Unit tests for `bls_modular_inverse`.
+ * ```repl
+ * :prove test_compute_powers`{2} 13 [13, 13^^2]
+ * :prove test_compute_powers`{5} 13 [13, 13^^2, 13^^3, 13^^4, 13^^5]
+ * ```
+ * NOTE: we just chose these values at "random"
+ */
+test_compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement -> Bit
+property test_compute_powers x expected =
+    join (compute_powers`{n} x) == join expected
