@@ -10,4 +10,4 @@ The subdirectory `Common` contains Cryptol modules that contain utility function
 
 ## Minimum Required Version
 
-The minimum required version of Cryptol is 3.2, in order to support top-level module docstrings.
+The minimum required version of Cryptol is [3.2](https://github.com/GaloisInc/cryptol/releases/tag/3.2.0), in order to support top-level module docstrings.
