@@ -24,7 +24,7 @@ BLS_MODULUS = 524358751751261904794477405081859658376905525005276378226036586999
 /**
  * Compute the modular inverse of x
  *  i.e. return y such that x * y % BLS_MODULUS == 1
- * Precondition: x != 0
+ * Precondition: x != 0 BLS_MODULUS
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
  * NOTE: Cryptol can not perform exponentiation with negative exponents,
  *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.

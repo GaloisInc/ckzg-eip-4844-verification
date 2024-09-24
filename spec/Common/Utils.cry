@@ -97,7 +97,7 @@ multinv x m =
 /**
  * Compute the modular inverse of x
  *  i.e. return y such that x * y % modulus == 1
- * Precondition: x != 0
+ * Precondition: x != 0 mod modulus
  * ```repl
  * :prove modular_inverse 7492 319 == 177
  * :prove modular_inverse (-3) 319 == 106
