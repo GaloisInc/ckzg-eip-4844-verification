@@ -11,16 +11,6 @@ module Spec::BlsEC where
 import Common::Utils
 
 /**
- * Size of a G1 point
- */
-type G1Bits = 384
-
-/**
- * Serialized G1 point
- */
-type Bytes48 = [G1Bits]
-
-/**
  * G1 elliptic curve point
  *
  * Note: by using the Z type, all modular arithmetic
