@@ -80,6 +80,15 @@ type Bytes48 = [G1Bits]
 G1_POINT_AT_INFINITY : Bytes48
 G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
 
+/*
+ * These are convenience values for working with the
+ *  compressed point flags.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/constants.py#L12-L15
+ */
+POW_2_381 = 2^^381
+POW_2_382 = 2^^382
+POW_2_383 = 2^^383
+
 /**
  * Helper function for decompressing a G1 or G2 compresed point.
  *
@@ -141,7 +150,7 @@ decompress_G1 z =
         //  Z Fp, so we sometimes need to convert back and forth between
         //  Z Fp and Integer.
         (cFlag, bFlag, aFlag) = get_flags z
-        xBits = (toInteger z) % (2^^381)
+        xBits = (toInteger z) % POW_2_381
         x = fromInteger xBits
         q = `(Fp)
         b = 4 : Z Fp // Our elliptic curve equation is y^^2 = x^^3 + 4
