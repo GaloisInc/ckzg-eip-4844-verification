@@ -112,20 +112,20 @@ modular_inverse x modulus = multinv x' modulus where
 /**
  * Divide two field elements: x by y
  * ```repl
- * :prov div 3 7492 319 == 212
- * :prov div 3 (-7492) 319 == 107
+ * :prov div_mod 3 7492 319 == 212
+ * :prov div_mod 3 (-7492) 319 == 107
  * ```
  */
-div : Integer -> Integer -> Integer -> Integer
-div x y modulus = (x * (modular_inverse y modulus)) % modulus
+div_mod : Integer -> Integer -> Integer -> Integer
+div_mod x y modulus = (x * (modular_inverse y modulus)) % modulus
 
 /**
  * Exponentiation in the specified modulo field `n`.
  * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
  * ```repl
- * :prove pow`{7} 3 2 == 2
- * :prove pow`{2} 1 18 == 1
- * :prove pow`{3} 0 5 == 0
+ * :prove pow_mod`{7} 3 2 == 2
+ * :prove pow_mod`{2} 1 18 == 1
+ * :prove pow_mod`{3} 0 5 == 0
  */
-pow : {n} (fin n, n >= 1) => Integer -> Integer -> Integer
-pow base exp = fromZ (((fromInteger base) : Z n) ^^ exp)
+pow_mod : {n} (fin n, n >= 1) => Integer -> Integer -> Integer
+pow_mod base exp = fromZ (((fromInteger base) : Z n) ^^ exp)

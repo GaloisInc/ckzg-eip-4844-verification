@@ -39,7 +39,7 @@ bls_modular_inverse x = fromInteger (modular_inverse x' modulus) where
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
-bls_div x y = fromInteger (div x' y' modulus) where
+bls_div x y = fromInteger (div_mod x' y' modulus) where
     x' = toInteger x
     y' = toInteger y
     modulus = toInteger BLS_MODULUS
@@ -123,7 +123,7 @@ decompress_G1 z =
         q = toInteger Fp
         b = 4 // Our elliptic curve equation is y^^2 = x^^3 + 4
         // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
-        y = pow`{FP} base exp
+        y = pow_mod`{FP} base exp
         base = (x^^3 + b) % q
         exp = ((q + 1) / 4 ) % q
         y' = q - y

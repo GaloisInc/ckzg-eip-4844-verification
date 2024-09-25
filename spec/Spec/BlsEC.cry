@@ -89,7 +89,7 @@ g1_double point = newPoint where
     x = toInteger point.xCoord
     y = toInteger point.yCoord
     modulus = toInteger Fp
-    m = div (3 * x^^2) (2 * y) modulus
+    m = div_mod (3 * x^^2) (2 * y) modulus
     newX = m^^2 - (2 * x)
     newY = m * (x - newX) - y
     newPoint =
@@ -117,7 +117,7 @@ g1_add p1 p2 =
     x2 = toInteger p2.xCoord
     y2 = toInteger p2.yCoord
     modulus = toInteger Fp
-    m = div (y2 - y1) (x2 - x1) modulus
+    m = div_mod (y2 - y1) (x2 - x1) modulus
     newX = m^^2 - x1 - x2
     newY = m * (x1 - newX) - y1
 
