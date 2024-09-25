@@ -64,6 +64,7 @@ g1_multi_exp points scalars = results!0 where
 
 /**
  * Deserialize the G1 bytes into a G1 point
+ * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L337
  * ```repl
  * :prove bytes48_to_G1 G1_POINT_AT_INFINITY == G1_INFINITY
  * :prove bytes48_to_G1 G1_2P_COMPRESSED == G1_2P
@@ -75,6 +76,7 @@ bytes48_to_G1 bytes = decompress_G1 bytes
 
 /**
  * Serialize the G1 point into G1 bytes
+ * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L315
  * ```repl
  * :prove g1_to_bytes48 G1_INFINITY == G1_POINT_AT_INFINITY
  * :prove g1_to_bytes48 G1_2P == G1_2P_COMPRESSED
