@@ -60,6 +60,14 @@ fromIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => [m] -> Z n
 fromIntegral value = fromInteger (toInteger value)
 
 /**
+ * Convert from a fixed size bit type to a `Z` type.
+ * ```repl
+ * :prove (toIntegral`{m=384} (3 : Z 13) == (3:[384]))
+ */
+toIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => Z n -> [m]
+toIntegral value = fromInteger (fromZ value)
+
+/**
  * Calculates the gcd and Bezout coefficients,
  *   using the Extended Euclidean Algorithm (recursive).
  *   (Source: https://extendedeuclideanalgorithm.com/code)
