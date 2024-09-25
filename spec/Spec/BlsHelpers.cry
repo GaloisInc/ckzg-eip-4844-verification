@@ -166,6 +166,33 @@ decompress_G1 z =
 bytes48_to_G1 : Bytes48 -> G1Point
 bytes48_to_G1 bytes = decompress_G1 bytes
 
+/**
+ * Compress the G1 point
+ *
+ * Encodes x and y coordinates in the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L58-L77
+ */
+compress_G1 : G1Point -> Bytes48
+compress_G1 point =
+    if g1_point_eq point G1_INFINITY then
+        // Set c_flag = 1 and b_flag = 1. leave a_flag = x = 0
+        fromInteger (POW_2_383 + POW_2_382)
+    else
+        // Set c_flag = 1 and b_flag = 0
+        fromInteger (x + a_flag * POW_2_381 + POW_2_383)
+    where
+        // Record y's leftmost bit to the a_flag
+        x = fromZ point.xCoord
+        y = fromZ point.yCoord
+        q = toInteger `(Fp)
+        a_flag = (y * 2) / q
+
+/**
+ * Serialize the G1 point into G1 bytes
+ */
+g1_to_bytes48 : G1Point -> Bytes48
+g1_to_bytes48 point = compress_G1 point
+
 /*
  * ===============
  * Unit test suite
@@ -277,3 +304,27 @@ G1_7P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_7P.xCoord) where
 test_bytes48_to_G1 : Bytes48 -> G1Point -> Bit
 property test_bytes48_to_G1 bytes point =
     bytes48_to_G1 bytes == point
+
+/**
+ * Unit tests for `g1_to_bytes48`.
+ * ```repl
+ * :prove test_G1_to_bytes48 G1_INFINITY G1_POINT_AT_INFINITY
+ * :prove test_G1_to_bytes48 G1_2P G1_2P_COMPRESSED
+ * :prove test_G1_to_bytes48 G1_7P G1_7P_COMPRESSED
+ * ```
+ */
+test_G1_to_bytes48 : G1Point -> Bytes48 -> Bit
+property test_G1_to_bytes48 point bytes =
+    g1_to_bytes48 point == bytes
+/**
+ * Check the property that compression => decompression is the same point.
+ * This check is performed by running random tests.
+ * ```repl
+ * :set tests=10000
+ * :check check_compression_decompress_inverse
+ * ```
+ */
+check_compression_decompress_inverse : G1Point -> Bit
+property check_compression_decompress_inverse point = precondition ==> statement where
+    precondition = g1_is_valid_point point
+    statement = bytes48_to_G1 (g1_to_bytes48 point) == point
