@@ -22,10 +22,14 @@ type Bytes48 = [G1Bits]
 
 /**
  * G1 elliptic curve point
+ *
+ * Note: by using the Z type, all modular arithmetic
+ *  is handled automatically and there is no potential
+ *  for any overflow errors.
  */
 type G1Point =
-    { xCoord : Bytes48
-    , yCoord : Bytes48
+    { xCoord : Z FP
+    , yCoord : Z FP
     }
 
 /**
@@ -74,11 +78,10 @@ type FP = 4002409555221667393417789825735904156556882819939007885332058136124031
  */
 g1_is_valid_point : G1Point -> Bit
 g1_is_valid_point point =
-    (y^^2 - x^^3) % modulus == 4
+    y^^2 - x^^3 == 4
     where
-        x = toInteger point.xCoord
-        y = toInteger point.yCoord
-        modulus = toInteger Fp
+        x = point.xCoord
+        y = point.yCoord
 
 /**
  * Double a G1 point
@@ -86,15 +89,14 @@ g1_is_valid_point point =
  */
 g1_double : G1Point -> G1Point
 g1_double point = newPoint where
-    x = toInteger point.xCoord
-    y = toInteger point.yCoord
-    modulus = toInteger Fp
-    m = fromZ (div_mod`{FP} (fromInteger (3 * x^^2)) (fromInteger (2 * y)))
+    x = point.xCoord
+    y = point.yCoord
+    m = div_mod (3 * x^^2) (2 * y)
     newX = m^^2 - (2 * x)
     newY = m * (x - newX) - y
     newPoint =
-        { xCoord = fromInteger (newX % modulus)
-        , yCoord = fromInteger (newY % modulus)
+        { xCoord = newX
+        , yCoord = newY
         }
 
 /**
@@ -108,16 +110,15 @@ g1_add p1 p2 =
     else if (x2 == x1) && (y2 == y1) then
         g1_double p1
     else
-        { xCoord = fromInteger (newX % modulus)
-        , yCoord = fromInteger (newY % modulus)
+        { xCoord = newX
+        , yCoord = newY
         }
     where
-    x1 = toInteger p1.xCoord
-    y1 = toInteger p1.yCoord
-    x2 = toInteger p2.xCoord
-    y2 = toInteger p2.yCoord
-    modulus = toInteger Fp
-    m = fromZ (div_mod`{FP} (fromInteger (y2 - y1)) (fromInteger (x2 - x1)))
+    x1 = p1.xCoord
+    y1 = p1.yCoord
+    x2 = p2.xCoord
+    y2 = p2.yCoord
+    m = div_mod (y2 - y1) (x2 - x1)
     newX = m^^2 - x1 - x2
     newY = m * (x1 - newX) - y1
 
