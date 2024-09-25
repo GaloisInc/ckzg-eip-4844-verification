@@ -64,12 +64,22 @@ g1_multi_exp points scalars = results!0 where
 
 /**
  * Deserialize the G1 bytes into a G1 point
+ * ```repl
+ * :prove bytes48_to_G1 G1_POINT_AT_INFINITY == G1_INFINITY
+ * :prove bytes48_to_G1 G1_2P_COMPRESSED == G1_2P
+ * :prove bytes48_to_G1 G1_7P_COMPRESSED == G1_7P
+ * ```
  */
 bytes48_to_G1 : Bytes48 -> G1Point
 bytes48_to_G1 bytes = decompress_G1 bytes
 
 /**
  * Serialize the G1 point into G1 bytes
+ * ```repl
+ * :prove g1_to_bytes48 G1_INFINITY == G1_POINT_AT_INFINITY
+ * :prove g1_to_bytes48 G1_2P == G1_2P_COMPRESSED
+ * :prove g1_to_bytes48 G1_7P == G1_7P_COMPRESSED
+ * ```
  */
 g1_to_bytes48 : G1Point -> Bytes48
 g1_to_bytes48 point = compress_G1 point
@@ -130,27 +140,3 @@ property test_compute_powers x expected =
 test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt64 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
-
-/**
- * Unit tests for `bytes48_to_G1`.
- * ```repl
- * :prove test_bytes48_to_G1 G1_POINT_AT_INFINITY G1_INFINITY
- * :prove test_bytes48_to_G1 G1_2P_COMPRESSED G1_2P
- * :prove test_bytes48_to_G1 G1_7P_COMPRESSED G1_7P
- * ```
- */
-test_bytes48_to_G1 : Bytes48 -> G1Point -> Bit
-property test_bytes48_to_G1 bytes point =
-    bytes48_to_G1 bytes == point
-
-/**
- * Unit tests for `g1_to_bytes48`.
- * ```repl
- * :prove test_G1_to_bytes48 G1_INFINITY G1_POINT_AT_INFINITY
- * :prove test_G1_to_bytes48 G1_2P G1_2P_COMPRESSED
- * :prove test_G1_to_bytes48 G1_7P G1_7P_COMPRESSED
- * ```
- */
-test_G1_to_bytes48 : G1Point -> Bytes48 -> Bit
-property test_G1_to_bytes48 point bytes =
-    g1_to_bytes48 point == bytes
