@@ -72,6 +72,13 @@ type G1Bits = 384
 type Bytes48 = [G1Bits]
 
 /**
+ * Compressed G1 point at infinity
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+G1_POINT_AT_INFINITY : Bytes48
+G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
+
+/**
  * Helper function for decompressing a G1 or G2 compresed point.
  *
  * The most-significant three bits of a G1 or G2 encoding should be masked away before
@@ -141,13 +148,6 @@ decompress_G1 z =
         base = x^^3 + b
         exp = ((q + 1) / 4) % q
         y' = fromInteger (q - (fromZ y))
-
-/**
- * Compressed G1 point at infinity
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- */
-G1_POINT_AT_INFINITY : Bytes48
-G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
 
 /**
  * Deserialize the G1 bytes into a G1 point
