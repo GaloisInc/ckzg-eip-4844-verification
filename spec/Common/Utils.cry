@@ -139,9 +139,9 @@ div_mod x y = x * (modular_inverse y)
  * Exponentiation in the specified modulo field `n`.
  * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
  * ```repl
- * :prove pow_mod (3 : Z 7) (2 : Z 7) == 2
- * :prove pow_mod`{2} (fromInteger 1) (fromInteger 18) == 1
- * :prove pow_mod`{3} (0 : Z 3) (fromInteger 5) == 0
+ * :prove pow_mod (3 : Z 7) 2 == 2
+ * :prove pow_mod`{2} (fromInteger 1) 18 == 1
+ * :prove pow_mod`{3} (0 : Z 3) 5 == 0
  */
-pow_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
-pow_mod base exp = base ^^ (fromZ exp)
+pow_mod : {n} (fin n, n >= 1) => Z n -> Integer -> Z n
+pow_mod base exp = base ^^ exp
