@@ -50,6 +50,16 @@ bit_to_integer : Bit -> Integer
 bit_to_integer b = if b then 1 else 0
 
 /**
+ * Convert from a `Z` type tp a fixed size bit type.
+ * ```repl
+ * :prove (fromIntegral`{13} (3:[384])) == (3 : Z 13)
+ * :prove (fromIntegral`{13} (14:[384])) == (1 : Z 13)
+ * :prove (fromIntegral`{13} (13:[384])) == (0 : Z 13)
+ */
+fromIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => [m] -> Z n
+fromIntegral value = fromInteger (toInteger value)
+
+/**
  * Calculates the gcd and Bezout coefficients,
  *   using the Extended Euclidean Algorithm (recursive).
  *   (Source: https://extendedeuclideanalgorithm.com/code)
