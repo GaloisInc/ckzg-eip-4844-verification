@@ -182,11 +182,29 @@ G1_INVALID_POINT_COMPRESSED = cFlag + bFlag + aFlag + 13 where
 /**
  * Test point for the decompression function `bytes48_to_g1_point`
  */
+G1_1P_COMPRESSED : Bytes48
+G1_1P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1.xCoord) where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (0 << 381) // because the MSB of G1.yCoord is '0'
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
 G1_2P_COMPRESSED : Bytes48
 G1_2P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_2P.xCoord) where
     cFlag = (1 << 383) // is compressed
     bFlag = (0 << 382) // not infinity
     aFlag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_3P_COMPRESSED : Bytes48
+G1_3P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_3P.xCoord) where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (0 << 381) // because the MSB of G1_3P.yCoord is '0'
 
 /**
  * Test point for the decompression function `bytes48_to_g1_point`
