@@ -58,7 +58,7 @@ compute_powers x = powers where
  * Performs a multi-scalar multiplication between G1 `points` and `scalars`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#multi_exp
  */
-g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt64 -> G1Point
+g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
     results = [G1_INFINITY] # [g1_add (results@i) (g1_multi (points@i) (scalars@i)) | i <- [0 .. len-1]]
 
@@ -139,6 +139,6 @@ property test_compute_powers x expected =
  * :prove test_g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] (g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2])
  * ```
  */
-test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt64 -> G1Point -> Bit
+test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected

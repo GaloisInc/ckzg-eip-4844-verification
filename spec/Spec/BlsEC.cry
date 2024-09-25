@@ -114,7 +114,7 @@ g1_add p1 p2 =
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  */
-g1_multi : G1Point -> UInt64 -> G1Point
+g1_multi : G1Point -> UInt256 -> G1Point
 g1_multi point scalar =
     if scalar == 1 then
         point
@@ -234,6 +234,6 @@ property test_g1_add p1 p2 p3 =
  * :prove test_g1_multi G1_3P 2 G1_6P
  * ```
  */
-test_g1_multi : G1Point -> UInt64 -> G1Point -> Bit
+test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
 property test_g1_multi point scalar expected =
     g1_point_eq (g1_multi point scalar) expected
