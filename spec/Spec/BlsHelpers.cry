@@ -163,8 +163,8 @@ decompress_G1 z =
 /**
  * Deserialize the G1 bytes into a G1 point
  */
-bytes48_to_g1_point : Bytes48 -> G1Point
-bytes48_to_g1_point bytes = { xCoord = x, yCoord = y} where
+bytes48_to_G1 : Bytes48 -> G1Point
+bytes48_to_G1 bytes = { xCoord = x, yCoord = y} where
     (x, y) = decompress_G1 bytes
 
 /*
@@ -268,13 +268,13 @@ G1_7P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_7P.xCoord) where
     aFlag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'
 
 /**
- * Unit tests for `bytes48_to_g1_point`.
+ * Unit tests for `bytes48_to_G1`.
  * ```repl
- * :prove test_bytes48_to_g1_point G1_POINT_AT_INFINITY G1_INFINITY
- * :prove test_bytes48_to_g1_point G1_2P_COMPRESSED G1_2P
- * :prove test_bytes48_to_g1_point G1_7P_COMPRESSED G1_7P
+ * :prove test_bytes48_to_G1 G1_POINT_AT_INFINITY G1_INFINITY
+ * :prove test_bytes48_to_G1 G1_2P_COMPRESSED G1_2P
+ * :prove test_bytes48_to_G1 G1_7P_COMPRESSED G1_7P
  * ```
  */
-test_bytes48_to_g1_point : Bytes48 -> G1Point -> Bit
-property test_bytes48_to_g1_point bytes point =
-    bytes48_to_g1_point bytes == point
+test_bytes48_to_G1 : Bytes48 -> G1Point -> Bit
+property test_bytes48_to_G1 bytes point =
+    bytes48_to_G1 bytes == point
