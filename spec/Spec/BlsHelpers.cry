@@ -122,7 +122,7 @@ get_flags z = (c_flag, b_flag, a_flag) where
  * Recovers x and y coordinates from the compressed point.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
  */
-decompress_G1 : Bytes48 -> (Z Fp, Z Fp)
+decompress_G1 : Bytes48 -> G1Point
 decompress_G1 z =
     // cFlag == 1 indicates the compressed form
     // MSB should be 1
@@ -132,7 +132,7 @@ decompress_G1 z =
         // 3 MSBs should be b110
         if aFlag then
             error "decompress_G1: a point at infinity should have aFlag == 0"
-        else (0, 0)
+        else G1_INFINITY
     // Else, not point at infinity
     // 3 MSBs should be b100 or b101
     else if xBits >= q then
@@ -141,9 +141,9 @@ decompress_G1 z =
         error "The given point is not on G1: y^^2 = x^^3 + 4"
     // Choose the y whose leftmost bit is equal to the aFlag
     else if (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
-        (x, y')
+        { xCoord = x, yCoord = y'}
     else
-        (x, y)
+        { xCoord = x, yCoord = y}
     where
         // We want to use the type Z Fp for all modular arithmetic, but
         //  we have to use Fp as a value which is not allowable with
@@ -164,8 +164,7 @@ decompress_G1 z =
  * Deserialize the G1 bytes into a G1 point
  */
 bytes48_to_G1 : Bytes48 -> G1Point
-bytes48_to_G1 bytes = { xCoord = x, yCoord = y} where
-    (x, y) = decompress_G1 bytes
+bytes48_to_G1 bytes = decompress_G1 bytes
 
 /*
  * ===============
