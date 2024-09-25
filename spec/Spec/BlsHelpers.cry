@@ -50,7 +50,9 @@ bls_div x y = toIntegral (div_mod x' y') where
  */
 compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
 compute_powers x = powers where
-        powers = [x] # [(powers@(i-1) * x) % `(BLS_MODULUS) | i <- [1 .. n-1]]
+        x' = fromIntegral`{BLS_MODULUS} x
+        powers' = [x'] # [powers'@(i-1) * x' | i <- [1 .. n-1]]
+        powers = [toIntegral xi' | xi' <- powers']
 
 /**
  * Performs a multi-scalar multiplication between G1 `points` and `scalars`.
