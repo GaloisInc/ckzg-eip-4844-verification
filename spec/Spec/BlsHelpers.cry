@@ -102,6 +102,26 @@ g1_lincomb points scalars = g1_to_bytes48 result where
     points_g1 = [bytes48_to_G1 point | point <- points]
     result = g1_multi_exp`{n} points_g1 scalars
 
+/**
+ * BLS Primitive root of unity.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+PRIMITIVE_ROOT_OF_UNITY : Z BLS_MODULUS
+PRIMITIVE_ROOT_OF_UNITY = 7
+
+/**
+ * Compute the roots of unity for the `order`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_roots_of_unity
+ * Precondition: `(BLS_MODULUS - 1) % order == 0`
+ * Assertion: `order == n`
+ */
+compute_roots_of_unity : {n} (fin n, width n <= 64, n >= 2) => UInt64 -> [n]BlsFieldElement
+compute_roots_of_unity order = assert (order == `n) "order must be equal to n" result where
+        order' = toInteger order
+        root_of_unity = pow_mod PRIMITIVE_ROOT_OF_UNITY ((`(BLS_MODULUS) - 1) / order')
+        root_of_unity' = toIntegral root_of_unity
+        result = compute_powers`{n} root_of_unity'
+
 /*
  * ===============
  * Unit test suite
@@ -172,3 +192,15 @@ property test_g1_multi_exp points scalars expected =
  test_g1_lincomb : {n} (fin n, n >= 1) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
 property test_g1_lincomb points scalars commitment =
     g1_lincomb points scalars == commitment
+
+/**
+ * Unit tests for `g1_lincomb`.
+ * ```repl
+ * let bls_minus1 = fromIntegral`{BLS_MODULUS, 256} (`(BLS_MODULUS) - 1)
+ * let bls_minus1_sqrd = bls_minus1^^2
+ * :prove test_compute_roots_of_unity`{2} 2 [toIntegral bls_minus1, toIntegral bls_minus1_sqrd]
+ * ```
+ */
+test_compute_roots_of_unity : {n} (fin n, width n <= 64, n >= 2) => UInt64 -> [n]BlsFieldElement -> Bit
+property test_compute_roots_of_unity order roots =
+    compute_roots_of_unity order == roots
