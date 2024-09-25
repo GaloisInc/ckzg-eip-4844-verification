@@ -28,8 +28,8 @@ type Bytes48 = [G1Bits]
  *  for any overflow errors.
  */
 type G1Point =
-    { xCoord : Z FP
-    , yCoord : Z FP
+    { xCoord : Z Fp
+    , yCoord : Z Fp
     }
 
 /**
@@ -60,9 +60,7 @@ G1 =
  *  finite field Fp, where p is the prime defined below.
  * @see https://hackmd.io/@Wimet/S1dvK2NBh#The-Curve
  */
-Fp : Bytes48
-Fp = `FP
-type FP = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+type Fp = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 
 /**
  * Determines whether or not the given point is on the G1 curve.

@@ -94,7 +94,7 @@ get_flags z = (c_flag, b_flag, a_flag) where
  * Recovers x and y coordinates from the compressed point.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
  */
-decompress_G1 : Bytes48 -> (Z FP, Z FP)
+decompress_G1 : Bytes48 -> (Z Fp, Z Fp)
 decompress_G1 z =
     // cFlag == 1 indicates the compressed form
     // MSB should be 1
@@ -124,8 +124,8 @@ decompress_G1 z =
         (cFlag, bFlag, aFlag) = get_flags z
         xBits = (toInteger z) % (2^^381)
         x = fromInteger xBits
-        q = `(FP)
-        b = 4 : Z FP // Our elliptic curve equation is y^^2 = x^^3 + 4
+        q = `(Fp)
+        b = 4 : Z Fp // Our elliptic curve equation is y^^2 = x^^3 + 4
         // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
         y = pow_mod base exp
         base = x^^3 + b
@@ -216,7 +216,7 @@ G1_INVALID_INFINITY_COMPRESSED = cFlag + bFlag + aFlag where
  * Test point for the decompression function `bytes48_to_g1_point`
  */
 G1_INVALID_TO_BIG_COMPRESSED : Bytes48
-G1_INVALID_TO_BIG_COMPRESSED = cFlag + Fp + 1 where
+G1_INVALID_TO_BIG_COMPRESSED = cFlag + `(Fp) + 1 where
     cFlag = (1 << 383) // is compressed
 
 /**
