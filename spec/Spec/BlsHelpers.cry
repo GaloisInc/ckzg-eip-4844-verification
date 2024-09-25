@@ -32,17 +32,17 @@ type BLS_MOD = 52435875175126190479447740508185965837690552500527637822603658699
  *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
-bls_modular_inverse x = fromInteger (fromZ (modular_inverse`{BLS_MOD} x')) where
-    x' = fromInteger (toInteger x)
+bls_modular_inverse x = toIntegral (modular_inverse`{BLS_MOD} x') where
+    x' = fromIntegral x
 
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
-bls_div x y = fromInteger (fromZ (div_mod`{BLS_MOD} x' y')) where
-    x' = fromInteger (toInteger x)
-    y' = fromInteger (toInteger y)
+bls_div x y = toIntegral (div_mod`{BLS_MOD} x' y') where
+    x' = fromIntegral x
+    y' = fromIntegral y
 
 /**
  * Return x to power of [0, n-1].
