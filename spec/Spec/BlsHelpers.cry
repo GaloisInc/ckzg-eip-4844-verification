@@ -94,7 +94,7 @@ get_flags z = (c_flag, b_flag, a_flag) where
  * Recovers x and y coordinates from the compressed point.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
  */
-decompress_G1 : Bytes48 -> (Integer, Integer)
+decompress_G1 : Bytes48 -> (Z FP, Z FP)
 decompress_G1 z =
     // cFlag == 1 indicates the compressed form
     // MSB should be 1
@@ -107,25 +107,30 @@ decompress_G1 z =
         else (0, 0)
     // Else, not point at infinity
     // 3 MSBs should be b100 or b101
-    else if x >= q then
+    else if xBits >= q then
         error "decompress_G1: point value should be less than field modulus"
-    else if (y^^2 % q) != (x^^3 + b) % q then
+    else if (y^^2) != (x^^3 + b) then
         error "The given point is not on G1: y^^2 = x^^3 + 4"
     // Choose the y whose leftmost bit is equal to the aFlag
-    else if ((y * 2) / q) != (bit_to_integer aFlag) then
+    else if (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
         (x, y')
     else
         (x, y)
     where
+        // We want to use the type Z Fp for all modular arithmetic, but
+        //  we have to use Fp as a value which is not allowable with
+        //  Z Fp, so we sometimes need to convert back and forth between
+        //  Z Fp and Integer.
         (cFlag, bFlag, aFlag) = get_flags z
-        x = (toInteger z) % (2^^381)
-        q = toInteger Fp
-        b = 4 // Our elliptic curve equation is y^^2 = x^^3 + 4
+        xBits = (toInteger z) % (2^^381)
+        x = fromInteger xBits
+        q = `(FP)
+        b = 4 : Z FP // Our elliptic curve equation is y^^2 = x^^3 + 4
         // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
-        y = fromZ (pow_mod`{FP} (fromInteger base) (fromInteger exp))
-        base = (x^^3 + b) % q
-        exp = ((q + 1) / 4 ) % q
-        y' = q - y
+        y = pow_mod base exp
+        base = x^^3 + b
+        exp = ((q + 1) / 4) % q
+        y' = fromInteger (q - (fromZ y))
 
 /**
  * Compressed G1 point at infinity
@@ -138,7 +143,7 @@ G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
  * Deserialize the G1 bytes into a G1 point
  */
 bytes48_to_g1_point : Bytes48 -> G1Point
-bytes48_to_g1_point bytes = { xCoord = fromInteger x, yCoord = fromInteger y} where
+bytes48_to_g1_point bytes = { xCoord = x, yCoord = y} where
     (x, y) = decompress_G1 bytes
 
 /*
