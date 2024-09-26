@@ -189,7 +189,7 @@ property test_g1_multi_exp points scalars expected =
  * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
  * ```
  */
- test_g1_lincomb : {n} (fin n, n >= 1) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
+test_g1_lincomb : {n} (fin n, n >= 1) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
 property test_g1_lincomb points scalars commitment =
     g1_lincomb points scalars == commitment
 
