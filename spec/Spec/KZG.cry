@@ -1,0 +1,31 @@
+/**
+ * The module contains functions that perform the BLS KZG operations.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#kzg
+ */
+module Spec::KZG where
+
+import Common::Utils
+import Spec::BlsHelpers
+import Spec::Permutations
+import Spec::Polynomials
+
+/**
+ * Given `y == p(z)` for a polynomial `p(x)`, compute `q(z)`: the KZG quotient polynomial evaluated at `z` for the
+ *  special case where `z` is in roots of unity.
+ * For more details, read https://dankradfeist.de/ethereum/2021/06/18/pcs-multiproofs.html section "Dividing
+ *  when one of the points is zero". The code below computes q(x_m) for the roots of unity special case.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
+ */
+compute_quotient_eval_within_domain : BlsFieldElement -> BlsPolynomial -> BlsFieldElement -> BlsFieldElement
+compute_quotient_eval_within_domain z polynomial y = toIntegral summation where
+    roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
+    results = [result 0] # [results@(i-1) + (result i) |  i <- [1 .. (FIELD_ELEMENTS_PER_BLOB-1)]]
+    f i = (toInteger `(BLS_MODULUS)) + (toInteger (polynomial@i)) - (toInteger (y % `(BLS_MODULUS)))
+    omega i = fromIntegral`{BLS_MODULUS} (roots_of_unity_brp@i)
+    numerator i = (fromInteger (f i)) * (omega i)
+    // Adding the BLS_MODULUS doesn't affect the computation because it is modular arithmetic with that modulus
+    denominator i = z' * (z - (omega i))
+    z' = fromIntegral z
+    // Skip the evaluation point (z) in the sum
+    result i = if omega i != z' then div_mod (numerator i) (denominator i) else 0
+    summation = results!0
