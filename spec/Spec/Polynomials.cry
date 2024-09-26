@@ -52,3 +52,18 @@ evaluate_polynomial_in_evaluation_form polynomial z =
             z' = fromIntegral z
             width' = toInteger width
             evaluation = (results!0) * (bls_mod_minus_1 + (pow_mod z' width')) * inverse_width
+
+/**
+ * The BLS basic data blob
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ * Also @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
+ */
+type BlsBlob = [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
+
+/**
+ * Convert a blob to list of BLS field scalars.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob_to_polynomial
+ */
+blob_to_polynomial : BlsBlob -> BlsPolynomial
+blob_to_polynomial blob = polynomial where
+    polynomial = [bytes_to_bls_field bytes | bytes <- (split`{FIELD_ELEMENTS_PER_BLOB} blob)]
