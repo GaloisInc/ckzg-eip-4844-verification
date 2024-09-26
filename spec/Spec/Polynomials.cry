@@ -1,0 +1,53 @@
+/**
+ * The module contains functions that perform BLS polynomial operations.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#polynomials
+ */
+module Spec::Polynomials where
+
+import Common::Utils
+import Spec::BlsHelpers
+import Spec::Permutations
+
+/**
+ * The number of BLS field elements in a data Blob.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
+ */
+type FIELD_ELEMENTS_PER_BLOB = 4096
+
+/**
+ * A polynomial in evaluation form.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type BlsPolynomial = [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
+
+/**
+ * Evaluate a polynomial (in evaluation form) at an arbitrary point `z`.
+ *  - When `z` is in the domain, the evaluation can be found by indexing the polynomial at the
+ *  position that `z` is in the domain.
+ *  - When `z` is not in the domain, the barycentric formula is used:
+ *     f(z) = (z^^WIDTH - 1) / WIDTH  *  sum_(i=0)^WIDTH  (f(DOMAIN[i]) * DOMAIN[i]) / (z - DOMAIN[i])
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#evaluate_polynomial_in_evaluation_form
+ */
+evaluate_polynomial_in_evaluation_form : BlsPolynomial -> BlsFieldElement -> BlsFieldElement
+evaluate_polynomial_in_evaluation_form polynomial z =
+    // If we are asked to evaluate within the domain, we already know the answer
+    if within_domain then
+        polynomial@(roots_of_unity_brp@z)
+    else
+        evaluate_polynomial_not_within_domain
+    where
+        width = `(FIELD_ELEMENTS_PER_BLOB)
+        inverse_width = fromIntegral`{BLS_MODULUS} (bls_modular_inverse width)
+        roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
+        within_domain = elem z roots_of_unity_brp // builtin Cryptol function
+
+        evaluate_polynomial_not_within_domain : BlsFieldElement
+        evaluate_polynomial_not_within_domain = toIntegral evaluation where
+            results = [result 0] # [results@(i-1) + (result i) | i <- [1 .. (FIELD_ELEMENTS_PER_BLOB-1)]]
+            a i = (fromIntegral (polynomial@i)) * (fromIntegral (roots_of_unity_brp@i))
+            b i = z' - fromIntegral (roots_of_unity_brp@i)
+            result i = div_mod (a i) (b i)
+            z' = fromIntegral z
+            width' = toInteger width
+            r = (pow_mod z' width') - 1
+            evaluation = (results!0) * r * inverse_width
