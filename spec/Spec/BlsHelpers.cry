@@ -131,9 +131,15 @@ compute_roots_of_unity order = assert (order == `n) "order must be equal to n" r
         result = compute_powers`{n} root_of_unity'
 
 /**
+ * Bytes used to encode a BLS scalar field element.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+type BYTES_PER_FIELD_ELEMENT = 32
+
+/**
  * The bytes of a BLS scalar field element.
  */
-type Bytes32 = [32][8]
+type Bytes32 = [BYTES_PER_FIELD_ELEMENT][8]
 
 /**
  * Convert untrusted bytes to a trusted and validated BLS scalar field element.
