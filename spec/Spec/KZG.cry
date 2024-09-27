@@ -4,7 +4,7 @@
  */
 module Spec::KZG where
 
-import Common::Utils
+import Common::ModArith
 import Spec::BlsHelpers
 import Spec::BlsSerde
 import Spec::Permutations

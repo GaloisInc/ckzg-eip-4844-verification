@@ -8,6 +8,7 @@
  */
 module Spec::BlsEC where
 
+import Common::ModArith
 import Common::Utils
 
 /**
