@@ -17,12 +17,6 @@ type BlsFieldSize = 256
 type BlsFieldElement = [BlsFieldSize]
 
 /**
- * Specified by the consensus-specs.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- */
-type BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
-
-/**
  * Compute the modular inverse of x
  *  i.e. return y such that x * y % BLS_MODULUS == 1
  * Precondition: x != 0 BLS_MODULUS
