@@ -168,6 +168,18 @@ validate_kzg_g1 b =
     if b == G1_POINT_AT_INFINITY then True
     else key_validate b
 
+/**
+ * Convert untrusted bytes into a trusted and validated `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_commitment
+ * ```repl
+ * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * ```
+ * NOTE: this repl test is slow.
+ */
+bytes_to_kzg_commitment : Bytes48 -> KZGCommitment
+bytes_to_kzg_commitment b =
+    assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b
+
 /*
  * ===============
  * Unit test suite
