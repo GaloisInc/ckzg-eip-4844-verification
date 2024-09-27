@@ -155,6 +155,27 @@ property check_compression_decompress_inverse point = precondition ==> statement
     precondition = g1_is_valid_point point
     statement = decompress_G1 (compress_G1 point) == point
 
+
+/**
+ * Make sure the compressed G1 point is valid, i.e. not infinity and in the subgroup.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/ciphersuites.py#L113
+ * ```repl
+ * :prove key_validate G1_1P_COMPRESSED == True
+ * // :error key_validate G1_INVALID_POINT_COMPRESSED // Cryptol cannot currently do this
+ * ```
+ * NOTE: I have manually checked that calling `key_validate` on an invalid compressed point
+ *  fails with an error thrown. Unfortunately, there is not a way in the Cryptol REPL to
+ *  say that I expect an error to be thrown.
+ */
+key_validate : Bytes48 -> Bit
+key_validate bytes =
+    if bytes == G1_POINT_AT_INFINITY then
+        False
+    else
+        subgroup_check point
+    where
+        point = decompress_G1 bytes
+
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
