@@ -225,7 +225,6 @@ test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 ->
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
 
-
 /**
  * Unit tests for `g1_lincomb`.
  * ```repl
