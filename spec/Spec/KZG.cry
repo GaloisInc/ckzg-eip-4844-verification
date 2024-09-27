@@ -6,6 +6,7 @@ module Spec::KZG where
 
 import Common::Utils
 import Spec::BlsHelpers
+import Spec::BlsSerde
 import Spec::Permutations
 import Spec::Polynomials
 
@@ -24,8 +25,57 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral summation where
     omega i = fromIntegral`{BLS_MODULUS} (roots_of_unity_brp@i)
     numerator i = (fromInteger (f i)) * (omega i)
     // Adding the BLS_MODULUS doesn't affect the computation because it is modular arithmetic with that modulus
-    denominator i = z' * (z - (omega i))
+    denominator i = z' * (z' - (omega i))
     z' = fromIntegral z
     // Skip the evaluation point (z) in the sum
     result i = if omega i != z' then div_mod (numerator i) (denominator i) else 0
     summation = results!0
+
+/**
+ * Same as for `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type KZGProof = Bytes48
+
+/**
+ * KZG trusted setup value.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#trusted-setup
+ */
+KZG_SETUP_G1_LAGRANGE : [FIELD_ELEMENTS_PER_BLOB]Bytes48
+KZG_SETUP_G1_LAGRANGE = zero
+
+/**
+ * Helper function for `compute_kzg_proof()` and `compute_blob_kzg_proof()`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
+ */
+compute_kzg_proof_impl : BlsPolynomial -> BlsFieldElement -> (KZGProof, BlsFieldElement)
+compute_kzg_proof_impl polynomial z = (proof, y) where
+    roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
+    // For all x_i, compute p(x_i) - p(z)
+    y = evaluate_polynomial_in_evaluation_form polynomial z
+    polynomial_shifted = [(fromIntegral`{BLS_MODULUS} p) - (fromIntegral y) | p <- polynomial]
+    // For all x_i, compute (x_i - z)
+    denominator_poly = [(fromIntegral`{BLS_MODULUS} x) - (fromIntegral z) | x <- roots_of_unity_brp]
+    // Compute the quotient polynomial directly in evaluation form
+    quotient_polynomial = [quotient i a b | a <- polynomial_shifted | b <- denominator_poly | i <- [0 .. FIELD_ELEMENTS_PER_BLOB-1]]
+    // Handle the conditional computation of computing the quotient
+    quotient : Integer -> Z BLS_MODULUS -> Z BLS_MODULUS -> BlsFieldElement
+    quotient i a b =
+        if b == 0 then
+            // The denominator is zero hence `z` is a root of unity: we must handle it as a special case.
+            compute_quotient_eval_within_domain (roots_of_unity_brp@i) polynomial y
+        else
+            // Compute: q(x_i) = (p(x_i) - p(z)) / (x_i - z).
+            toIntegral (div_mod`{BLS_MODULUS} a b)
+    proof = g1_lincomb (bit_reversal_permutation (KZG_SETUP_G1_LAGRANGE)) quotient_polynomial
+
+/**
+ * Compute KZG proof at point `z` for the polynomial represented by `blob`.
+ * Do this by computing the quotient polynomial in evaluation form: q(x) = (p(x) - p(z)) / (x - z).
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof
+ */
+compute_kzg_proof : BlsBlob -> Bytes32 -> (KZGProof, Bytes32)
+compute_kzg_proof blob z_bytes = (proof, y) where
+    polynomial = blob_to_polynomial blob
+    (proof, y') = compute_kzg_proof_impl polynomial (bytes_to_bls_field z_bytes)
+    y = split`{BYTES_PER_FIELD_ELEMENT} y'
