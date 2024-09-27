@@ -161,6 +161,7 @@ bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg fie
  * NOTE: I have manually checked that calling `key_validate` on an invalid compressed point
  *  fails with an error thrown. Unfortunately, there is not a way in the Cryptol REPL to
  *  say that I expect an error to be thrown.
+ * NOTE: this repl test is slow.
  */
 validate_kzg_g1 : Bytes48 -> Bit
 validate_kzg_g1 b =
