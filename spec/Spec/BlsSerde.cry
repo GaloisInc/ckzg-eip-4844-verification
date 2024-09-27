@@ -5,6 +5,7 @@
  */
 module Spec::BlsSerde where
 
+import Common::ModArith
 import Common::Utils
 import Spec::BlsEC
 
