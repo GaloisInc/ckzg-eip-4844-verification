@@ -33,12 +33,6 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral summation where
     summation = results!0
 
 /**
- * Same as for `KZGCommitment`.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
- */
-type KZGProof = Bytes48
-
-/**
  * KZG trusted setup value.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#trusted-setup
  */
