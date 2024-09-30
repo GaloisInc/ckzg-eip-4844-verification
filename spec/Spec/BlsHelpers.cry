@@ -183,6 +183,24 @@ bytes_to_kzg_commitment : Bytes48 -> KZGCommitment
 bytes_to_kzg_commitment b =
     assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b
 
+/**
+ * Same as for `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type KZGProof = Bytes48
+
+/**
+ * Convert untrusted bytes into a trusted and validated `KZGProof`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_proof
+  * ```repl
+ * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * ```
+ * NOTE: this repl test is slow.
+ */
+bytes_to_kzg_proof : Bytes48 -> KZGProof
+bytes_to_kzg_proof b =
+    assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b
+
 /*
  * ===============
  * Unit test suite
