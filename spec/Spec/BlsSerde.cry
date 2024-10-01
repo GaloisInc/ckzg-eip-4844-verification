@@ -1,0 +1,198 @@
+/**
+ * The module contains functions that perform BLS serialization and deserialization operations.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py
+ * These functions are intended to match the corresponding py_ecc functions.
+ */
+module Spec::BlsSerde where
+
+import Common::Utils
+import Spec::BlsEC
+
+/**
+ * Size of a G1 point
+ */
+type G1Bits = 384
+
+/**
+ * Serialized G1 point
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type Bytes48 = [G1Bits]
+
+/*
+ * These are convenience values for working with the
+ *  compressed point flags.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/constants.py#L12-L15
+ */
+POW_2_381 = 2^^381
+POW_2_382 = 2^^382
+POW_2_383 = 2^^383
+
+/**
+ * Compressed G1 point at infinity
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ *
+ * Note: the name, though it is somewhat misleading, is chosen to match the Python spec.
+ */
+G1_POINT_AT_INFINITY : Bytes48
+G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
+
+/**
+ * Helper function for decompressing a G1 or G2 compresed point.
+ *
+ * The most-significant three bits of a G1 or G2 encoding should be masked away before
+ * the coordinate(s) are interpreted.
+ * These bits are used to unambiguously represent the underlying element.
+ * The format: (cFlag, bFlag, aFlag, x)
+ *  - cFlag: is '1' to indicated a compressed point, '0' otherwise.
+ *  - bFlag: is '1' to indicate a point at infinity, '0' otherwise.
+ *     - NOTE: the cFlag must also be set to indicate an intentionally
+ *             compressed infinity point.
+ *  - aFlag: is used to store the most significant bit of the y-coordinate.
+ *  - x: is the x-coordinate of the point.
+ *
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
+ *
+ * ```repl
+ * :prove get_flags`{8} 0xC0 == (True, True, False)
+ * :prove get_flags`{384} (0xE0 # (zero:[384-8])) == (True, True, True)
+ * ```
+ */
+get_flags : {n} (fin n, n >= 3) => [n] -> (Bit, Bit, Bit)
+get_flags z = (c_flag, b_flag, a_flag) where
+    c_flag = int_to_bit`{n} ((z >> (`n - 1)) && 1)  // The most significant bit
+    b_flag = int_to_bit`{n} ((z >> (`n - 2)) && 1)  // The second-most significant bit
+    a_flag = int_to_bit`{n} ((z >> (`n - 3)) && 1)  // The third-most significant bit
+
+/**
+ * Decompress the G1 compressed point
+ *
+ * Recovers x and y coordinates from the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
+ *
+* ```repl
+ * :prove decompress_G1 G1_POINT_AT_INFINITY == G1_INFINITY
+ * :prove decompress_G1 G1_2P_COMPRESSED == G1_2P
+ * :prove decompress_G1 G1_7P_COMPRESSED == G1_7P
+ * ```
+ */
+decompress_G1 : Bytes48 -> G1Point
+decompress_G1 z =
+    // cFlag == 1 indicates the compressed form
+    // MSB should be 1
+    if ~cFlag then
+        error "decompress_G1: cFlag must be 1"
+    else if bFlag then
+        // 3 MSBs should be b110
+        if aFlag then
+            error "decompress_G1: a point at infinity should have aFlag == 0"
+        else G1_INFINITY
+    // Else, not point at infinity
+    // 3 MSBs should be b100 or b101
+    else if xBits >= q then
+        error "decompress_G1: point value should be less than field modulus"
+    else if (y^^2) != (x^^3 + b) then
+        error "The given point is not on G1: y^^2 = x^^3 + 4"
+    // Choose the y whose leftmost bit is equal to the aFlag
+    else if (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
+        { xCoord = x, yCoord = y'}
+    else
+        { xCoord = x, yCoord = y}
+    where
+        // We want to use the type Z Fp for all modular arithmetic, but
+        //  we have to use Fp as a value which is not allowable with
+        //  Z Fp, so we sometimes need to convert back and forth between
+        //  Z Fp and Integer.
+        (cFlag, bFlag, aFlag) = get_flags z
+        xBits = (toInteger z) % POW_2_381
+        x = fromInteger xBits
+        q = `(Fp)
+        b = 4 : Z Fp // Our elliptic curve equation is y^^2 = x^^3 + 4
+        // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
+        y = pow_mod base exp
+        base = x^^3 + b
+        exp = ((q + 1) / 4) % q
+        y' = fromInteger (q - (fromZ y))
+
+/**
+ * Compress the G1 point
+ *
+ * Encodes x and y coordinates in the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L58-L77
+ *
+ * ```repl
+ * :prove compress_G1 G1_INFINITY == G1_POINT_AT_INFINITY
+ * :prove compress_G1 G1_2P == G1_2P_COMPRESSED
+ * :prove compress_G1 G1_7P == G1_7P_COMPRESSED
+ * ```
+ */
+compress_G1 : G1Point -> Bytes48
+compress_G1 point =
+    if g1_point_eq point G1_INFINITY then
+        // Set c_flag = 1 and b_flag = 1. leave a_flag = x = 0
+        fromInteger (POW_2_383 + POW_2_382)
+    else
+        // Set c_flag = 1 and b_flag = 0
+        fromInteger (x + a_flag * POW_2_381 + POW_2_383)
+    where
+        // Record y's leftmost bit to the a_flag
+        x = fromZ point.xCoord
+        y = fromZ point.yCoord
+        q = toInteger `(Fp)
+        a_flag = (y * 2) / q
+
+/**
+ * Check the property that compression => decompression is the same point.
+ * This check is performed by running random tests.
+ * ```repl
+ * :set tests=10000
+ * :check check_compression_decompress_inverse
+ * ```
+ */
+check_compression_decompress_inverse : G1Point -> Bit
+property check_compression_decompress_inverse point = precondition ==> statement where
+    precondition = g1_is_valid_point point
+    statement = decompress_G1 (compress_G1 point) == point
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_INFINITY_COMPRESSED : Bytes48
+G1_INVALID_INFINITY_COMPRESSED = cFlag + bFlag + aFlag where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (1 << 382) // is infinity
+    aFlag = (1 << 381) // invalid aFlag when infinity
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_TO_BIG_COMPRESSED : Bytes48
+G1_INVALID_TO_BIG_COMPRESSED = cFlag + `(Fp) + 1 where
+    cFlag = (1 << 383) // is compressed
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_INVALID_POINT_COMPRESSED : Bytes48
+G1_INVALID_POINT_COMPRESSED = cFlag + bFlag + aFlag + 13 where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // doesn't matter since invalid point
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_2P_COMPRESSED : Bytes48
+G1_2P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_2P.xCoord) where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
+
+/**
+ * Test point for the decompression function `bytes48_to_g1_point`
+ */
+G1_7P_COMPRESSED : Bytes48
+G1_7P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_7P.xCoord) where
+    cFlag = (1 << 383) // is compressed
+    bFlag = (0 << 382) // not infinity
+    aFlag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'

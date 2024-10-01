@@ -30,6 +30,44 @@ bool_to_bit : [1] -> Bit
 bool_to_bit b = if b == 1 then True else False
 
 /**
+ * Convert an Integral value of 'n' bits to a `Bit`.
+ * ```repl
+ * :prove int_to_bit`{8} 1 == True
+ * :prove int_to_bit`{8} 0 == False
+ * ```
+ */
+int_to_bit : {n} (fin n, n >= 1) => [n] -> Bit
+int_to_bit b = if b == 1 then True else False
+
+/**
+ * Convert an Integral value of 'n' bits to a `Bit`.
+ * ```repl
+ * :prove bit_to_integer True == 1
+ * :prove bit_to_integer False == 0
+ * ```
+ */
+bit_to_integer : Bit -> Integer
+bit_to_integer b = if b then 1 else 0
+
+/**
+ * Convert from a `Z` type tp a fixed size bit type.
+ * ```repl
+ * :prove (fromIntegral`{13} (3:[384])) == (3 : Z 13)
+ * :prove (fromIntegral`{13} (14:[384])) == (1 : Z 13)
+ * :prove (fromIntegral`{13} (13:[384])) == (0 : Z 13)
+ */
+fromIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => [m] -> Z n
+fromIntegral value = fromInteger (toInteger value)
+
+/**
+ * Convert from a fixed size bit type to a `Z` type.
+ * ```repl
+ * :prove (toIntegral`{m=384} (3 : Z 13) == (3:[384]))
+ */
+toIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => Z n -> [m]
+toIntegral value = fromInteger (fromZ value)
+
+/**
  * Calculates the gcd and Bezout coefficients,
  *   using the Extended Euclidean Algorithm (recursive).
  *   (Source: https://extendedeuclideanalgorithm.com/code)
@@ -76,25 +114,34 @@ multinv x m =
 
 /**
  * Compute the modular inverse of x
- *  i.e. return y such that x * y % modulus == 1
- * Precondition: x != 0
+ *  i.e. return y such that x * y % n == 1
+ * Precondition: x != 0 mod n
  * ```repl
- * :prove modular_inverse 7492 319 == 177
- * :prove modular_inverse (-3) 319 == 106
+ * :prove modular_inverse`{319} (fromInteger 7492) == 177
+ * :prove modular_inverse`{319} (fromInteger (-3)) == 106
  * ```
  * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
  */
-modular_inverse : Integer -> Integer -> Integer
-modular_inverse x modulus = multinv x' modulus where
-    x' = if x < 0 then x % modulus
-         else x
+modular_inverse : {n} (fin n, n >= 1) => Z n -> Z n
+modular_inverse x = fromInteger (multinv (fromZ x) `n)
 
 /**
  * Divide two field elements: x by y
  * ```repl
- * :prov div 3 7492 319 == 212
- * :prov div 3 (-7492) 319 == 107
+ * :prov div_mod (3 : Z 319) (fromInteger 7492) == 212
+ * :prov div_mod (3 : Z 319) (fromInteger (-7492))== 107
  * ```
  */
-div : Integer -> Integer -> Integer -> Integer
-div x y modulus = (x * (modular_inverse y modulus)) % modulus
+div_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
+div_mod x y = x * (modular_inverse y)
+
+/**
+ * Exponentiation in the specified modulo field `n`.
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
+ * ```repl
+ * :prove pow_mod (3 : Z 7) 2 == 2
+ * :prove pow_mod`{2} (fromInteger 1) 18 == 1
+ * :prove pow_mod`{3} (0 : Z 3) 5 == 0
+ */
+pow_mod : {n} (fin n, n >= 1) => Z n -> Integer -> Z n
+pow_mod base exp = base ^^ exp
