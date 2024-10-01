@@ -62,9 +62,11 @@ G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
  */
 get_flags : Bytes48 -> (Bit, Bit, Bit)
 get_flags z = (c_flag, b_flag, a_flag) where
-    c_flag = int_to_bit`{384} ((z >> 383) && 1)  // The most significant bit
-    b_flag = int_to_bit`{384} ((z >> 382) && 1)  // The second-most significant bit
-    a_flag = int_to_bit`{384} ((z >> 381) && 1)  // The third-most significant bit
+    // The index operator '!0' as applied gives us the
+    //   LSB which is what we want.
+    c_flag = ((z >> 383) && 1)!0  // The most significant bit
+    b_flag = ((z >> 382) && 1)!0  // The second-most significant bit
+    a_flag = ((z >> 381) && 1)!0  // The third-most significant bit
 
 /**
  * Decompress the G1 compressed point
