@@ -58,11 +58,11 @@
 % Define a special header style for the title page:
 \newcommand{\ps@title}{%
   \renewcommand{\@oddhead}{%
-    \sffamily\hspace{-0.25in}\includegraphics[width=1in]{galois-blue.png}\hfill\includegraphics[width=1in]{consensys.png}
+    \sffamily\hspace{-0.25in}\includegraphics[width=1in]{../img/galois-blue.png}\hfill\includegraphics[width=1in]{../img/consensys.png}
     }}
 
 % Set up the headers/footers for the rest of the document:
-\lhead{\sffamily\hspace{0.75in}\includegraphics[width=1in]{galois-blue.png}\hfill\includegraphics[width=1in]{consensys.png}}
+\lhead{\sffamily\hspace{0.75in}\includegraphics[width=1in]{../img/galois-blue.png}\hfill\includegraphics[width=1in]{../img/consensys.png}}
 
 \rhead{
   \sffamily
