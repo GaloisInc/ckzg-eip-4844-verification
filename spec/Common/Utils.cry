@@ -7,6 +7,8 @@ type BYTE_WIDTH = 8
 
 type UInt64 = [64]
 
+type UInt256 = [256]
+
 /**
  * Convert a `Bit` to a 1-bit value.
  * We use this function because SAW cannot convert
