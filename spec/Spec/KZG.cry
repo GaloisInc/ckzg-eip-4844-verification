@@ -7,6 +7,8 @@ module Spec::KZG where
 import Common::ModArith
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
+import Spec::BlsEC::G2
+import Spec::BlsEC::Pairing
 import Spec::BlsHelpers
 import Spec::BlsSerde
 import Spec::Permutations
@@ -73,3 +75,27 @@ compute_kzg_proof blob z_bytes = (proof, y) where
     polynomial = blob_to_polynomial blob
     (proof, y') = compute_kzg_proof_impl polynomial (bytes_to_bls_field z_bytes)
     y = split`{BYTES_PER_FIELD_ELEMENT} y'
+
+/**
+ * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
+ */
+verify_kzg_proof_impl : KZGCommitment -> BlsFieldElement -> BlsFieldElement -> KZGProof -> Bit
+verify_kzg_proof_impl commitment z y proof = pairing_check points where
+    // Verify: P - y = Q * (X - z)
+    x_minus_z = g2_add (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)) g2_mult
+    g2_mult = g2_multi_optimized G2 ((`(BLS_MODULUS) - z) % `(BLS_MODULUS))
+    p_minus_y = g1_add (bytes48_to_G1 commitment) g1_mult
+    g1_mult = g1_multi_optimized G1 ((`(BLS_MODULUS) - y) % `(BLS_MODULUS))
+    points = [(p_minus_y, (g2_negate G2)), ((bytes48_to_G1 proof), x_minus_z)]
+
+/**
+ * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
+ */
+verify_kzg_proof : Bytes48 -> Bytes32 -> Bytes32 -> Bytes48 -> Bit
+verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes =
+    verify_kzg_proof_impl (bytes_to_kzg_commitment commitment_bytes)
+                          (bytes_to_bls_field z_bytes)
+                          (bytes_to_bls_field y_bytes)
+                          (bytes_to_kzg_proof proof_bytes)
