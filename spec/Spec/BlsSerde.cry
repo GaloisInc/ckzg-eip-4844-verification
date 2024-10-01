@@ -55,15 +55,16 @@ G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
  *
  * ```repl
- * :prove get_flags`{8} 0xC0 == (True, True, False)
- * :prove get_flags`{384} (0xE0 # (zero:[384-8])) == (True, True, True)
+ * :prove get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
+ * :prove get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
  * ```
+ * NOTE: `Bytes48 == [384]
  */
-get_flags : {n} (fin n, n >= 3) => [n] -> (Bit, Bit, Bit)
+get_flags : Bytes48 -> (Bit, Bit, Bit)
 get_flags z = (c_flag, b_flag, a_flag) where
-    c_flag = int_to_bit`{n} ((z >> (`n - 1)) && 1)  // The most significant bit
-    b_flag = int_to_bit`{n} ((z >> (`n - 2)) && 1)  // The second-most significant bit
-    a_flag = int_to_bit`{n} ((z >> (`n - 3)) && 1)  // The third-most significant bit
+    c_flag = int_to_bit`{384} ((z >> 383) && 1)  // The most significant bit
+    b_flag = int_to_bit`{384} ((z >> 382) && 1)  // The second-most significant bit
+    a_flag = int_to_bit`{384} ((z >> 381) && 1)  // The third-most significant bit
 
 /**
  * Decompress the G1 compressed point
