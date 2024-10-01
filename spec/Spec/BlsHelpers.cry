@@ -95,6 +95,8 @@ type KZGCommitment = Bytes48
 /**
  * BLS multiscalar multiplication in G1. This can be naively implemented using double-and-add.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#g1_lincomb
+ * NOTE: we don't need to check for non-equal lengths for `points` and `scalars`,
+ *  because our type parameter `n` enforces that for us.
  */
 g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
