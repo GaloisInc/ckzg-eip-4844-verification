@@ -51,7 +51,7 @@ compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]Bls
 compute_powers x = powers where
         x' = fromIntegral`{BLS_MODULUS} x
         powers' = [1] # [(powers'@i) * x' | i <- [0 .. n-2]]
-        powers = [toIntegral xi' | xi' <- powers']
+        powers = map toIntegral powers'
 
 /**
  * Performs a multi-scalar multiplication between G1 `points` and `scalars`.
