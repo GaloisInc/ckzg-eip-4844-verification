@@ -86,6 +86,8 @@ decompress_G1 z =
     // MSB should be 1
     if ~cFlag then
         error "decompress_G1: cFlag must be 1"
+     | bFlag != isInfinity then
+        error "b_flag should be 1"
      | bFlag then
         // 3 MSBs should be b110
         if aFlag then
@@ -103,6 +105,7 @@ decompress_G1 z =
      else
         { xCoord = x, yCoord = y}
      where
+        isInfinity = (z % POW_2_381) == 0
         // We want to use the type Z Fp for all modular arithmetic, but
         //  we have to use Fp as a value which is not allowable with
         //  Z Fp, so we sometimes need to convert back and forth between
