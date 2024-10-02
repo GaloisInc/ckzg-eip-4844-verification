@@ -1,0 +1,19 @@
+/**
+ * This module contains constants and types for the prime field used
+ * by BLS. The prime is sometimes noted as 'q' and sometimes as 'p'
+ * in different references. It is 'q' in the py_ecc library, so that
+ * is the convention we will use.
+ *
+ * The Deneb Python specs use the py_ecc library for the same operations.
+ * This modules functions are based off of py_ecc.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py
+ */
+module Spec::BlsEC::Field where
+
+/**
+ * The BLS12-384 curve is defined as: y^^2 = x^^3 + 4 over the
+ *  finite field Fq, where q is the prime defined below.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L29
+ * @see https://hackmd.io/@Wimet/S1dvK2NBh#The-Curve (it uses 'p' instead of 'q')
+ */
+type Fq = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
