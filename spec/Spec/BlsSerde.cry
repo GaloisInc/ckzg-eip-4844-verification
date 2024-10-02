@@ -7,7 +7,7 @@ module Spec::BlsSerde where
 
 import Common::ModArith
 import Common::Utils
-import Spec::BlsEC
+import Spec::BlsEC::G1
 
 /**
  * Size of a G1 point

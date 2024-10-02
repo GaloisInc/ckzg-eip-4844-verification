@@ -6,7 +6,7 @@
  * This modules functions are based off of py_ecc.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
  */
-module Spec::BlsEC where
+module Spec::BlsEC::G1 where
 
 import Common::ModArith
 import Common::Utils

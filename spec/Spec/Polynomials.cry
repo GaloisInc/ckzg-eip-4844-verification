@@ -5,7 +5,7 @@
 module Spec::Polynomials where
 
 import Common::ModArith
-import Spec::BlsEC
+import Spec::BlsEC::G1
 import Spec::BlsHelpers
 import Spec::Permutations
 
