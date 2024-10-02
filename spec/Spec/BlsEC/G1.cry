@@ -12,9 +12,9 @@ import Common::ModArith
 import Common::Utils
 
 /**
- * G1 elliptic curve point
+ * G1 elliptic curve point.
  *
- * Note: by using the Z type, all modular arithmetic
+ * NOTE: by using the Z type, all modular arithmetic
  *  is handled automatically and there is no potential
  *  for any overflow errors.
  */
@@ -26,7 +26,7 @@ type G1Point =
 /**
  * Representation of G1 point at infinity.
  *
- * Note: (0,0) isn't actually the point at infinity, but since we
+ * NOTE: (0,0) isn't actually the point at infinity, but since we
  *  can't use enums here and (0, 0) is not on the curve, it's an
  *  acceptable substitute.
  */
@@ -37,8 +37,8 @@ G1_INFINITY =
     }
 
 /**
- * G1 generator
- * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L35
+ * Generator for curve over Fp.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L35
  */
 G1 : G1Point
 G1 =
