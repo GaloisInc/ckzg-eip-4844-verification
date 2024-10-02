@@ -1,6 +1,6 @@
 /**
  * This module contains functions that perform ECC Point operations.
- * These functions are specific to the BLS curve, and specifially G1.
+ * These functions are specific to the BLS curve, and specifically G1.
  *
  * The Deneb Python specs use the py_ecc library for the same operations.
  * This modules functions are based off of py_ecc.
