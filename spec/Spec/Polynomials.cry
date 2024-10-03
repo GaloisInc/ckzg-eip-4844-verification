@@ -19,7 +19,7 @@ type FIELD_ELEMENTS_PER_BLOB = 4096
  * A polynomial in evaluation form.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
  */
-type BlsPolynomial = [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
+type Polynomial = [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
 
 /**
  * Evaluate a polynomial (in evaluation form) at an arbitrary point `z`.
@@ -29,7 +29,7 @@ type BlsPolynomial = [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
  *     f(z) = (z^^WIDTH - 1) / WIDTH  *  sum_(i=0)^WIDTH  (f(DOMAIN[i]) * DOMAIN[i]) / (z - DOMAIN[i])
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#evaluate_polynomial_in_evaluation_form
  */
-evaluate_polynomial_in_evaluation_form : BlsPolynomial -> BlsFieldElement -> BlsFieldElement
+evaluate_polynomial_in_evaluation_form : Polynomial -> BlsFieldElement -> BlsFieldElement
 evaluate_polynomial_in_evaluation_form polynomial z =
     // If we are asked to evaluate within the domain, we already know the answer
     if within_domain then
@@ -58,12 +58,12 @@ evaluate_polynomial_in_evaluation_form polynomial z =
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
  * Also @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
  */
-type BlsBlob = [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
+type Blob = [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
 
 /**
  * Convert a blob to list of BLS field scalars.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob_to_polynomial
  */
-blob_to_polynomial : BlsBlob -> BlsPolynomial
+blob_to_polynomial : Blob -> Polynomial
 blob_to_polynomial blob = polynomial where
     polynomial = [bytes_to_bls_field bytes | bytes <- (groupBy`{BYTES_PER_FIELD_ELEMENT} blob)]
