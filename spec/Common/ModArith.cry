@@ -27,6 +27,10 @@ toIntegral value = fromInteger (fromZ value)
  * Calculates the gcd and Bezout coefficients,
  *   using the Extended Euclidean Algorithm (recursive).
  *   (Source: https://extendedeuclideanalgorithm.com/code)
+ * NOTE: 's' and 't' are used for the Bézout coefficients,
+ *   that satisfy the equation `a*s + b*t = gcd(a,b)`.
+ *   `s1` and `t1` are the previous computed coefficients.
+ *   `s2` and `t2` are the current computed coefficients.
  * ```repl
  * :prove xgcd 7 5 1 0 0 1 == (1, -2, 3)
  * ```
