@@ -45,13 +45,17 @@ bls_div x y = toIntegral (div_mod x' y') where
 /**
  * Return x to power of [0, n-1].
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_powers
- * NOTE: this Cryptol function requires n >= 1, which is not the same constraint on the Python function,
+ * NOTE: this Cryptol function requires n >= 2, which is not the same constraint on the Python function,
  *  whose constraint is n >= 0.
+ * ```repl
+ * let expected_powers = [0x01, 0x03, 0x09, 0x1b, 0x051, 0x0f3, 0x2d9, 0x88b]
+ * :prove compute_powers`{8} 3 == expected_powers
+ * ```
  */
 compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
 compute_powers x = powers where
         x' = fromIntegral`{BLS_MODULUS} x
-        powers' = [x'] # [powers'@(i-1) * x' | i <- [1 .. n-1]]
+        powers' = [1] # [(powers'@i) * x' | i <- [0 .. n-2]]
         powers = [toIntegral xi' | xi' <- powers']
 
 /**
@@ -158,18 +162,6 @@ property test_bls_div x y expected =
     bls_div x y == expected
 
 /**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_compute_powers`{2} 13 [13, 13^^2]
- * :prove test_compute_powers`{5} 13 [13, 13^^2, 13^^3, 13^^4, 13^^5]
- * ```
- * NOTE: we just chose these values at "random"
- */
-test_compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement -> Bit
-property test_compute_powers x expected =
-    join (compute_powers`{n} x) == join expected
-
-/**
  * Unit tests for `g1_multi_exp`.
  * ```repl
  * :prove test_g1_multi_exp`{1} [G1] [1] G1
@@ -200,11 +192,15 @@ property test_g1_lincomb points scalars commitment =
 /**
  * Unit tests for `g1_lincomb`.
  * ```repl
- * let bls_minus1 = fromIntegral`{BLS_MODULUS, 256} (`(BLS_MODULUS) - 1)
- * let bls_minus1_sqrd = bls_minus1^^2
- * :prove test_compute_roots_of_unity`{2} 2 [toIntegral bls_minus1, toIntegral bls_minus1_sqrd]
+ * :prove test_compute_roots_of_unity
  * ```
  */
-test_compute_roots_of_unity : {n} (fin n, width n <= 64, n >= 2) => UInt64 -> [n]BlsFieldElement -> Bit
-property test_compute_roots_of_unity order roots =
-    compute_roots_of_unity order == roots
+test_compute_roots_of_unity : Bit
+property test_compute_roots_of_unity =
+    compute_roots_of_unity`{4} 4 == expected_roots where
+    expected_roots =
+        [ 0x0000000000000000000000000000000000000000000000000000000000000001
+        , 0x00000000000000008d51ccce760304d0ec030002760300000001000000000000
+        , 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+        , 0x73eda753299d7d47a5e80b39939ed33467baa40089fb5bfefffeffff00000001
+        ]
