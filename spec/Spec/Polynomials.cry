@@ -66,4 +66,4 @@ type BlsBlob = [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
  */
 blob_to_polynomial : BlsBlob -> BlsPolynomial
 blob_to_polynomial blob = polynomial where
-    polynomial = [bytes_to_bls_field bytes | bytes <- (split`{FIELD_ELEMENTS_PER_BLOB} blob)]
+    polynomial = [bytes_to_bls_field bytes | bytes <- (groupBy`{BYTES_PER_FIELD_ELEMENT} blob)]
