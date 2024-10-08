@@ -17,7 +17,7 @@ type FIELD_ELEMENTS_PER_BLOB = 4096
 
 /**
  * A polynomial in evaluation form.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#cryptographic-types
  */
 type Polynomial = [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
 
