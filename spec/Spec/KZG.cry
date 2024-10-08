@@ -10,6 +10,7 @@ import Spec::BlsHelpers
 import Spec::BlsSerde
 import Spec::Permutations
 import Spec::Polynomials
+import Spec::TrustedSetup
 
 /**
  * Given `y == p(z)` for a polynomial `p(x)`, compute `q(z)`: the KZG quotient polynomial evaluated at `z` for the
@@ -36,13 +37,6 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral result where
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
  */
 type KZGProof = Bytes48
-
-/**
- * KZG trusted setup value.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#trusted-setup
- */
-KZG_SETUP_G1_LAGRANGE : [FIELD_ELEMENTS_PER_BLOB]Bytes48
-KZG_SETUP_G1_LAGRANGE = zero
 
 /**
  * Helper function for `compute_kzg_proof()` and `compute_blob_kzg_proof()`.
