@@ -45,13 +45,17 @@ bls_div x y = toIntegral (div_mod x' y') where
 /**
  * Return x to power of [0, n-1].
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_powers
- * NOTE: this Cryptol function requires n >= 1, which is not the same constraint on the Python function,
+ * NOTE: this Cryptol function requires n >= 2, which is not the same constraint on the Python function,
  *  whose constraint is n >= 0.
+ * ```repl
+ * let expected_powers = [0x01, 0x03, 0x09, 0x1b, 0x051, 0x0f3, 0x2d9, 0x88b]
+ * :prove compute_powers`{8} 3 == expected_powers
+ * ```
  */
 compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
 compute_powers x = powers where
         x' = fromIntegral`{BLS_MODULUS} x
-        powers' = [x'] # [powers'@(i-1) * x' | i <- [1 .. n-1]]
+        powers' = [1] # [(powers'@i) * x' | i <- [0 .. n-2]]
         powers = [toIntegral xi' | xi' <- powers']
 
 /**
@@ -105,6 +109,26 @@ g1_lincomb points scalars
         points_g1 = [bytes48_to_G1 point | point <- points]
         result = g1_multi_exp`{n} points_g1 scalars
 
+/**
+ * BLS Primitive root of unity.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+PRIMITIVE_ROOT_OF_UNITY : Z BLS_MODULUS
+PRIMITIVE_ROOT_OF_UNITY = 7
+
+/**
+ * Compute the roots of unity for the `order`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_roots_of_unity
+ * Precondition: `(BLS_MODULUS - 1) % order == 0`
+ * Assertion: `order == n`
+ */
+compute_roots_of_unity : {n} (fin n, width n <= 64, n >= 2) => UInt64 -> [n]BlsFieldElement
+compute_roots_of_unity order = assert (order == `n) "order must be equal to n" result where
+        order' = toInteger order
+        root_of_unity = pow_mod PRIMITIVE_ROOT_OF_UNITY ((`(BLS_MODULUS) - 1) / order')
+        root_of_unity' = toIntegral root_of_unity
+        result = compute_powers`{n} root_of_unity'
+
 /*
  * ===============
  * Unit test suite
@@ -138,18 +162,6 @@ property test_bls_div x y expected =
     bls_div x y == expected
 
 /**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_compute_powers`{2} 13 [13, 13^^2]
- * :prove test_compute_powers`{5} 13 [13, 13^^2, 13^^3, 13^^4, 13^^5]
- * ```
- * NOTE: we just chose these values at "random"
- */
-test_compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement -> Bit
-property test_compute_powers x expected =
-    join (compute_powers`{n} x) == join expected
-
-/**
  * Unit tests for `g1_multi_exp`.
  * ```repl
  * :prove test_g1_multi_exp`{1} [G1] [1] G1
@@ -173,6 +185,22 @@ property test_g1_multi_exp points scalars expected =
  * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
  * ```
  */
- test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
+test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
 property test_g1_lincomb points scalars commitment =
     g1_lincomb points scalars == commitment
+
+/**
+ * Unit tests for `g1_lincomb`.
+ * ```repl
+ * :prove test_compute_roots_of_unity
+ * ```
+ */
+test_compute_roots_of_unity : Bit
+property test_compute_roots_of_unity =
+    compute_roots_of_unity`{4} 4 == expected_roots where
+    expected_roots =
+        [ 0x0000000000000000000000000000000000000000000000000000000000000001
+        , 0x00000000000000008d51ccce760304d0ec030002760300000001000000000000
+        , 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+        , 0x73eda753299d7d47a5e80b39939ed33467baa40089fb5bfefffeffff00000001
+        ]
