@@ -18,7 +18,7 @@ import Spec::Polynomials
  * ```
  */
 correct_roots_of_unity_brp : Bit
-property correct_roots_of_unity_brp = roots_of_unity_brp == expected_roots_of_unity_brp where
+property correct_roots_of_unity_brp = roots_of_unity_brp == ROOTS_OF_UNITY_BRP where
     roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
 
 /**
@@ -33,7 +33,10 @@ correct_evaluate_polynomial_in_evaluation_form : Bit
 property correct_evaluate_polynomial_in_evaluation_form =
     evaluate_polynomial_in_evaluation_form eval_poly_polynomial eval_poly_z == expected_eval_poly_output
 
-expected_roots_of_unity_brp = [
+/**
+ * Constant value for the BLS specification.
+ */
+ROOTS_OF_UNITY_BRP = [
     0x0000000000000000000000000000000000000000000000000000000000000001,
     0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000,
     0x00000000000000008d51ccce760304d0ec030002760300000001000000000000,
