@@ -55,15 +55,18 @@ G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
  *
  * ```repl
- * :prove get_flags`{8} 0xC0 == (True, True, False)
- * :prove get_flags`{384} (0xE0 # (zero:[384-8])) == (True, True, True)
+ * :prove get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
+ * :prove get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
  * ```
+ * NOTE: `Bytes48 == [384]
  */
-get_flags : {n} (fin n, n >= 3) => [n] -> (Bit, Bit, Bit)
+get_flags : Bytes48 -> (Bit, Bit, Bit)
 get_flags z = (c_flag, b_flag, a_flag) where
-    c_flag = int_to_bit`{n} ((z >> (`n - 1)) && 1)  // The most significant bit
-    b_flag = int_to_bit`{n} ((z >> (`n - 2)) && 1)  // The second-most significant bit
-    a_flag = int_to_bit`{n} ((z >> (`n - 3)) && 1)  // The third-most significant bit
+    // The index operator '!0' as applied gives us the
+    //   LSB which is what we want.
+    c_flag = ((z >> 383) && 1)!0  // The most significant bit
+    b_flag = ((z >> 382) && 1)!0  // The second-most significant bit
+    a_flag = ((z >> 381) && 1)!0  // The third-most significant bit
 
 /**
  * Decompress the G1 compressed point
@@ -83,23 +86,26 @@ decompress_G1 z =
     // MSB should be 1
     if ~cFlag then
         error "decompress_G1: cFlag must be 1"
-    else if bFlag then
+     | bFlag != isInfinity then
+        error "b_flag should be 1"
+     | bFlag then
         // 3 MSBs should be b110
         if aFlag then
             error "decompress_G1: a point at infinity should have aFlag == 0"
         else G1_INFINITY
-    // Else, not point at infinity
-    // 3 MSBs should be b100 or b101
-    else if xBits >= q then
+     // Else, not point at infinity
+     // 3 MSBs should be b100 or b101
+     | xBits >= q then
         error "decompress_G1: point value should be less than field modulus"
-    else if (y^^2) != (x^^3 + b) then
+     | (y^^2) != (x^^3 + b) then
         error "The given point is not on G1: y^^2 = x^^3 + 4"
-    // Choose the y whose leftmost bit is equal to the aFlag
-    else if (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
+     // Choose the y whose leftmost bit is equal to the aFlag
+     | (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
         { xCoord = x, yCoord = y'}
-    else
+     else
         { xCoord = x, yCoord = y}
-    where
+     where
+        isInfinity = (z % POW_2_381) == 0
         // We want to use the type Z Fp for all modular arithmetic, but
         //  we have to use Fp as a value which is not allowable with
         //  Z Fp, so we sometimes need to convert back and forth between
