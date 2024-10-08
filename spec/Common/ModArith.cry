@@ -1,0 +1,107 @@
+/*
+ * This module contains helper functions related to modular arithmetic operations.
+ */
+module Common::ModArith where
+
+/**
+ * Convert from a fixed size bit type to a `Z` type.
+ * ```repl
+ * :prove (fromIntegral`{13} (3:[384])) == (3 : Z 13)
+ * :prove (fromIntegral`{13} (14:[384])) == (1 : Z 13)
+ * :prove (fromIntegral`{13} (13:[384])) == (0 : Z 13)
+ * ```
+ */
+fromIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => [m] -> Z n
+fromIntegral value = fromInteger (toInteger value)
+
+/**
+ * Convert from a `Z` type to a fixed size bit type.
+ * ```repl
+ * :prove (toIntegral`{m=384} (3 : Z 13) == (3:[384]))
+ * ```
+ */
+toIntegral : {n, m} (fin n, n >= 1, fin m, m >= 1) => Z n -> [m]
+toIntegral value = fromInteger (fromZ value)
+
+/**
+ * Calculates the gcd and Bezout coefficients,
+ *   using the Extended Euclidean Algorithm (recursive).
+ *   (Source: https://extendedeuclideanalgorithm.com/code)
+ * NOTE: 's' and 't' are used for the Bézout coefficients,
+ *   that satisfy the equation `a*s + b*t = gcd(a,b)`.
+ *   `s1` and `t1` are the previous computed coefficients.
+ *   `s2` and `t2` are the current computed coefficients.
+ * ```repl
+ * :prove xgcd 7 5 1 0 0 1 == (1, -2, 3)
+ * ```
+ */
+xgcd : Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> (Integer, Integer, Integer)
+xgcd a b s1 s2 t1 t2 =
+    if b == 0 then
+        (abs (a), 1, 0)
+    // if r == 0, then b will be the gcd and
+    //    s2, t2 the Bezout coefficients
+    else if r == 0 then
+        (abs (b), s2, t2)
+    else
+        xgcd b r s2 s3 t2 t3
+    where
+        q = a / b
+        r = a - q * b
+        s3 = s1 - q * s2
+        t3 = t1 - q * t2
+
+/**
+ * Calculates the multiplicative inverse of a number 'x' mod 'm',
+ *  using the Extended Euclidean Algorithm. If 'x' does not have a
+ *  multiplicative inverse mod 'm', then return 0.
+ *  (Source: https://extendedeuclideanalgorithm.com/code)
+ * ```repl
+ * :prove multinv 3 7 == 5
+ * :prove multinv 88831 319 == 167
+ * ```
+ */
+multinv : Integer -> Integer -> Integer
+multinv x m =
+    // 'b' only has a multiplicative inverse if the 'gcd' is 1
+    if gcd == 1
+    then t % m
+    else 0
+    // Get the 'gcd' and the second Bezout coefficient 't' from
+    //  the Extended Euclidean Algorithm. Note that 's' is unused.
+    //  Default values for the last four parameters are standard.
+    where (gcd, s, t) = xgcd m x 1 0 0 1
+
+/**
+ * Compute the modular inverse of x
+ *  i.e. return y such that x * y % n == 1
+ * Precondition: x != 0 mod n
+ * ```repl
+ * :prove modular_inverse`{319} (fromInteger 7492) == 177
+ * :prove modular_inverse`{319} (fromInteger (-3)) == 106
+ * ```
+ * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
+ */
+modular_inverse : {n} (fin n, n >= 1) => Z n -> Z n
+modular_inverse x = fromInteger (multinv (fromZ x) `n)
+
+/**
+ * Divide two field elements: x by y
+ * ```repl
+ * :prov div_mod (3 : Z 319) (fromInteger 7492) == 212
+ * :prov div_mod (3 : Z 319) (fromInteger (-7492))== 107
+ * ```
+ */
+div_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
+div_mod x y = x * (modular_inverse y)
+
+/**
+ * Exponentiation in the specified modulo field `n`.
+ * @see https://github.com/ethereum/c-kzg-4844/blob/main/src/common/fr.c#L93
+ * ```repl
+ * :prove pow_mod (3 : Z 7) 2 == 2
+ * :prove pow_mod`{2} (fromInteger 1) 18 == 1
+ * :prove pow_mod`{3} (0 : Z 3) 5 == 0
+ */
+pow_mod : {n} (fin n, n >= 1) => Z n -> Integer -> Z n
+pow_mod base exp = base ^^ exp

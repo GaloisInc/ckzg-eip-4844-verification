@@ -8,6 +8,7 @@
  */
 module Spec::BlsEC where
 
+import Common::ModArith
 import Common::Utils
 
 /**
@@ -126,6 +127,26 @@ g1_multi point scalar =
     else
         // If scalar is odd, double and add
         g1_add ((g1_multi (g1_double point) (scalar / 2))) point
+
+/**
+ * The subgroup modulus.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L17
+ */
+type BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
+
+/**
+ * Determine whether or not the G1 point is a member of the subgroup.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
+ * ```repl
+ * :prove (subgroup_check G1_INFINITY) == False
+ * :prove (subgroup_check G1) == True
+ * :prove (subgroup_check G1_2P) == True
+ * ```
+ * NOTE: these repl tests are very slow (~5 seconds).
+ */
+subgroup_check : G1Point -> Bit
+subgroup_check point = G1_INFINITY != (g1_multi point `(BLS_MODULUS))
 
 /*
  * ===============

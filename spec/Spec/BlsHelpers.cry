@@ -4,6 +4,7 @@
  */
 module Spec::BlsHelpers where
 
+import Common::ModArith
 import Common::Utils
 import Spec::BlsEC
 import Spec::BlsSerde
@@ -14,12 +15,6 @@ import Spec::BlsSerde
  */
 type BlsFieldSize = 256
 type BlsFieldElement = [BlsFieldSize]
-
-/**
- * Specified by the consensus-specs.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- */
-type BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 /**
  * Compute the modular inverse of x
@@ -74,6 +69,9 @@ g1_multi_exp points scalars = results!0 where
  * :prove bytes48_to_G1 G1_2P_COMPRESSED == G1_2P
  * :prove bytes48_to_G1 G1_7P_COMPRESSED == G1_7P
  * ```
+ * NOTE: We're not testing any of the invalid points since they throw runtime errors,
+ *  and Cryptol does not have a way to expect that. One can manually test to verify
+ *  these errors are thrown.
  */
 bytes48_to_G1 : Bytes48 -> G1Point
 bytes48_to_G1 bytes = decompress_G1 bytes
@@ -101,6 +99,7 @@ type KZGCommitment = Bytes48
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#g1_lincomb
  * NOTE: we don't need to check for non-equal lengths for `points` and `scalars`,
  *  because our type parameter `n` enforces that for us.
+ * NOTE: the `points` being passed in are compressed G1 points.
  */
 g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
@@ -128,6 +127,79 @@ compute_roots_of_unity order = assert (order == `n) "order must be equal to n" r
         root_of_unity = pow_mod PRIMITIVE_ROOT_OF_UNITY ((`(BLS_MODULUS) - 1) / order')
         root_of_unity' = toIntegral root_of_unity
         result = compute_powers`{n} root_of_unity'
+
+/**
+ * Bytes used to encode a BLS scalar field element.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+type BYTES_PER_FIELD_ELEMENT = 32
+
+/**
+ * The bytes of a BLS scalar field element.
+ */
+type Bytes32 = [BYTES_PER_FIELD_ELEMENT][8]
+
+/**
+ * Convert untrusted bytes to a trusted and validated BLS scalar field element.
+ * This function does not accept inputs greater than the BLS modulus.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_bls_field
+ * ```repl
+ * let bytes = [0x73,0xed,0xa7,0x53,0x29,0x9d,0x7d,0x48,0x33,0x39,0xd8,0x08,0x09,0xa1,0xd8,0x05,0x53,0xbd,0xa4,0x02,0xff,0xfe,0x5b,0xfe,0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00]
+ * let field_element = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
+ * :prove bytes_to_bls_field bytes == field_element
+ * ```
+ */
+bytes_to_bls_field : Bytes32 -> BlsFieldElement
+bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg field_element where
+    field_element = join bytes // Crytol is big endian
+    error_msg = "BLS scalar field element must be less than modulus"
+
+/**
+ * Perform BLS validation required by the types `KZGProof` and `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#validate_kzg_g1
+ * ```repl
+ * :prove validate_kzg_g1 G1_1P_COMPRESSED
+ * // :error key_validate G1_INVALID_POINT_COMPRESSED // Cryptol cannot currently do this
+ * ```
+ * NOTE: I have manually checked that calling `key_validate` on an invalid compressed point
+ *  fails with an error thrown. Unfortunately, there is not a way in the Cryptol REPL to
+ *  say that I expect an error to be thrown.
+ * NOTE: this repl test is slow (couple of seconds).
+ */
+validate_kzg_g1 : Bytes48 -> Bit
+validate_kzg_g1 b =
+    if b == G1_POINT_AT_INFINITY then True
+    else key_validate b
+
+/**
+ * Convert untrusted bytes into a trusted and validated `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_commitment
+ * ```repl
+ * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * ```
+ * NOTE: this repl test is slow (couple of seconds).
+ */
+bytes_to_kzg_commitment : Bytes48 -> KZGCommitment
+bytes_to_kzg_commitment b =
+    assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b
+
+/**
+ * Same as for `KZGCommitment`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type KZGProof = Bytes48
+
+/**
+ * Convert untrusted bytes into a trusted and validated `KZGProof`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_proof
+  * ```repl
+ * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * ```
+ * NOTE: this repl test is slow (couple of seconds).
+ */
+bytes_to_kzg_proof : Bytes48 -> KZGProof
+bytes_to_kzg_proof b =
+    assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b
 
 /*
  * ===============
@@ -173,7 +245,6 @@ property test_bls_div x y expected =
 test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
-
 
 /**
  * Unit tests for `g1_lincomb`.
