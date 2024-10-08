@@ -43,12 +43,19 @@ bls_div x y = toIntegral (div_mod x' y') where
  * NOTE: this Cryptol function requires n >= 2, which is not the same constraint on the Python function,
  *  whose constraint is n >= 0.
  * ```repl
- * let expected_powers = [0x01, 0x03, 0x09, 0x1b, 0x051, 0x0f3, 0x2d9, 0x88b]
+ * let expected_powers = [1, 3, 3^^2, 3^^3, 3^^4, 3^^5, 3^^6, ((3^^7):BlsFieldElement)]
  * :prove compute_powers`{8} 3 == expected_powers
+ * :prove compute_powers`{0} 3 == []
+ * :prove compute_powers`{1} 7 == [1:BlsFieldElement]
+ * :prove compute_powers`{2} 7 == [1:BlsFieldElement, 7]
  * ```
  */
-compute_powers : {n} (fin n, width n <= 64, n >= 2) => BlsFieldElement -> [n]BlsFieldElement
-compute_powers x = powers where
+compute_powers : {n} (fin n, width n <= 64) => BlsFieldElement -> [n]BlsFieldElement
+compute_powers x
+    | n == 0 => []
+    | n == 1 => [1]
+    | n == 2 => [1, x]
+    | n > 2 => powers where
         x' = fromIntegral`{BLS_MODULUS} x
         powers' = [1] # [(powers'@i) * x' | i <- [0 .. n-2]]
         powers = map toIntegral powers'
@@ -125,7 +132,7 @@ PRIMITIVE_ROOT_OF_UNITY = 7
  * Precondition: `(BLS_MODULUS - 1) % order == 0`
  * Assertion: `order == n`
  */
-compute_roots_of_unity : {n} (fin n, width n <= 64, n >= 2) => UInt64 -> [n]BlsFieldElement
+compute_roots_of_unity : {n} (fin n, width n <= 64) => UInt64 -> [n]BlsFieldElement
 compute_roots_of_unity order = assert (order == `n) "order must be equal to n" result where
         order' = toInteger order
         root_of_unity = pow_mod PRIMITIVE_ROOT_OF_UNITY ((`(BLS_MODULUS) - 1) / order')
