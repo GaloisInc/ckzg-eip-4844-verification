@@ -1,0 +1,157 @@
+/**
+ * This module contains a slightly optimized G1 point
+ *  scalar multiplication function. For some scalars
+ *  the multiplication will be computed significantly
+ *  faster: those at or slightly greater than the
+ *  precomputed points. For all other scalars, this
+ *  function will run in about the same amount of time
+ *  as the generic `g1_multi` found in `Spec::BlsEC`.
+ *  The most significant optimization is for those
+ *  scalars greater than `BLS_MODULUS / 2` where we
+ *  can call `g1_multi_optimized` from `Spec::BlsEC`.
+ *
+ * NOTE: this is not the correct way to optimize ECC
+ *  scalar multiplication --- it was just the easiest
+ *  way give the deadline constraints on creating this
+ *  code. For actual optimizations, the usual approach
+ *  is to change coordinate systems (away from Affine)
+ *  or to use windowing algorithms.
+ */
+module Spec::BlsG1MultiOptimized where
+
+import Common::Utils
+import Spec::BlsEC
+import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange3
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange5
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange6
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange7
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange8
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange9
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange64
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow1
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow2
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow4
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow6
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow8
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow10
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow12
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow14
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow16
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange4096pow18
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow229
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow230
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow231
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow232
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow233
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow234
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow235
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow236
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow237
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow238
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow239
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow240
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow241
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow242
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow243
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow244
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow245
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow246
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow247
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow248
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow249
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow250
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow251
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow252
+import Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow253
+
+
+/**
+ * Use look up tables for constant time improvements to
+ *  scalar multiplication for G1 points.
+ * There are two approaches: the bottom up and top down.
+ *  - Bottom up: we have precomputed all LAGRANGE_BRP
+ *     points multiplied by `k` up to 9.
+ *     This saves a handful of doubles and adds.
+ *  - Top down: we have precomputed all LAGRANGE_BRP
+ *     points for some scalar powers of 2. For these
+ *     scalars, and scalars slightly greater, we have
+ *     a major speed up (e.g. for 2^255 we can use the
+ *     look up to go from 5 seconds to under 0.1 seconds).
+ *     But for scalars just smaller than these powers,
+ *     there is no speed up.
+ *     I chose the powers of 2 to help with the largest
+ *     numbers, and then some powers of 4096 to have a
+ *     few more spots of optimization. I'm sure that a
+ *     more thorough analysis could optimize this better.
+ *     This was the easiest way to speed up our computations.
+ */
+g1_multi_with_table : G1Point -> UInt256 -> UInt256 -> G1Point
+g1_multi_with_table point scalar index =
+    if scalar == 0 then G1_INFINITY
+     | scalar == 1 then point
+     | scalar == 2 then (KZG_LAGRANGE_BRP_2@index)
+     | scalar == 3 then (KZG_LAGRANGE_BRP_3@index)
+     | scalar == 4 then (KZG_LAGRANGE_BRP_4@index)
+     | scalar == 5 then (KZG_LAGRANGE_BRP_5@index)
+     | scalar == 6 then (KZG_LAGRANGE_BRP_6@index)
+     | scalar == 7 then (KZG_LAGRANGE_BRP_7@index)
+     | scalar == 8 then (KZG_LAGRANGE_BRP_8@index)
+     | scalar == 9 then (KZG_LAGRANGE_BRP_9@index)
+     | scalar >= `(BLS_MODULUS) / 2 then g1_multi_optimized point scalar
+     | scalar >= 2^^253   then split_multi (KZG_LAGRANGE_BRP_2pow253@index)   (2^^253)
+     | scalar >= 2^^252   then split_multi (KZG_LAGRANGE_BRP_2pow252@index)   (2^^252)
+     | scalar >= 2^^251   then split_multi (KZG_LAGRANGE_BRP_2pow251@index)   (2^^251)
+     | scalar >= 2^^250   then split_multi (KZG_LAGRANGE_BRP_2pow250@index)   (2^^250)
+     | scalar >= 2^^249   then split_multi (KZG_LAGRANGE_BRP_2pow249@index)   (2^^249)
+     | scalar >= 2^^248   then split_multi (KZG_LAGRANGE_BRP_2pow248@index)   (2^^248)
+     | scalar >= 2^^247   then split_multi (KZG_LAGRANGE_BRP_2pow247@index)   (2^^247)
+     | scalar >= 2^^246   then split_multi (KZG_LAGRANGE_BRP_2pow246@index)   (2^^246)
+     | scalar >= 2^^245   then split_multi (KZG_LAGRANGE_BRP_2pow245@index)   (2^^245)
+     | scalar >= 2^^244   then split_multi (KZG_LAGRANGE_BRP_2pow244@index)   (2^^244)
+     | scalar >= 2^^243   then split_multi (KZG_LAGRANGE_BRP_2pow243@index)   (2^^243)
+     | scalar >= 2^^242   then split_multi (KZG_LAGRANGE_BRP_2pow242@index)   (2^^242)
+     | scalar >= 2^^241   then split_multi (KZG_LAGRANGE_BRP_2pow241@index)   (2^^241)
+     | scalar >= 2^^240   then split_multi (KZG_LAGRANGE_BRP_2pow240@index)   (2^^240)
+     | scalar >= 2^^239   then split_multi (KZG_LAGRANGE_BRP_2pow239@index)   (2^^239)
+     | scalar >= 2^^238   then split_multi (KZG_LAGRANGE_BRP_2pow238@index)   (2^^238)
+     | scalar >= 2^^237   then split_multi (KZG_LAGRANGE_BRP_2pow237@index)   (2^^237)
+     | scalar >= 2^^236   then split_multi (KZG_LAGRANGE_BRP_2pow236@index)   (2^^236)
+     | scalar >= 2^^235   then split_multi (KZG_LAGRANGE_BRP_2pow235@index)   (2^^235)
+     | scalar >= 2^^234   then split_multi (KZG_LAGRANGE_BRP_2pow234@index)   (2^^234)
+     | scalar >= 2^^233   then split_multi (KZG_LAGRANGE_BRP_2pow233@index)   (2^^233)
+     | scalar >= 2^^232   then split_multi (KZG_LAGRANGE_BRP_2pow232@index)   (2^^232)
+     | scalar >= 2^^231   then split_multi (KZG_LAGRANGE_BRP_2pow231@index)   (2^^231)
+     | scalar >= 2^^230   then split_multi (KZG_LAGRANGE_BRP_2pow230@index)   (2^^230)
+     | scalar >= 2^^229   then split_multi (KZG_LAGRANGE_BRP_2pow239@index)   (2^^229)
+     | scalar >= 4096^^18 then split_multi (KZG_LAGRANGE_BRP_4096pow18@index) (4096^^18)
+     | scalar >= 4096^^16 then split_multi (KZG_LAGRANGE_BRP_4096pow16@index) (4096^^16)
+     | scalar >= 4096^^14 then split_multi (KZG_LAGRANGE_BRP_4096pow14@index) (4096^^14)
+     | scalar >= 4096^^12 then split_multi (KZG_LAGRANGE_BRP_4096pow12@index) (4096^^12)
+     | scalar >= 4096^^10 then split_multi (KZG_LAGRANGE_BRP_4096pow10@index) (4096^^10)
+     | scalar >= 4096^^8  then split_multi (KZG_LAGRANGE_BRP_4096pow8@index)  (4096^^8)
+     | scalar >= 4096^^6  then split_multi (KZG_LAGRANGE_BRP_4096pow6@index)  (4096^^6)
+     | scalar >= 4096^^4  then split_multi (KZG_LAGRANGE_BRP_4096pow4@index)  (4096^^4)
+     | scalar >= 4096^^2  then split_multi (KZG_LAGRANGE_BRP_4096pow2@index)  (4096^^2)
+     | scalar >= 4096     then split_multi (KZG_LAGRANGE_BRP_4096pow1@index)   4096
+     | scalar >= 64       then split_multi (KZG_LAGRANGE_BRP_64@index)         64
+     else g1_multi point scalar
+     where
+        split_multi pp n = g1_add (g1_multi pp (scalar / n)) (g1_multi_with_table point (scalar % n) index)
+
+/**
+ * ```repl
+ * :prove correct_g1_multi_with_table (`(BLS_MODULUS) - 1)
+ * :prove correct_g1_multi_with_table ((`(BLS_MODULUS) / 2) - 1)
+ * :prove correct_g1_multi_with_table 4097
+ * :prove correct_g1_multi_with_table ((2^^229) + 111113)
+ * :prove correct_g1_multi_with_table ((`(BLS_MODULUS) / 2^^31) + 1)
+ * ```
+ */
+property correct_g1_multi_with_table scalar =
+    foldl (&&) True [g1_point_eq pi ei | pi <- precomputed | ei <- expected] where
+        random_indices = [0, 5, 1388, 4095]
+        precomputed = [g1_multi_with_table (LAGRANGE_BRP_POINTS@i) scalar i | i <- random_indices]
+        expected = [g1_multi_optimized (LAGRANGE_BRP_POINTS@i) scalar | i <- random_indices]

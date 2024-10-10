@@ -7,6 +7,8 @@ module Spec::BlsHelpers where
 import Common::ModArith
 import Common::Utils
 import Spec::BlsEC
+import Spec::BlsG1MultiOptimized
+import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
 import Spec::BlsSerde
 
 /**
@@ -59,6 +61,20 @@ compute_powers x
         powers = map toIntegral powers'
 
 /**
+ * Performs a multi-scalar multiplication between the bit-reversal
+ * permutation of the KZG Lagrange setup G1 `points`.
+ *
+ * WARNING: this function assumes that the input `points` is equal to:
+ * ```
+ * let points = [bytes48_to_G1 b | b <- (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE)]
+ * points == LAGRANGE_BRP_POINTS
+ * ```
+ */
+g1_multi_exp_lbrp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp_lbrp points scalars = results!0 where
+    results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (len-1)]]
+
+/**
  * Performs a multi-scalar multiplication between G1 `points` and `scalars`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#multi_exp
  * For the actual implementation,
@@ -68,7 +84,16 @@ compute_powers x
  */
 g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
-    results = [G1_INFINITY] # [g1_add (results@i) (g1_multi (points@i) (scalars@i)) | i <- [0 .. len-1]]
+    results = [G1_INFINITY] # [g1_add r (g1_multi p s) | r <- results | p <- points | s <- scalars]
+
+/**
+ * Add a property that our optimized g1_multi_exp is equivalent to
+ *  the more obviously correct implementation.
+ * NOTE: property is slow to prove (takes ~15 minutes).
+ */
+property g1_multi_exp_equiv = g1_multi_exp_lbrp points scalars == g1_multi_exp points scalars where
+    points = LAGRANGE_BRP_POINTS
+    scalars = [1 .. 4096]
 
 /**
  * Deserialize the G1 bytes into a G1 point
@@ -110,12 +135,24 @@ type KZGCommitment = Bytes48
  *  because our type parameter `n` enforces that for us.
  * NOTE: the `points` being passed in are compressed G1 points.
  */
-g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
+g1_lincomb : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
     | n == 0 => G1_POINT_AT_INFINITY
     | n > 0 => g1_to_bytes48 result where
         points_g1 = [bytes48_to_G1 point | point <- points]
         result = g1_multi_exp`{n} points_g1 scalars
+
+/**
+ * This function calls `g1_multi_exp_lbrp` and thus only works
+ *  under the same constraint for that function found in the
+ *  "WARNING" comment.
+ */
+g1_lincomb_lbrp : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
+g1_lincomb_lbrp points scalars
+    | n == 0 => G1_POINT_AT_INFINITY
+    | n > 0 => g1_to_bytes48 result where
+        points_g1 = [bytes48_to_G1 point | point <- points]
+        result = g1_multi_exp_lbrp`{n} points_g1 scalars
 
 /**
  * BLS Primitive root of unity.
@@ -251,7 +288,7 @@ property test_bls_div x y expected =
  * :prove test_g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] (g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2])
  * ```
  */
-test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
+test_g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
 
@@ -265,7 +302,7 @@ property test_g1_multi_exp points scalars expected =
  * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
  * ```
  */
-test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
+test_g1_lincomb : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
 property test_g1_lincomb points scalars commitment =
     g1_lincomb points scalars == commitment
 

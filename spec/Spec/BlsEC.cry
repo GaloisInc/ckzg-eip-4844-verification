@@ -114,19 +114,33 @@ g1_add p1 p2 =
 /**
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
+ *  Call `g1_multi` instead if `scalar == BLS_MODULUS`.
+ * The optimization of running scalar multiplication on the inverse and then using the
+ *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  */
+g1_multi_optimized : G1Point -> UInt256 -> G1Point
+g1_multi_optimized point scalar =
+    if scalar < `(BLS_MODULUS) / 2
+        then g1_multi point scalar
+    else
+        { xCoord = x
+        , yCoord = y
+        }
+    where
+        inverse_scalar = `(BLS_MODULUS) - scalar
+        inverse_point = g1_multi point inverse_scalar
+        y = fromInteger (`(Fp) - (fromZ inverse_point.yCoord))
+        x = inverse_point.xCoord
+
 g1_multi : G1Point -> UInt256 -> G1Point
 g1_multi point scalar =
-    if scalar == 0 then
-        G1_INFINITY
-    else if scalar == 1 then
-        point
-    else if scalar % 2 == 0 then
+    if scalar == 0 then G1_INFINITY
+        | scalar == 1 then point
         // If scalar is even, just double
-        g1_multi (g1_double point) (scalar / 2)
-    else
+        | scalar % 2 == 0 then g1_multi (g1_double point) (scalar / 2)
         // If scalar is odd, double and add
-        g1_add ((g1_multi (g1_double point) (scalar / 2))) point
+        else g1_add ((g1_multi (g1_double point) (scalar / 2))) point
 
 /**
  * The subgroup modulus.

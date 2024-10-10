@@ -89,7 +89,8 @@ modular_inverse x = fromInteger (multinv (fromZ x) `n)
  * Divide two field elements: x by y
  * ```repl
  * :prov div_mod (3 : Z 319) (fromInteger 7492) == 212
- * :prov div_mod (3 : Z 319) (fromInteger (-7492))== 107
+ * :prov div_mod (3 : Z 319) (fromInteger (-7492)) == 107
+ * :prov div_mod (3 : Z 319) 0 == 0
  * ```
  */
 div_mod : {n} (fin n, n >= 1) => Z n -> Z n -> Z n
