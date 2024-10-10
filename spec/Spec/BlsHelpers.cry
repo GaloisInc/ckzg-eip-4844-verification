@@ -143,6 +143,18 @@ g1_lincomb points scalars
         result = g1_multi_exp`{n} points_g1 scalars
 
 /**
+ * This function calls `g1_multi_exp_lbrp` and thus only works
+ *  under the same constraint for that function found in the
+ *  "WARNING" comment.
+ */
+g1_lincomb_lbrp : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
+g1_lincomb_lbrp points scalars
+    | n == 0 => G1_POINT_AT_INFINITY
+    | n > 0 => g1_to_bytes48 result where
+        points_g1 = [bytes48_to_G1 point | point <- points]
+        result = g1_multi_exp_lbrp`{n} points_g1 scalars
+
+/**
  * BLS Primitive root of unity.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
  */
