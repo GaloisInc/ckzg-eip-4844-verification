@@ -60,7 +60,9 @@ compute_kzg_proof_impl polynomial z = (proof, y) where
         else
             // Compute: q(x_i) = (p(x_i) - p(z)) / (x_i - z).
             toIntegral (div_mod`{BLS_MODULUS} a b)
-    proof = g1_lincomb (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE) quotient_polynomial
+    // Note that we call the 'lincomb' and 'multi_exp' functions hardcoded to optimize
+    //  scalar multiplication on the KZG Lagrange setup points.
+    proof = g1_lincomb_lbrp (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE) quotient_polynomial
 
 /**
  * Compute KZG proof at point `z` for the polynomial represented by `blob`.
