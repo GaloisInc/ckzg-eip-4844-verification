@@ -8,6 +8,7 @@ import Common::ModArith
 import Common::Utils
 import Spec::BlsEC
 import Spec::BlsG1MultiOptimized
+import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
 import Spec::BlsSerde
 
 /**
@@ -60,6 +61,20 @@ compute_powers x
         powers = map toIntegral powers'
 
 /**
+ * Performs a multi-scalar multiplication between the bit-reversal
+ * permutation of the KZG Lagrange setup G1 `points`.
+ *
+ * WARNING: this function assumes that the input `points` is equal to:
+ * ```
+ * let points = [bytes48_to_G1 b | b <- (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE)]
+ * points == LAGRANGE_BRP_POINTS
+ * ```
+ */
+g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp points scalars = results!0 where
+    results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (len-1)]]
+
+/**
  * Performs a multi-scalar multiplication between G1 `points` and `scalars`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#multi_exp
  * For the actual implementation,
@@ -67,9 +82,18 @@ compute_powers x
  * NOTE: the Python multi_exp handles both G1 and G2 points, and just calls their
  *  corresponding `add` and `multiply` functions. This implementation is for G1 points only.
  */
-g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
-g1_multi_exp points scalars = results!0 where
-    results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (len-1)]]
+g1_multi_exp_ref : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp_ref points scalars = results!0 where
+    results = [G1_INFINITY] # [g1_add r (g1_multi p s) | r <- results | p <- points | s <- scalars]
+
+/**
+ * Add a property that our optimized g1_multi_exp is equivalent to
+ *  the more obviously correct implementation.
+ * NOTE: property is slow to prove (takes ~15 minutes).
+ */
+property g1_multi_exp_equiv = g1_multi_exp points scalars == g1_multi_exp_ref points scalars where
+    points = LAGRANGE_BRP_POINTS
+    scalars = [1 .. 4096]
 
 /**
  * Deserialize the G1 bytes into a G1 point
