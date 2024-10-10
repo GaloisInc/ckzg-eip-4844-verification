@@ -67,7 +67,7 @@ compute_powers x
  * NOTE: the Python multi_exp handles both G1 and G2 points, and just calls their
  *  corresponding `add` and `multiply` functions. This implementation is for G1 points only.
  */
-g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
     results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (len-1)]]
 
@@ -111,7 +111,7 @@ type KZGCommitment = Bytes48
  *  because our type parameter `n` enforces that for us.
  * NOTE: the `points` being passed in are compressed G1 points.
  */
-g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
+g1_lincomb : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
     | n == 0 => G1_POINT_AT_INFINITY
     | n > 0 => g1_to_bytes48 result where
@@ -252,7 +252,7 @@ property test_bls_div x y expected =
  * :prove test_g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] (g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2])
  * ```
  */
-test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
+test_g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
 property test_g1_multi_exp points scalars expected =
     g1_point_eq (g1_multi_exp points scalars) expected
 
@@ -266,7 +266,7 @@ property test_g1_multi_exp points scalars expected =
  * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
  * ```
  */
-test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
+test_g1_lincomb : {n} (fin n, n >= 1, 256 >= width (n - 1)) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
 property test_g1_lincomb points scalars commitment =
     g1_lincomb points scalars == commitment
 
