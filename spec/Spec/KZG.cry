@@ -55,11 +55,12 @@ compute_kzg_proof_impl polynomial z = (proof, y) where
     quotient i a b =
         if b == 0 then
             // The denominator is zero hence `z` is a root of unity: we must handle it as a special case.
-            compute_quotient_eval_within_domain (roots_of_unity_brp@i) polynomial y
+            // This case can only happen once at most.
+            compute_quotient_eval_within_domain (ROOTS_OF_UNITY_BRP@i) polynomial y
         else
             // Compute: q(x_i) = (p(x_i) - p(z)) / (x_i - z).
             toIntegral (div_mod`{BLS_MODULUS} a b)
-    proof = g1_lincomb (bit_reversal_permutation (KZG_SETUP_G1_LAGRANGE)) quotient_polynomial
+    proof = g1_lincomb (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE) quotient_polynomial
 
 /**
  * Compute KZG proof at point `z` for the polynomial represented by `blob`.
