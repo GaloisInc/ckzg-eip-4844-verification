@@ -7,6 +7,7 @@ module Spec::BlsHelpers where
 import Common::ModArith
 import Common::Utils
 import Spec::BlsEC
+import Spec::BlsG1MultiOptimized
 import Spec::BlsSerde
 
 /**
@@ -68,7 +69,7 @@ compute_powers x
  */
 g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
-    results = [G1_INFINITY] # [g1_add r (g1_multi_optimized p s) | r <- results | p <- points | s <- scalars]
+    results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (FIELD_ELEMENTS_PER_BLOB-1)]]
 
 /**
  * Deserialize the G1 bytes into a G1 point
