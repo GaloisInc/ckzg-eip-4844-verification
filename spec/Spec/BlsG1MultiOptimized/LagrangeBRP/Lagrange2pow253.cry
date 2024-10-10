@@ -1,7 +1,7 @@
 module Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange2pow253 where
 
 import Spec::BlsEC
-import Spec::Polynomials
+import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
 
 generate_next_points : [FIELD_ELEMENTS_PER_BLOB]G1Point
 generate_next_points =

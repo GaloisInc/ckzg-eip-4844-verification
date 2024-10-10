@@ -2,7 +2,7 @@ module Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange7 where
 
 import Spec::BlsEC
 import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
-import Spec::Polynomials
+import Spec::BlsG1MultiOptimized::GenerateLagrangeBRP
 
 generate_points : [FIELD_ELEMENTS_PER_BLOB]G1Point
 generate_points =
