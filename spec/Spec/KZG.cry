@@ -21,11 +21,10 @@ import Spec::TrustedSetup
  */
 compute_quotient_eval_within_domain : BlsFieldElement -> Polynomial -> BlsFieldElement -> BlsFieldElement
 compute_quotient_eval_within_domain z polynomial y = toIntegral result where
-    roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
     result = sum [compute i | i <- [0 .. (FIELD_ELEMENTS_PER_BLOB-1)]]
-    f i = (toInteger `(BLS_MODULUS)) + (toInteger (polynomial@i)) - (toInteger (y % `(BLS_MODULUS)))
-    omega i = fromIntegral`{BLS_MODULUS} (roots_of_unity_brp@i)
-    numerator i = (fromInteger (f i)) * (omega i)
+    f i = (fromIntegral (polynomial@i)) - (fromIntegral y)
+    omega i = fromIntegral`{BLS_MODULUS} (ROOTS_OF_UNITY_BRP@i)
+    numerator i = (f i) * (omega i)
     // Adding the BLS_MODULUS doesn't affect the computation because it is modular arithmetic with that modulus
     denominator i = z' * (z' - (omega i))
     z' = fromIntegral z
@@ -44,12 +43,11 @@ type KZGProof = Bytes48
  */
 compute_kzg_proof_impl : Polynomial -> BlsFieldElement -> (KZGProof, BlsFieldElement)
 compute_kzg_proof_impl polynomial z = (proof, y) where
-    roots_of_unity_brp = bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
     // For all x_i, compute p(x_i) - p(z)
     y = evaluate_polynomial_in_evaluation_form polynomial z
     polynomial_shifted = [(fromIntegral`{BLS_MODULUS} p) - (fromIntegral y) | p <- polynomial]
     // For all x_i, compute (x_i - z)
-    denominator_poly = [(fromIntegral`{BLS_MODULUS} x) - (fromIntegral z) | x <- roots_of_unity_brp]
+    denominator_poly = [(fromIntegral`{BLS_MODULUS} x) - (fromIntegral z) | x <- ROOTS_OF_UNITY_BRP]
     // Compute the quotient polynomial directly in evaluation form
     quotient_polynomial = [quotient i a b | a <- polynomial_shifted | b <- denominator_poly | i <- [0 .. FIELD_ELEMENTS_PER_BLOB-1]]
     // Handle the conditional computation of computing the quotient
