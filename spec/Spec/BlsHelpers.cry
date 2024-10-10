@@ -70,8 +70,8 @@ compute_powers x
  * points == LAGRANGE_BRP_POINTS
  * ```
  */
-g1_multi_exp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
-g1_multi_exp points scalars = results!0 where
+g1_multi_exp_lbrp : {len} (fin len, len >= 1, 256 >= width (len - 1)) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp_lbrp points scalars = results!0 where
     results = [G1_INFINITY] # [g1_add r (g1_multi_with_table p s i) | r <- results | p <- points | s <- scalars | i <- [0 .. (len-1)]]
 
 /**
@@ -82,8 +82,8 @@ g1_multi_exp points scalars = results!0 where
  * NOTE: the Python multi_exp handles both G1 and G2 points, and just calls their
  *  corresponding `add` and `multiply` functions. This implementation is for G1 points only.
  */
-g1_multi_exp_ref : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
-g1_multi_exp_ref points scalars = results!0 where
+g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
+g1_multi_exp points scalars = results!0 where
     results = [G1_INFINITY] # [g1_add r (g1_multi p s) | r <- results | p <- points | s <- scalars]
 
 /**
@@ -91,7 +91,7 @@ g1_multi_exp_ref points scalars = results!0 where
  *  the more obviously correct implementation.
  * NOTE: property is slow to prove (takes ~15 minutes).
  */
-property g1_multi_exp_equiv = g1_multi_exp points scalars == g1_multi_exp_ref points scalars where
+property g1_multi_exp_equiv = g1_multi_exp_lbrp points scalars == g1_multi_exp points scalars where
     points = LAGRANGE_BRP_POINTS
     scalars = [1 .. 4096]
 
