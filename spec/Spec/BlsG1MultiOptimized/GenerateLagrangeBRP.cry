@@ -1,0 +1,30 @@
+/**
+ * This modules is used to precompute scalar multiplication on
+ *  the fixed KZG Lagrange bit-reversal permutation points which
+ *  come from the trusted setup.
+ * These precomputed points can be used to significantly speed
+ *  up scalar multiplication used in `compute_kzg_proof_impl`,
+ *  found in `Spec::KZG`.
+ * WARNING: before modifying this file, know that it is being
+ *  used by the `genLagrangePrecompFiles.sh` bash script found
+ *  in this same folder.
+ */
+module Spec::BlsG1MultiOptimized::GenerateLagrangeBRP where
+
+import Spec::BlsEC
+import Spec::BlsHelpers
+import Spec::Permutations
+import Spec::TrustedSetup
+
+/**
+ * This computation is the same as found in `compute_kzg_proof` for the G1 points passed
+ *  into the `g1_lincomb` call (the last line of the function).
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
+ */
+LAGRANGE_BRP_POINTS = [bytes48_to_G1 point | point <- (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE)]
+
+/**
+ * This generic function is used by `genLagrangePrecompFiles.sh` to generate the
+ *  first set of precomputed points.
+ */
+generate_points scalar points = [g1_multi point scalar | point <- points]

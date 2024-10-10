@@ -1,0 +1,11 @@
+module Spec::BlsG1MultiOptimized::LagrangeBRP::Lagrange__MOD__ where
+
+import Spec::BlsEC
+import Spec::Polynomials
+
+generate_next_points : [FIELD_ELEMENTS_PER_BLOB]G1Point
+generate_next_points =
+    [g1_multi point __SIZE__ | point <- KZG_LAGRANGE_BRP___MOD__]
+
+KZG_LAGRANGE_BRP___MOD__ : [FIELD_ELEMENTS_PER_BLOB]G1Point
+KZG_LAGRANGE_BRP___MOD__ = [__POINTS__
