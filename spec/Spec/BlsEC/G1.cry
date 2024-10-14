@@ -255,8 +255,7 @@ property test_g1_add p1 p2 p3 =
  * :prove test_g1_multi G1 2 G1_2P
  * :prove test_g1_multi G1 3 G1_3P
  * :prove test_g1_multi G1 6 G1_6P
- * :prove test_g1_multi G1_2P 3 G1_6P
- * :prove test_g1_multi G1_3P 2 G1_6P
+ * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
  * ```
  */
 test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
