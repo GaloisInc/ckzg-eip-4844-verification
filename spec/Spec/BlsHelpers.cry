@@ -68,7 +68,7 @@ compute_powers x
  */
 g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
-    results = [G1_INFINITY] # [g1_add (results@i) (g1_multi (points@i) (scalars@i)) | i <- [0 .. len-1]]
+    results = [G1_INFINITY] # [g1_add r (g1_multi_optimized p s) | r <- results | p <- points | s <- scalars]
 
 /**
  * Deserialize the G1 bytes into a G1 point
