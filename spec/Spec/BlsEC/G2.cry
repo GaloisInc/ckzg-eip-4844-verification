@@ -157,6 +157,18 @@ fq2_inv coeffs = {real = real, imag = imag} where
     (coeffs1.real == coeffs2.real) && (coeffs1.imag == coeffs2.imag)
 
 /**
+ * Negate the Fq2 element.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L355
+ * ```repl
+ * :prove fq2_neg (fq2_neg G2.xCoeffs) == G2.xCoeffs
+ * ```
+ */
+fq2_neg : Fq2 -> Fq2
+fq2_neg coeffs = {real = new_real, imag = new_imag} where
+    new_real = -coeffs.real
+    new_imag = -coeffs.imag
+
+/**
  * G2 elliptic curve point.
  * This is the quadratic extension field (Fq2) for the field Fq (G1).
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L367
@@ -235,6 +247,23 @@ g2_is_valid_point point =
     where
         x = point.xCoeffs
         y = point.yCoeffs
+
+/**
+ * Negate a G2 point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L135
+ * ```repl
+ * :prove g2_negate G2 == G2_Negated
+ * :prove g2_negate (g2_negate G2) == G2
+ * ```
+ */
+g2_negate : G2Point -> G2Point
+g2_negate point = newPoint where
+    x = point.xCoeffs
+    y = point.yCoeffs
+    newPoint =
+        { xCoeffs = x
+        , yCoeffs = fq2_neg y
+        }
 
 /**
  * Double a G2 point.
@@ -331,6 +360,21 @@ G2_yInverse : Fq2
 G2_yInverse =
     { real = 3828301281232776537393462114696026453820925117135598932697882187079936548530569912296382199133331215710911400309693
     , imag = 1450185639544495128598198914056492809111071767684112182252696543466687995844478949870392653614483391964324409513904
+    }
+
+/**
+ * G2 negated. Computed using py_ecc: `normalize(neg(G2))`.
+ */
+G2_Negated : G2Point
+G2_Negated =
+    { xCoeffs =
+        { real = 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+        , imag = 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758
+        }
+    , yCoeffs =
+        { real = 2017258952934375457849735304558732518256013841723352154472679471057686924117014146018818524865681679396399932211882
+        , imag = 3074855889729334937670587859959866275799142626485414915307030157330054773488162299461738339401058098462460928340205
+        }
     }
 
 /*
