@@ -7,7 +7,8 @@ module Spec::BlsSerde where
 
 import Common::ModArith
 import Common::Utils
-import Spec::BlsEC
+import Spec::BlsEC::Field
+import Spec::BlsEC::G1
 
 /**
  * Size of a G1 point
@@ -106,15 +107,15 @@ decompress_G1 z =
         { xCoord = x, yCoord = y}
      where
         isInfinity = (z % POW_2_381) == 0
-        // We want to use the type Z Fp for all modular arithmetic, but
-        //  we have to use Fp as a value which is not allowable with
-        //  Z Fp, so we sometimes need to convert back and forth between
-        //  Z Fp and Integer.
+        // We want to use the type Z Fq for all modular arithmetic, but
+        //  we have to use Fq as a value which is not allowable with
+        //  Z Fq, so we sometimes need to convert back and forth between
+        //  Z Fq and Integer.
         (cFlag, bFlag, aFlag) = get_flags z
         xBits = (toInteger z) % POW_2_381
         x = fromInteger xBits
-        q = `(Fp)
-        b = 4 : Z Fp // Our elliptic curve equation is y^^2 = x^^3 + 4
+        q = `(Fq)
+        b = 4 : Z Fq // Our elliptic curve equation is y^^2 = x^^3 + 4
         // Try solving y coordinate from the equation y^^2 = x^^3 + b using quadratic residue
         y = pow_mod base exp
         base = x^^3 + b
@@ -145,7 +146,7 @@ compress_G1 point =
         // Record y's leftmost bit to the a_flag
         x = fromZ point.xCoord
         y = fromZ point.yCoord
-        q = toInteger `(Fp)
+        q = toInteger `(Fq)
         a_flag = (y * 2) / q
 
 /**
@@ -196,7 +197,7 @@ G1_INVALID_INFINITY_COMPRESSED = cFlag + bFlag + aFlag where
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_INVALID_TO_BIG_COMPRESSED : Bytes48
-G1_INVALID_TO_BIG_COMPRESSED = cFlag + `(Fp) + 1 where
+G1_INVALID_TO_BIG_COMPRESSED = cFlag + `(Fq) + 1 where
     cFlag = (1 << 383) // is compressed
 
 /**
