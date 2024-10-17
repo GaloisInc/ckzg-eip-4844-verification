@@ -372,6 +372,19 @@ g2_point_eq : G2Point -> G2Point -> Bit
 g2_point_eq p1 p2 =
     (p1.xCoeffs ~==~ p2.xCoeffs) && (p1.yCoeffs ~==~ p2.yCoeffs)
 
+/**
+ * Determine whether or not the G2 point is a member of the subgroup.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
+ * ```repl
+ * :prove (g2_subgroup_check G2_INFINITY) == False
+ * :prove (g2_subgroup_check G2) == True
+ * :prove (g2_subgroup_check G2_2P) == True
+ * ```
+ * NOTE: these repl tests are very slow (~10 seconds each for the last two).
+ */
+g2_subgroup_check : G2Point -> Bit
+g2_subgroup_check point = G2_INFINITY != (g2_multi point `(BLS_MODULUS))
+
 /*
  * ==========
  * Unit Tests
