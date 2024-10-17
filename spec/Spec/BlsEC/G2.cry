@@ -11,6 +11,7 @@ module Spec::BlsEC::G2 where
 import Common::ModArith
 import Common::Utils
 import Spec::BlsEC::Field
+import Spec::BlsEC::Poly(poly_extended_euclidean)
 
 /**
  * A G2 point is comprised of two Fq2 elements, or sets of coefficients, each of degree two.
@@ -120,10 +121,14 @@ FQ2_B2 =
  * :prove fq2_inv G2.yCoeffs == G2_yInverse
  * :prove fq2_inv (fq2_inv G2.yCoeffs) == G2.yCoeffs
  * ```
- * TODO: Implement and make the tests pass.
  */
 fq2_inv : Fq2 -> Fq2
-fq2_inv coeffs = coeffs
+fq2_inv coeffs = {real = real, imag = imag} where
+    lm = [1, 0, 0]
+    hm = [0, 0, 0]
+    low = [coeffs.real, coeffs.imag, 0]
+    high = [FQ2_MODULUS_COEFFICIENTS.real, FQ2_MODULUS_COEFFICIENTS.imag, 1]
+    (real, imag) = poly_extended_euclidean lm low hm high
 
 /**
  * Exponentiation of a G2 coeffsicient by some scalar.
