@@ -343,6 +343,26 @@ g2_add p1 p2 =
     newY = m ~*~ (x1 ~-~ newX) ~-~ y1
 
 /**
+ * Multiply a G2 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * ```repl
+ * :prove g2_multi G2 0 == G2_INFINITY
+ * :prove g2_multi G2 1 == G2
+ * :prove g2_multi G2 2 == G2_2P
+ * :prove g2_multi G2 3 == G2_3P
+ * :prove g2_multi G2 6 == G2_6P
+ * ```
+ */
+g2_multi : G2Point -> UInt256 -> G2Point
+g2_multi point scalar =
+    if scalar == 0 then G2_INFINITY
+        | scalar == 1 then point
+        // If scalar is even, just double
+        | scalar % 2 == 0 then g2_multi (g2_double point) (scalar / 2)
+        // If scalar is odd, double and add
+        else g2_add ((g2_multi (g2_double point) (scalar / 2))) point
+
+/**
  * Helper function for testing point equality.
  * ```repl
  * :prove g2_point_eq G2 G2
