@@ -269,6 +269,8 @@ G2_6P =
  * ```repl
  * :prove g2_is_valid_point G2
  * :prove g2_is_valid_point G2_2P
+ * :prove g2_is_valid_point G2_3P
+ * :prove g2_is_valid_point G2_6P
  * ```
  */
 g2_is_valid_point : G2Point -> Bit
@@ -300,6 +302,7 @@ g2_negate point = newPoint where
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
  * ```repl
  * :prove g2_double G2 == G2_2P
+ * :prove g2_double G2_3P == G2_6P
  * ```
  */
 g2_double : G2Point -> G2Point
@@ -351,6 +354,7 @@ g2_add p1 p2 =
  * :prove g2_multi G2 2 == G2_2P
  * :prove g2_multi G2 3 == G2_3P
  * :prove g2_multi G2 6 == G2_6P
+ * :prove g2_multi G2_2P 3 == g2_multi G2_3P 2
  * ```
  */
 g2_multi : G2Point -> UInt256 -> G2Point
@@ -366,6 +370,7 @@ g2_multi point scalar =
  * Helper function for testing point equality.
  * ```repl
  * :prove g2_point_eq G2 G2
+ * :prove ~(g2_point_eq G2 G2_6P)
  * ```
  */
 g2_point_eq : G2Point -> G2Point -> Bit
