@@ -112,6 +112,12 @@ g1_add p1 p2 =
  *  Call `g1_multi` instead if `scalar == BLS_MODULUS`.
  * The optimization of running scalar multiplication on the inverse and then using the
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
+ * ```repl
+ * :prove g1_multi_optimized G1 0 == G1_INFINITY
+ * :prove g1_multi_optimized G1 1 == G1
+ * :prove g1_multi_optimized G1 6 == G1_6P
+ * :prove g1_multi_optimized G1_2P 3 == g1_multi G1_3P 2
+ * ```
  */
 g1_multi_optimized : G1Point -> UInt256 -> G1Point
 g1_multi_optimized point scalar =
@@ -130,6 +136,12 @@ g1_multi_optimized point scalar =
 /**
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * ```repl
+ * :prove g1_multi G1 0 == G1_INFINITY
+ * :prove g1_multi G1 1 == G1
+ * :prove g1_multi G1 6 == G1_6P
+ * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
+ * ```
  */
 g1_multi : G1Point -> UInt256 -> G1Point
 g1_multi point scalar =
