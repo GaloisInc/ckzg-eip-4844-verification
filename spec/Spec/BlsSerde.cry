@@ -162,7 +162,6 @@ property check_compression_decompress_inverse point = precondition ==> statement
     precondition = g1_is_valid_point point
     statement = decompress_G1 (compress_G1 point) == point
 
-
 /**
  * Make sure the compressed G1 point is valid, i.e. not infinity and in the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/ciphersuites.py#L113
