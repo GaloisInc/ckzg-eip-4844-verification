@@ -127,6 +127,10 @@ g1_multi_optimized point scalar =
         y = fromInteger (`(Fq) - (fromZ inverse_point.yCoord))
         x = inverse_point.xCoord
 
+/**
+ * Multiply a G1 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ */
 g1_multi : G1Point -> UInt256 -> G1Point
 g1_multi point scalar =
     if scalar == 0 then G1_INFINITY
@@ -135,6 +139,18 @@ g1_multi point scalar =
         | scalar % 2 == 0 then g1_multi (g1_double point) (scalar / 2)
         // If scalar is odd, double and add
         else g1_add ((g1_multi (g1_double point) (scalar / 2))) point
+
+/**
+ * Randomize tesitng to show the two g1_multi functions are equivalent.
+ * ```repl
+ * :check g1_multis_equiv
+ * ```
+ * This takes about a minute.
+ */
+g1_multis_equiv : UInt256 -> Bit
+property g1_multis_equiv scalar = precondition ==> statement where
+    precondition = scalar < `(BLS_MODULUS)
+    statement = g1_multi G1 scalar == g1_multi_optimized G1 scalar
 
 /**
  * Determine whether or not the G1 point is a member of the subgroup.
