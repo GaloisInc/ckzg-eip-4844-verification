@@ -59,7 +59,7 @@ G1_POINT_AT_INFINITY = 0xc0 # zero
  * :prove get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
  * :prove get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
  * ```
- * NOTE: `Bytes48 == [384]
+ * NOTE: `Bytes48 == [384]`
  */
 get_flags : Bytes48 -> (Bit, Bit, Bit)
 get_flags z = (c_flag, b_flag, a_flag) where
