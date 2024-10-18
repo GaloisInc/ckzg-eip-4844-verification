@@ -14,6 +14,13 @@ import Spec::BlsEC::Field
 import Spec::BlsEC::Poly(poly_extended_euclidean)
 
 /**
+ * The order of Fq2.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/constants.py#L9C1-L9C21
+ */
+FQ2_ORDER : Integer
+FQ2_ORDER = `(Fq)^^2 - 1
+
+/**
  * A G2 point is comprised of two Fq2 elements, or sets of coefficients, each of degree two.
  * Each element is comprised of a real and imaginary coeffsicient.
  */
