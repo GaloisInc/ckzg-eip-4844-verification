@@ -37,7 +37,7 @@ POW_2_383 = 2^^383
  * Note: the name, though it is somewhat misleading, is chosen to match the Python spec.
  */
 G1_POINT_AT_INFINITY : Bytes48
-G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
+G1_POINT_AT_INFINITY = 0xc0 # zero
 
 /**
  * Helper function for decompressing a G1 or G2 compresed point.
