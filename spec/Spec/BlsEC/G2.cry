@@ -3,7 +3,7 @@
  *  G2 ECC points with coordinates in the quadratic extension field Fq2.
  *
  * The Deneb Python specs has an option to use the py_ecc library for these operations.
- * This modules functions are based off of py_ecc.
+ * This module's functions are based off of py_ecc.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
  */
 module Spec::BlsEC::G2 where

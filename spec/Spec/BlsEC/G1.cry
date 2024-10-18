@@ -3,7 +3,7 @@
  * These functions are specific to the BLS curve, and specifically G1.
  *
  * The Deneb Python specs use the py_ecc library for the same operations.
- * This modules functions are based off of py_ecc.
+ * This module's functions are based off of py_ecc.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
  */
 module Spec::BlsEC::G1 where
