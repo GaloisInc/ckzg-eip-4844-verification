@@ -3,7 +3,7 @@
  *  G2 ECC points with coordinates in the quadratic extension field Fq2.
  *
  * The Deneb Python specs has an option to use the py_ecc library for these operations.
- * This modules functions are based off of py_ecc.
+ * This module's functions are based off of py_ecc.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
  */
 module Spec::BlsEC::G2 where
@@ -12,6 +12,13 @@ import Common::ModArith
 import Common::Utils
 import Spec::BlsEC::Field
 import Spec::BlsEC::Poly(poly_extended_euclidean)
+
+/**
+ * The order of Fq2.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/constants.py#L9C1-L9C21
+ */
+FQ2_ORDER : Integer
+FQ2_ORDER = `(Fq)^^2 - 1
 
 /**
  * A G2 point is comprised of two Fq2 elements, or sets of coefficients, each of degree two.
