@@ -109,19 +109,19 @@ inv_nested_for lm low nm new r = (nm', new') where
  */
 inv_nested_for_compute_value : {n} (fin n, n >= 1) => Z Fq -> Integer -> [n](Z Fq) -> [n](Z Fq) -> Z Fq
 inv_nested_for_compute_value ni i l r =
-    foldl (-) ni (map (inv_nested_for_multi l r) (inv_nested_for_index_pairs`{n} i))
+    foldl (-) ni (map (poly_pair_multi l r) (inv_nested_for_index_pairs`{n} i))
 
 /**
  * This function performs pair-wise multiplication between two polynomials.
  * ```repl
- * :prove inv_nested_for_multi [13] [13] (-1, 0) == 0
- * :prove inv_nested_for_multi [13] [13] (0, -1) == 0
- * :prove inv_nested_for_multi [13] [13] (-1, -1) == 0
- * :prove inv_nested_for_multi [(2 : Z Fq), (3 : Z Fq)] [(5 : Z Fq), (7 : Z Fq)] (0, 1) == 14
+ * :prove poly_pair_multi [13] [13] (-1, 0) == 0
+ * :prove poly_pair_multi [13] [13] (0, -1) == 0
+ * :prove poly_pair_multi [13] [13] (-1, -1) == 0
+ * :prove poly_pair_multi [(2 : Z Fq), (3 : Z Fq)] [(5 : Z Fq), (7 : Z Fq)] (0, 1) == 14
  * ```
  */
-inv_nested_for_multi : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> (Integer, Integer) -> Z Fq
-inv_nested_for_multi l r (i, j) =
+poly_pair_multi : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> (Integer, Integer) -> Z Fq
+poly_pair_multi l r (i, j) =
     if (i == -1) || (j == -1) then 0
     else (l@i) * (r@j)
 
