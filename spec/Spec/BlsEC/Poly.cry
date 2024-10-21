@@ -12,17 +12,16 @@ import Spec::BlsEC::Field
  * ```repl
  * let expected_real = 1223514866584400226619392018844575446040489926980124362465220784014275923982521236729115905530146470033177964357563
  * let expected_imag = 3495453419063574139925455551631318136524378768480668459768684498547208492074727172949503320416899422709399085629096
- * let expected = (expected_real, expected_imag)
+ * let expected = [expected_real, expected_imag]
  * let low = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160, 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758, 0]
  * let high = [1, 0, 1]
  * :prove poly_extended_euclidean [1, 0, 0] low [0, 0, 0] high == expected
  * ```
  */
-poly_extended_euclidean : {n} (fin n, n == 3) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> (Z Fq, Z Fq)
-poly_extended_euclidean lm low hm high = (invReal, invImag) where
+poly_extended_euclidean : {n} (fin n, n >= 2) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n-1](Z Fq)
+poly_extended_euclidean lm low hm high = take`{n-1} results where
     (lm', low') = inv_while lm low hm high
-    invReal = div_mod (lm'@0) (low'@0)
-    invImag = div_mod (lm'@1) (low'@0)
+    results = [div_mod lmi (low'@0) | lmi <- lm']
 
 /**
  * Implements the inner while look of the inverse function.
@@ -36,7 +35,7 @@ poly_extended_euclidean lm low hm high = (invReal, invImag) where
  * :prove inv_while [1, 0, 0] low [0, 0, 0] high == expected
  * ```
  */
-inv_while : {n} (fin n, n == 3) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> ([n](Z Fq), [n](Z Fq))
+inv_while : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> ([n](Z Fq), [n](Z Fq))
 inv_while lm low hm high =
     if (deg low) > 0 then
         inv_while nm new lm low
@@ -96,7 +95,7 @@ inv_while lm low hm high =
  * 4) Do this for both `nm` and `new`
  *  - This is the body of `inv_nested_for`
  */
-inv_nested_for : {n} (fin n, n == 3) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> ([n](Z Fq), [n](Z Fq))
+inv_nested_for : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> ([n](Z Fq), [n](Z Fq))
 inv_nested_for lm low nm new r = (nm', new') where
     nm' = [inv_nested_for_compute_value nmi i lm r | nmi <- nm | i <- [0..(n-1)]]
     new' = [inv_nested_for_compute_value newi i low r | newi <- new | i <- [0..(n-1)]]
