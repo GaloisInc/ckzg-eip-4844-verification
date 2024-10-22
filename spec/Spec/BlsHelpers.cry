@@ -8,6 +8,7 @@ import Common::ModArith
 import Common::Utils
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
+import Spec::BlsEC::G2
 import Spec::BlsSerde
 
 /**
@@ -97,6 +98,33 @@ bytes48_to_G1 bytes = decompress_G1 bytes
  */
 g1_to_bytes48 : G1Point -> Bytes48
 g1_to_bytes48 point = compress_G1 point
+
+/**
+ * Deserialize the G2 bytes into a G2 point
+ * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L337
+ * ```repl
+ * :prove bytes96_to_G2 G2_POINT_AT_INFINITY == G2_INFINITY
+ * :prove bytes96_to_G2 G2_2P_COMPRESSED == G2_2P
+ * :prove bytes96_to_G2 G2_3P_COMPRESSED == G2_3P
+ * ```
+ * NOTE: We're not testing any of the invalid points since they throw runtime errors,
+ *  and Cryptol does not have a way to expect that. One can manually test to verify
+ *  these errors are thrown.
+ */
+bytes96_to_G2 : Bytes96 -> G2Point
+bytes96_to_G2 bytes = decompress_G2 bytes
+
+/**
+ * Serialize the G2 point into G2 bytes
+ * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L315
+ * ```repl
+ * :prove g2_to_bytes96 G2_INFINITY == G2_POINT_AT_INFINITY
+ * :prove g2_to_bytes96 G2_2P == G2_2P_COMPRESSED
+ * :prove g2_to_bytes96 G2_3P == G2_3P_COMPRESSED
+ * ```
+ */
+g2_to_bytes96 : G2Point -> Bytes96
+g2_to_bytes96 point = compress_G2 point
 
 /**
  * A KZG commitment is just a G1 point

@@ -9,6 +9,7 @@ import Common::ModArith
 import Common::Utils
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
+import Spec::BlsEC::G2
 
 /**
  * Size of a G1 point
@@ -37,7 +38,7 @@ POW_2_383 = 2^^383
  * Note: the name, though it is somewhat misleading, is chosen to match the Python spec.
  */
 G1_POINT_AT_INFINITY : Bytes48
-G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
+G1_POINT_AT_INFINITY = 0xc0 # zero
 
 /**
  * Helper function for decompressing a G1 or G2 compresed point.
@@ -59,7 +60,7 @@ G1_POINT_AT_INFINITY = 0xc0 # (zero:[47*BYTE_WIDTH])
  * :prove get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
  * :prove get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
  * ```
- * NOTE: `Bytes48 == [384]
+ * NOTE: `Bytes48 == [384]`
  */
 get_flags : Bytes48 -> (Bit, Bit, Bit)
 get_flags z = (c_flag, b_flag, a_flag) where
@@ -162,7 +163,6 @@ property check_compression_decompress_inverse point = precondition ==> statement
     precondition = g1_is_valid_point point
     statement = decompress_G1 (compress_G1 point) == point
 
-
 /**
  * Make sure the compressed G1 point is valid, i.e. not infinity and in the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/ciphersuites.py#L113
@@ -244,3 +244,193 @@ G1_7P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_7P.xCoord) where
     cFlag = (1 << 383) // is compressed
     bFlag = (0 << 382) // not infinity
     aFlag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'
+
+/**
+ * Size of a G2 point
+ */
+type G2Bits = 768
+
+/**
+ * Serialized G2 point
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
+ */
+type Bytes96 = [G2Bits]
+
+/**
+ * Compressed G2 point at infinity
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ *
+ * Note: the name, though it is somewhat misleading, is chosen to match the Python spec.
+ */
+G2_POINT_AT_INFINITY : Bytes96
+G2_POINT_AT_INFINITY = 0xc0 # zero
+
+/**
+ * Test point for the decompression function `bytes96_to_G2`
+ */
+G2_2P_COMPRESSED : Bytes96
+G2_2P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
+    cFlag = (1 << 767) // is compressed
+    bFlag = (0 << 766) // not infinity
+    aFlag = (1 << 765) // because the MSB of G2_2P.yCoeffs.imag is '1'
+    xReal = (toIntegral G2_2P.xCoeffs.real)
+    xImag = (toIntegral G2_2P.xCoeffs.imag) << 384
+
+/**
+ * Test point for the decompression function `bytes96_to_G2`
+ */
+G2_3P_COMPRESSED : Bytes96
+G2_3P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
+    cFlag = (1 << 767) // is compressed
+    bFlag = (0 << 766) // not infinity
+    aFlag = (0 << 765) // because the MSB of G2_3P.yCoeffs.imag is '0'
+    xReal = (toIntegral G2_3P.xCoeffs.real)
+    xImag = (toIntegral G2_3P.xCoeffs.imag) << 384
+
+/**
+ * Compress the G2 point
+ *
+ * Encodes x and y coordinates in the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L145
+ *
+ * ```repl
+ * :prove compress_G2 G2_INFINITY == G2_POINT_AT_INFINITY
+ * :prove compress_G2 G2_2P == G2_2P_COMPRESSED
+ * :prove compress_G2 G2_3P == G2_3P_COMPRESSED
+ * ```
+ * The compressed point (z1, z2) has the bit order:
+ *  z1: (c_flag1, b_flag1, a_flag1, x1)
+ *  z2: (c_flag2, b_flag2, a_flag2, x2)
+ *  where
+ *  - c_flag1 is always set to 1
+ *  - b_flag1 indicates infinity when set to 1
+ *  - a_flag1 helps determine the y-coordinate when decompressing,
+ *  - a_flag2, b_flag2, and c_flag2 are always set to 0
+ */
+compress_G2 : G2Point -> Bytes96
+compress_G2 point =
+    if g2_point_eq point G2_INFINITY then
+        // Set c_flag = 1 and b_flag = 1. leave a_flag = x = 0
+        (fromInteger (POW_2_383 + POW_2_382)) # (zero:[G1Bits])
+    else
+        z1Bits + z2Bits
+    where
+        x_re = fromZ point.xCoeffs.real
+        x_im = fromZ point.xCoeffs.imag
+        y_re = fromZ point.yCoeffs.real
+        y_im = fromZ point.yCoeffs.imag
+        q = toInteger `(Fq)
+        // Record the leftmost bit of y_im to the a_flag1
+        // If y_im happens to be zero, then use the bit of y_re
+        a_flag1 = if y_im > 0 then (y_im * 2) / q else (y_re * 2) / q
+        // Imaginary part of x goes to z1, real part goes to z2
+        // c_flag1 = 1, b_flag1 = 0
+        z1 = x_im + a_flag1 * POW_2_381 + POW_2_383
+        z2 = x_re
+        z1Bits = (fromInteger z1) # (zero:[G1Bits])
+        z2Bits = (fromInteger z2)
+
+/**
+ * Decompress the G2 compressed point
+ *
+ * Recovers x and y coordinates from the compressed point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L175
+ *
+* ```repl
+ * :prove decompress_G2 G2_POINT_AT_INFINITY == G2_INFINITY
+ * :prove decompress_G2 G2_2P_COMPRESSED == G2_2P
+ * :prove decompress_G2 G2_3P_COMPRESSED == G2_3P
+ * ```
+ */
+decompress_G2 : Bytes96 -> G2Point
+decompress_G2 z =
+    // cFlag == 1 indicates the compressed form
+    // MSB should be 1
+    if ~c_flag1 then
+        error "decompress_G2: c_flag1 must be 1"
+     | b_flag1 != is_inf_pt then
+        error "b_flag1 should be 1"
+     | b_flag1 then
+        // 3 MSBs should be b110
+        if a_flag1 then
+            error "decompress_G2: a point at infinity should have a_flag1 == 0"
+        else G2_INFINITY
+     // Else, not point at infinity
+     // 3 MSBs should be b100 or b101
+     // Ensure that x1 is less than the field modulus.
+     | x1Bits >= q then
+        error "decompress_G2: x1 value should be less than field modulus"
+     // Ensure that z2 is less than the field modulus.
+     | z2 >= (fromInteger q) then
+        error "decompress_G2: z2 value should be less than field modulus"
+     // The check for y being invalid is in fq2_modular_squareroot
+     // Choose the y whose leftmost bit of the imaginary part is equal to the a_flag1
+     // If y_im happens to be zero, then use the bit of y_re
+     | (y_im > 0) && condition1 then
+        { xCoeffs = x
+        , yCoeffs = (y ~* -1)
+        }
+     | (y_im == 0) && condition2 then
+        { xCoeffs = x
+        , yCoeffs = (y ~* -1)
+        }
+     else
+        { xCoeffs = x
+        , yCoeffs = y
+        }
+    where
+    is_inf_pt = ((z1 % POW_2_381) == 0) && (z2 == 0)
+    z1 = take`{G2Bits / 2} z
+    z2 = drop`{G2Bits / 2} z
+    (c_flag1, b_flag1, a_flag1) = get_flags z1
+    x1Bits = (toInteger z1) % POW_2_381
+    x1 = fromInteger x1Bits
+    q = `(Fq)
+    x2 = fromIntegral`{Fq} z2
+    // x1 is the imaginary part, x2 is the real part
+    x = { real = x2, imag = x1}
+    y = fq2_modular_squareroot (x~^^3 ~+~ b2)
+    (y_re, y_im) = (fromZ y.real, fromZ y.imag)
+    b2 = FQ2_B2
+    condition1 = ((y_im * 2) / q) != (bit_to_integer (a_flag1))
+    condition2 = ((y_re * 2) / q) != (bit_to_integer (a_flag1))
+
+/**
+ * Given value=x, returns the value y such that y^^2 % q == x,
+ *  and errors if this is not possible. In cases where there are two solutions,
+ *  the value with higher imaginary component is favored;
+ *  if both solutions have equal imaginary component the value with higher real
+ *  component is favored.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L123
+ * ```repl
+ * let y_squared = G2.xCoeffs~^^3 ~+~ FQ2_B2
+ * :prove ((fq2_modular_squareroot y_squared) ~* -1) == G2.yCoeffs
+ * ```
+ */
+fq2_modular_squareroot : Fq2 -> Fq2
+fq2_modular_squareroot value =
+    if elem check EVEN_EIGHTH_ROOTS_OF_UNITY then
+        if ((x1_im > x2_im) || ((x1_im == x2_im) && (x1_re > x2_re))) then x1 else x2
+    else
+        error "Failed to find a modular squareroot"
+    where
+        candidate_squareroot = value~^^((FQ2_ORDER + 8) / 16)
+        check = candidate_squareroot~^^2 ~/~ value
+        candidate_rou_index = (find_eighth_root_of_unity_index check) / 2
+        x1 = candidate_squareroot ~/~ (EIGHTH_ROOTS_OF_UNITY@candidate_rou_index)
+        x2 = fq2_neg x1
+        (x1_re, x1_im) = (fromZ x1.real, fromZ x1.imag)
+        (x2_re, x2_im) = (fromZ x2.real, fromZ x2.imag)
+
+FQ2_ONE = {real = 1, imag = 1}
+EIGHTH_ROOTS_OF_UNITY = [FQ2_ONE~^^((FQ2_ORDER * k) / 8) | k <- [0..7]]
+EVEN_EIGHTH_ROOTS_OF_UNITY = [EIGHTH_ROOTS_OF_UNITY@i | i <- [0, 2, 4, 6]]
+
+/**
+ * Find the index of the eighth root of unity.
+ * When this function is called, we know that we've already found an even
+ *  eighth root of unity, so we only check those.
+ */
+find_eighth_root_of_unity_index : Fq2 -> Integer
+find_eighth_root_of_unity_index value =
+    sum [if value == rou then i else 0 | rou <- EVEN_EIGHTH_ROOTS_OF_UNITY | i <- [0, 2, 4, 6]]
