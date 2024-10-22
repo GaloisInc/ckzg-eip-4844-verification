@@ -8,125 +8,147 @@ module Spec::BlsEC::FQP where
 import Spec::BlsEC::Field
 import Spec::BlsEC::Poly(poly_extended_euclidean)
 
+type FQP n = [n](Z Fq)
+
 /**
  * A G2 point is comprised of two Fq2 elements, or sets of coefficients, each of degree two.
  * Each element is comprised of a real and imaginary coeffsicient.
  */
-type Fq2 =
-    { real : Z Fq   // Real number coeffsicient
-    , imag : Z Fq   // Imaginary number coeffsicient
-    }
+type Fq2 = FQP 2
 
 /**
  * The modulus coefficients for the quadratic extension field Fq2.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L30
  */
 FQ2_MODULUS_COEFFICIENTS : Fq2
-FQ2_MODULUS_COEFFICIENTS =
-    { real = 1
-    , imag = 0
-    }
+FQ2_MODULUS_COEFFICIENTS = [1, 0]
 
 /**
- * Addition of two Fq2 elements.
+ * Addition of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L232
  * ```repl
  * :prove G2_y ~+~ G2_x == G2_y_plus_x
  * ```
  */
-(~+~) : Fq2 -> Fq2 -> Fq2
-(~+~) coeffs1 coeffs2 =
-    { real = coeffs1.real + coeffs2.real
-    , imag = coeffs1.imag + coeffs2.imag
-    }
+(~+~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
+(~+~) coeffs1 coeffs2 = [c1i + c2i | c1i <- coeffs1 | c2i <- coeffs2]
 
 /**
- * Subtraction of two Fq2 elements.
+ * Subtraction of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L240
  * ```repl
  * :prove G2_y ~-~ G2_x == G2_y_minus_x
  * ```
  */
-(~-~) : Fq2 -> Fq2 -> Fq2
-(~-~) coeffs1 coeffs2 =
-    { real = coeffs1.real - coeffs2.real
-    , imag = coeffs1.imag - coeffs2.imag
-    }
+(~-~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
+(~-~) coeffs1 coeffs2 = [c1i - c2i | c1i <- coeffs1 | c2i <- coeffs2]
 
 /**
- * Multiplication of two Fq2 elements.
+ * Multiplication of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L251
  * ```repl
  * :prove G2_x ~*~ G2_x == G2_xSquared
  * :prove G2_x ~*~ G2_x ~*~ G2_x == G2_xCubed
  * ```
  */
-(~*~) : Fq2 -> Fq2 -> Fq2
-(~*~) coeffs1 coeffs2 = {real = new_real, imag = new_imag} where
-    b = [real_part, combination, imaginary_part]
-    real_part = coeffs1.real * coeffs2.real
-    imaginary_part = coeffs1.imag * coeffs2.imag
-    combination = (coeffs1.real * coeffs2.imag) + (coeffs1.imag * coeffs2.real)
-    new_real = (b@0) - (imaginary_part * FQ2_MODULUS_COEFFICIENTS.real)
-    new_imag = (b@1) - (imaginary_part * FQ2_MODULUS_COEFFICIENTS.imag)
+(~*~) : {n} (fin n, n >= 2) => FQP n -> FQP n -> FQP n
+(~*~) coeffs1 coeffs2 = reduce_while b (2 * `(n) - 1) where
+    b = poly_multi coeffs1 coeffs2
+
+reduce_while : {a, n} (fin n, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> Integer -> [n](Z Fq)
+reduce_while b len =
+    if len == `(n) then take`{n} b
+    else reduce_while b_reduced (len - 1)
+    where
+        modulus_coeffs =
+            // The appending by 'zero' is to help the Cryptol type checker.
+            // It actually evaulates to an empty bitvector.
+            if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
+            else repeat`{n} 0
+        top = b@(len-1)
+        exp = len - `(n) - 1
+        b' = b >> exp
+        modulus_coeffs' = modulus_coeffs >> exp
+        b_reduced = ([bi - (top * modci) | bi <- b' | modci <- modulus_coeffs'] << exp) # zero
 
 /**
- * Multiplication of an integer and Fq2 element.
+ * Compute the initial polynomial multiplication.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L253
+ * ```repl
+ * :prove poly_multi [2, 3] [5, 7] == [10, 29, 21]
+ * let expected = [8,22,39,87,130,149,133,153,233,278,178,188,276,239,207,125,94,88,51,35,41,28,30]
+ * :prove poly_multi [2,3,3,1,2,5,6,1,2,5,3,5] [4,5,6,25,12,1,4,6,2,1,2,6] == expected
+ * ```
+ */
+poly_multi : {n, a} (fin n, 2 * n >= 1, fin a, a == 2 * n - 1) => FQP n -> FQP n -> FQP a
+poly_multi l r =
+    if (all (\x -> x == 0) l) then zero
+    else ((scalar_mult (l@0) r) # zero) ~+~ (((poly_multi (l << 1) r) # zero) >> 1)
+    where scalar_mult x ys = map ((*) x) ys
+
+/**
+ * Multiplication of an integer and a set of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L249
  * ```repl
  * :prove G2_x ~* 2 == G2_xDoubled
  * :prove 2 *~ G2_x == G2_xDoubled
  * ```
  */
-(*~) : Integer -> Fq2 -> Fq2
-(*~) value coeffs = {real = new_real, imag = new_imag} where
-    new_real = coeffs.real * (fromInteger value)
-    new_imag = coeffs.imag * (fromInteger value)
+(*~) : {n} (fin n, n >= 1) => Integer -> FQP n -> FQP n
+(*~) value coeffs = [value' * ci | ci <- coeffs] where
+    value' = fromInteger value
 
-(~*) : Fq2 -> Integer -> Fq2
+(~*) : {n} (fin n, n >= 1) => FQP n -> Integer -> FQP n
 (~*) coeffs value = value *~ coeffs
 
 /**
- * Division of two Fq2 elements.
+ * Division of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L280
  * ```repl
- * :prove G2_x ~/~ G2_x == {real = 1, imag = 0}
+ * :prove G2_x ~/~ G2_x == [1, 0]
  * :prove G2_y ~/~ G2_x == G2_y_div_mod_x
  * ```
  */
-(~/~) : Fq2 -> Fq2 -> Fq2
-(~/~) coeffs1 coeffs2 = coeffs1 ~*~ (fq2_inv coeffs2)
+(~/~) : {n} (fin n, n >= 2) => FQP n -> FQP n -> FQP n
+(~/~) coeffs1 coeffs2 = coeffs1 ~*~ (fqp_inv coeffs2)
 
 /**
  * Compute the inverse of a Fq2 element.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L302
  * ```repl
- * :prove fq2_inv G2_x == G2_xInverse
- * :prove fq2_inv (fq2_inv G2_x) == G2_x
- * :prove fq2_inv G2_y == G2_yInverse
- * :prove fq2_inv (fq2_inv G2_y) == G2_y
+ * :prove fqp_inv G2_x == G2_xInverse
+ * :prove fqp_inv (fqp_inv G2_x) == G2_x
+ * :prove fqp_inv G2_y == G2_yInverse
+ * :prove fqp_inv (fqp_inv G2_y) == G2_y
  * ```
  */
-fq2_inv : Fq2 -> Fq2
-fq2_inv coeffs = {real = real, imag = imag} where
-    lm = [1, 0, 0]
-    hm = [0, 0, 0]
-    low = [coeffs.real, coeffs.imag, 0]
-    high = [FQ2_MODULUS_COEFFICIENTS.real, FQ2_MODULUS_COEFFICIENTS.imag, 1]
-    [real, imag] = poly_extended_euclidean lm low hm high
+fqp_inv : {n} (fin n, n >= 2) => FQP n -> FQP n
+fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
+    modulus_coeffs =
+        // The appending by 'zero' is to help the Cryptol type checker.
+        // It actually evaulates to an empty bitvector.
+        if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
+        else n_zeros
+    lm = [1] # n_zeros
+    hm = [0] # n_zeros
+    low = coeffs # [0]
+    high = modulus_coeffs # [1]
+    n_zeros = repeat`{n} 0
 
 /**
- * Exponentiation of a G2 coeffsicient by some scalar.
+ * Exponentiation of a set of coeffsicients by a scalar.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L291
  * ```repl
+ * :prove G2_x~^^0 == [1, 0]
+ * :prove G2_x~^^1 == G2_x
  * :prove G2_x~^^2 == G2_xSquared
  * :prove G2_x~^^3 == G2_xCubed
  * ```
  */
-(~^^) : Fq2 -> Integer -> Fq2
+(~^^) : {n} (fin n, n >= 2) => FQP n -> Integer -> FQP n
 (~^^) coeffs scalar =
     if scalar == 0 then
-        {real = 1, imag = 0}
+        [1] # zero
      | scalar == 1 then
         coeffs
      | scalar % 2 == 0 then
@@ -135,113 +157,113 @@ fq2_inv coeffs = {real = real, imag = imag} where
         ((coeffs ~*~ coeffs) ~^^ (scalar / 2)) ~*~ coeffs
 
 /**
- * Equality of Fq2 elements.
- */
-(~==~) : Fq2 -> Fq2 -> Bit
-(~==~) coeffs1 coeffs2 =
-    (coeffs1.real == coeffs2.real) && (coeffs1.imag == coeffs2.imag)
-
-/**
- * Negate the Fq2 element.
+ * Negate the set of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L355
  * ```repl
- * :prove fq2_neg (fq2_neg G2_x) == G2_x
+ * :prove fqp_neg (fqp_neg G2_x) == G2_x
  * ```
  */
-fq2_neg : Fq2 -> Fq2
-fq2_neg coeffs = {real = new_real, imag = new_imag} where
-    new_real = -coeffs.real
-    new_imag = -coeffs.imag
+fqp_neg : {n} (fin n, n >= 1) => FQP n -> FQP n
+fqp_neg coeffs = [-ci | ci <- coeffs]
+
+/**
+ * Equality of two sets of coefficients.
+ * ```repl
+ * :prove G2_x ~==~ G2_x
+ * ```
+ */
+(~==~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
+(~==~) coeffs1 coeffs2 = and [c1i == c2i | c1i <- coeffs1 | c2i <- coeffs2]
 
 /**
  * X coefficients for generator for twisted curve over Fq2.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L44
  */
 G2_x : Fq2
-G2_x = { real = 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
-       , imag = 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758
-       }
+G2_x = [ 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+       , 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758
+       ]
 
 /**
  * Y coefficients for generator for twisted curve over Fq2.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L44
  */
 G2_y : Fq2
-G2_y = { real = 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
-       , imag = 927553665492332455747201965776037880757740193453592970025027978793976877002675564980949289727957565575433344219582
-       }
+G2_y = [ 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+       , 927553665492332455747201965776037880757740193453592970025027978793976877002675564980949289727957565575433344219582
+       ]
 
 /**
- * G2.xCoeffs + G2.yCoeffs. Computed using py_ecc.
+ * G2_x + G2_y. Computed using py_ecc.
  */
 G2_y_plus_x : Fq2
 G2_y_plus_x =
-    { real = 2337851671874758553755193637188231783190898931008430971079287309306138512109538745297216704607199160594256266651065
-    , imag = 3986698009736546165718461780529819517744210518930240528684401185085612201771633997414458852832304583413319107585340
-    }
+    [ 2337851671874758553755193637188231783190898931008430971079287309306138512109538745297216704607199160594256266651065
+    , 3986698009736546165718461780529819517744210518930240528684401185085612201771633997414458852832304583413319107585340
+    ]
 
 /**
- * G2.xCoeffs - G2.yCoeffs. Computed using py_ecc.
+ * G2_x - G2_y. Computed using py_ecc.
  */
 G2_y_minus_x : Fq2
 G2_y_minus_x =
-    { real = 1632449532699825317380915405166111493410839025422880490639470020826550940638108691550521503919468808688732414044745
-    , imag = 1870818876469786139193731976758160400328152687915953296697712908626373202724554996990127355752626211775441853413611
-    }
+    [ 1632449532699825317380915405166111493410839025422880490639470020826550940638108691550521503919468808688732414044745
+    , 1870818876469786139193731976758160400328152687915953296697712908626373202724554996990127355752626211775441853413611
+    ]
 
 /**
- * G2.xCoeffs squared. Computed using py_ecc.
+ * G2_x squared. Computed using py_ecc.
  */
 G2_xSquared : Fq2
 G2_xSquared =
-    { real = 1997086149283677522843833040423074048426674013790346437450988890364808601048656494674186077061491944389142492819694
-    , imag = 3113349101563180256960455051481244719726682130931247942710023183696345206282753395927436272834951815958170074391256
-    }
+    [ 1997086149283677522843833040423074048426674013790346437450988890364808601048656494674186077061491944389142492819694
+    , 3113349101563180256960455051481244719726682130931247942710023183696345206282753395927436272834951815958170074391256
+    ]
 
 /**
- * G2.xCoeffs cubed. Computed using py_ecc.
+ * G2_x cubed. Computed using py_ecc.
  */
 G2_xCubed : Fq2
 G2_xCubed =
-    { real = 3341065098200961989598748404381324054605449840948293400785922068969583005812936621662354076014412578129291257715484
-    , imag = 2133050398774337206222816300118221327418763981033055222570091459262312519047975404484651902003138703421962555090218
-    }
+    [ 3341065098200961989598748404381324054605449840948293400785922068969583005812936621662354076014412578129291257715484
+    , 2133050398774337206222816300118221327418763981033055222570091459262312519047975404484651902003138703421962555090218
+    ]
 
 /**
- * G2.xCoeffs multipled by two. Computed using py_ecc.
+ * G2_x multipled by two. Computed using py_ecc.
  */
 G2_xDoubled : Fq2
 G2_xDoubled =
-    { real = 705402139174933236374278232022120289780059905585550480439817288479587571471430053746695200687730351905523852606320
-    , imag = 2115879133266760026524729803771659117416057831014287231986688276459238999047079000424331497079678371637877254171729
-    }
+    [ 705402139174933236374278232022120289780059905585550480439817288479587571471430053746695200687730351905523852606320
+    , 2115879133266760026524729803771659117416057831014287231986688276459238999047079000424331497079678371637877254171729
+    ]
 
 /**
- * G2.yCoeffs / G2.xCoeffs. Computed using py_ecc.
+ * G2_y / G2_x. Computed using py_ecc.
  */
 G2_y_div_mod_x : Fq2
 G2_y_div_mod_x =
-    { real = 2645964961145567287646174681515652840605182444869364111679220104429646387260976011822898928226591963576020240426619
-    , imag = 3656195751079888906744826605664754595376734064625263022628224160781596224005157110042338963344577397675474692059176
-    }
+    [ 2645964961145567287646174681515652840605182444869364111679220104429646387260976011822898928226591963576020240426619
+    , 3656195751079888906744826605664754595376734064625263022628224160781596224005157110042338963344577397675474692059176
+    ]
 
 /**
- * G2.xCoeffs inverse. Computed using py_ecc.
+ * G2_x inverse. Computed using py_ecc.
  */
 G2_xInverse : Fq2
 G2_xInverse =
-    { real = 1223514866584400226619392018844575446040489926980124362465220784014275923982521236729115905530146470033177964357563
-    , imag = 3495453419063574139925455551631318136524378768480668459768684498547208492074727172949503320416899422709399085629096
-    }
+    [ 1223514866584400226619392018844575446040489926980124362465220784014275923982521236729115905530146470033177964357563
+    , 3495453419063574139925455551631318136524378768480668459768684498547208492074727172949503320416899422709399085629096
+    ]
 
 /**
- * G2.yCoeffs inverse. Computed using py_ecc.
+ * G2_y inverse. Computed using py_ecc.
  */
 G2_yInverse : Fq2
 G2_yInverse =
-    { real = 3828301281232776537393462114696026453820925117135598932697882187079936548530569912296382199133331215710911400309693
-    , imag = 1450185639544495128598198914056492809111071767684112182252696543466687995844478949870392653614483391964324409513904
-    }
+    [ 3828301281232776537393462114696026453820925117135598932697882187079936548530569912296382199133331215710911400309693
+    , 1450185639544495128598198914056492809111071767684112182252696543466687995844478949870392653614483391964324409513904
+    ]
 
 /*
  * ==========
@@ -250,54 +272,53 @@ G2_yInverse =
  */
 
 /**
- * Verify that coeffsicient addition is commutative.
+ * Verify that addition is commutative.
  * ```repl
- * :prove fq2_addition_commutative
+ * :prove fqp_addition_commutative`{2}
  * ```
  */
-fq2_addition_commutative : Fq2 -> Fq2 -> Bit
-property fq2_addition_commutative a b =
+fqp_addition_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
+property fqp_addition_commutative a b =
     a ~+~ b == b ~+~ a
 
 /**
- * Verify that coeffsicient multiplication is commutative.
+ * Verify that multiplication is commutative.
  * ```repl
- * :prove fq2_multiplication_commutative
+ * :prove fqp_multiplication_commutative`{2}
  * ```
  */
-fq2_multiplication_commutative : Fq2 -> Fq2 -> Bit
-property fq2_multiplication_commutative a b =
+fqp_multiplication_commutative : {n} (fin n, n >= 2) => FQP n -> FQP n -> Bit
+property fqp_multiplication_commutative a b =
     a ~*~ b == b ~*~ a
 
 /**
- * Verify that coeffsicient subtraction is not commutative,
+ * Verify that subtraction is not commutative,
  *   unless both coefficients are equal.
  * ```repl
- * :prove fq2_subtraction_not_commutative
+ * :prove fqp_subtraction_not_commutative`{2}
  * ```
  */
-fq2_subtraction_not_commutative : Fq2 -> Fq2 -> Bit
-property fq2_subtraction_not_commutative a b = precondition ==> statement where
+fqp_subtraction_not_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
+property fqp_subtraction_not_commutative a b = precondition ==> statement where
     precondition = a != b
     statement = a ~-~ b != b ~-~ a
 
 /**
- * Verify that squaring a coeffsicient is that same using
- *  either multiplication or exponentiation.
+ * Verify that squaring is that same using either multiplication or exponentiation.
  * ```repl
- * :prove fq2_squared_equiv
+ * :prove fqp_squared_equiv`{2}
  * ```
  */
-fq2_squared_equiv : Fq2 -> Bit
-property fq2_squared_equiv c =
+fqp_squared_equiv : {n} (fin n, n >= 2) => FQP n -> Bit
+property fqp_squared_equiv c =
     c~^^2 == c ~*~ c
 
 /**
- * Verify that coefficients equality is commutative.
+ * Verify that equality is commutative.
  * ```repl
- * :prove fq2_equality_commutative
+ * :prove fqp_equality_commutative`{2}
  * ```
  */
-fq2_equality_commutative : Fq2 -> Fq2 -> Bit
-property fq2_equality_commutative a b =
+fqp_equality_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
+property fqp_equality_commutative a b =
     a ~==~ b == b ~==~ a
