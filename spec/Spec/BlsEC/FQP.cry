@@ -8,6 +8,10 @@ module Spec::BlsEC::FQP where
 import Spec::BlsEC::Field
 import Spec::BlsEC::Poly(poly_extended_euclidean)
 
+/**
+ * A polynomial field extension type contains a list of
+ *  coefficients which are elements of Fq.
+ */
 type FQP n = [n](Z Fq)
 
 /**
