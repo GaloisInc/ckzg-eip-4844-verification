@@ -1,32 +1,33 @@
 /**
  * This module contains functions that perform ECC Point operations.
- * These functions are specific to the BLS curve, and specifially G1.
+ * These functions are specific to the BLS curve, and specifically G1.
  *
  * The Deneb Python specs use the py_ecc library for the same operations.
  * This modules functions are based off of py_ecc.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
  */
-module Spec::BlsEC where
+module Spec::BlsEC::G1 where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Field
 
 /**
- * G1 elliptic curve point
+ * G1 elliptic curve point.
  *
- * Note: by using the Z type, all modular arithmetic
+ * NOTE: by using the Z type, all modular arithmetic
  *  is handled automatically and there is no potential
  *  for any overflow errors.
  */
 type G1Point =
-    { xCoord : Z Fp
-    , yCoord : Z Fp
+    { xCoord : Z Fq
+    , yCoord : Z Fq
     }
 
 /**
  * Representation of G1 point at infinity.
  *
- * Note: (0,0) isn't actually the point at infinity, but since we
+ * NOTE: (0,0) isn't actually the point at infinity, but since we
  *  can't use enums here and (0, 0) is not on the curve, it's an
  *  acceptable substitute.
  */
@@ -37,21 +38,14 @@ G1_INFINITY =
     }
 
 /**
- * G1 generator
- * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L35
+ * Generator for curve over Fq.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L35
  */
 G1 : G1Point
 G1 =
     { xCoord = 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
     , yCoord = 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569
     }
-
-/**
- * The BLS12-384 curve is defined as: y^^2 = x^^3 + 4 over the
- *  finite field Fp, where p is the prime defined below.
- * @see https://hackmd.io/@Wimet/S1dvK2NBh#The-Curve
- */
-type Fp = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 
 /**
  * Determines whether or not the given point is on the G1 curve.
@@ -130,7 +124,7 @@ g1_multi_optimized point scalar =
     where
         inverse_scalar = `(BLS_MODULUS) - scalar
         inverse_point = g1_multi point inverse_scalar
-        y = fromInteger (`(Fp) - (fromZ inverse_point.yCoord))
+        y = fromInteger (`(Fq) - (fromZ inverse_point.yCoord))
         x = inverse_point.xCoord
 
 g1_multi : G1Point -> UInt256 -> G1Point
@@ -141,13 +135,6 @@ g1_multi point scalar =
         | scalar % 2 == 0 then g1_multi (g1_double point) (scalar / 2)
         // If scalar is odd, double and add
         else g1_add ((g1_multi (g1_double point) (scalar / 2))) point
-
-/**
- * The subgroup modulus.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L17
- */
-type BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 /**
  * Determine whether or not the G1 point is a member of the subgroup.
@@ -268,8 +255,7 @@ property test_g1_add p1 p2 p3 =
  * :prove test_g1_multi G1 2 G1_2P
  * :prove test_g1_multi G1 3 G1_3P
  * :prove test_g1_multi G1 6 G1_6P
- * :prove test_g1_multi G1_2P 3 G1_6P
- * :prove test_g1_multi G1_3P 2 G1_6P
+ * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
  * ```
  */
 test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
