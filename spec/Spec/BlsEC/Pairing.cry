@@ -1,0 +1,74 @@
+/**
+ * This module handles the BLS pairing operation and subfunctions.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py
+ */
+module Spec::BlsEC::Pairing where
+
+import Common::ModArith
+import Spec::BlsEC::Field
+import Spec::BlsEC::FQP
+import Spec::BlsEC::G1
+import Spec::BlsEC::G2
+import Spec::BlsEC::G12
+
+/**
+ * Cast a point in Fq to Fq12.
+ * The x and y coordinates are simply the first coefficient with all other coefficients as zero.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L50
+ * ```repl
+ * let expX = [3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507,0,0,0,0,0,0,0,0,0,0,0]
+ * let expY = [1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569,0,0,0,0,0,0,0,0,0,0,0]
+ * let expected = { xCoeffs = expX, yCoeffs = expY }
+ * :prove cast_point_to_fq12 G1 == expected
+ * ```
+ */
+cast_point_to_fq12 : G1Point -> G12Point
+cast_point_to_fq12 p = {xCoeffs = newX, yCoeffs = newY} where
+    x = p.xCoord
+    y = p.yCoord
+    newX = [x] # zero
+    newY = [y] # zero
+
+/**
+ * Create a function representing the line between `p1` and `p2`,
+ *  and evaluate it at `t`.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L66
+ * ```repl
+ * let one = G12
+ * let two = g12_double G12
+ * let three = g12_multi G12 3
+ * let negone = g12_multi_optimized G12 (`(BLS_MODULUS)-1)
+ * let negtwo = g12_multi_optimized G12 (`(BLS_MODULUS)-2)
+ * let negthree = g12_multi_optimized G12 (`(BLS_MODULUS)-3)
+ * :prove linefunc one two one == zero
+ * :prove linefunc one two two == zero
+ * :prove linefunc one two three != zero
+ * :prove linefunc one two negthree == zero
+ * :prove linefunc one negone one == zero
+ * :prove linefunc one negone negone == zero
+ * :prove linefunc one negone two != zero
+ * :prove linefunc one one one == zero
+ * :prove linefunc one one two != zero
+ * :prove linefunc one one negtwo == zero
+ * ```
+ * Tests from: https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L66
+ */
+linefunc : G12Point -> G12Point -> G12Point -> Fq12
+linefunc p1 p2 t =
+    if (p1 == G12_INFINITY) ||
+       (p2 == G12_INFINITY) ||
+       (t == G12_INFINITY) then // No points-at-infinity allowed
+        error "Invalid input - no points-at-infinity allowed"
+    else
+        if x1 != x2 then m1 ~*~ (xt ~-~ x1) ~-~ (yt ~-~ y1)
+         | y1 == y2 then m2 ~*~ (xt ~-~ x1) ~-~ (yt ~-~ y1)
+         else xt ~-~ x1
+    where
+        x1 = p1.xCoeffs
+        y1 = p1.yCoeffs
+        x2 = p2.xCoeffs
+        y2 = p2.yCoeffs
+        xt = t.xCoeffs
+        yt = t.yCoeffs
+        m1 = (y2 ~-~ y1) ~/~ (x2 ~-~ x1)
+        m2 = 3 *~ (x1~^^2) ~/~ (2 *~ y1)
