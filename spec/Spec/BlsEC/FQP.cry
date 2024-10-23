@@ -21,6 +21,11 @@ type FQP n = [n](Z Fq)
 type Fq2 = FQP 2
 
 /**
+ * A G12 point is comprised of two Fq12 elements, or sets of coefficients, each of degree twelve.
+ */
+type Fq12 = FQP 12
+
+/**
  * The modulus coefficients for the quadratic extension field Fq2.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L30
  */
