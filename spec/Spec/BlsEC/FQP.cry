@@ -63,25 +63,20 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
  * ```
  */
 (~*~) : {n} (fin n, n >= 2) => FQP n -> FQP n -> FQP n
-(~*~) coeffs1 coeffs2 = reduce_while b (2 * `(n) - 1) where
+(~*~) coeffs1 coeffs2 = reduce_while b modulus_coeffs (2 * `(n) - 1) where
     b = poly_multi coeffs1 coeffs2
 
-reduce_while : {a, n} (fin n, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> Integer -> [n](Z Fq)
-reduce_while b len =
+reduce_while : {a, n} (fin n, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> [n](Z Fq) -> Integer -> [n](Z Fq)
+reduce_while b mod_coeffs len =
     if len == `(n) then take`{n} b
-    else reduce_while b' (len - 1)
+    else reduce_while b' mod_coeffs (len - 1)
     where
-        modulus_coeffs =
-            // The appending by 'zero' is to help the Cryptol type checker.
-            // It actually evaulates to an empty bitvector.
-            if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
-            else repeat`{n} 0
         top = b@(len-1)
         exp = len - `(n) - 1
         b' = [compute bj j | bj <- b | j <- [0 .. (a-1)]]
         compute bj j =
             if (j >= exp) && (j <= exp + `(n) - 1) then
-                bj - (top * (modulus_coeffs@(j-exp)))
+                bj - (top * (mod_coeffs@(j-exp)))
             else bj
 
 /**
@@ -137,16 +132,22 @@ poly_multi l r =
  */
 fqp_inv : {n} (fin n, n >= 2) => FQP n -> FQP n
 fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
-    modulus_coeffs =
-        // The appending by 'zero' is to help the Cryptol type checker.
-        // It actually evaulates to an empty bitvector.
-        if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
-        else n_zeros
     lm = [1] # n_zeros
     hm = [0] # n_zeros
     low = coeffs # [0]
     high = modulus_coeffs # [1]
     n_zeros = repeat`{n} 0
+
+/**
+ * The modulus coefficients of the polynomial extension fields.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L30-L31
+ */
+modulus_coeffs : {n} (fin n, n >= 2) => FQP n
+modulus_coeffs =
+    // The appending by 'zero' is to help the Cryptol type checker.
+    // It actually evaluates to an empty bitvector.
+    if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
+    else zero
 
 /**
  * Exponentiation of a set of coeffsicients by a scalar.
