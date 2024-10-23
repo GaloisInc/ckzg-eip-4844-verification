@@ -37,6 +37,7 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L232
  * ```repl
  * :prove G2_y ~+~ G2_x == G2_y_plus_x
+ * :prove G12_y ~+~ G12_x == G12_y_plus_x
  * ```
  */
 (~+~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
@@ -47,6 +48,7 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L240
  * ```repl
  * :prove G2_y ~-~ G2_x == G2_y_minus_x
+ * :prove G12_y ~-~ G12_x == G12_y_minus_x
  * ```
  */
 (~-~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
@@ -170,6 +172,7 @@ fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L355
  * ```repl
  * :prove fqp_neg (fqp_neg G2_x) == G2_x
+ * :prove fqp_neg (fqp_neg G12_x) == G12_x
  * ```
  */
 fqp_neg : {n} (fin n, n >= 1) => FQP n -> FQP n
@@ -179,6 +182,7 @@ fqp_neg coeffs = [-ci | ci <- coeffs]
  * Equality of two sets of coefficients.
  * ```repl
  * :prove G2_x ~==~ G2_x
+ * :prove G12_x ~==~ G12_x
  * ```
  */
 (~==~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -274,6 +278,58 @@ G2_yInverse =
     , 1450185639544495128598198914056492809111071767684112182252696543466687995844478949870392653614483391964324409513904
     ]
 
+/**
+ * X coefficients for generator for the curve over Fq12.
+ */
+G12_x : Fq12
+G12_x =
+    [ 0, 0, 0, 0
+    , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+    , 0, 0, 0, 0, 0
+    , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+    , 0
+    ]
+
+/**
+ * Y coefficients for generator for the curve over Fq12.
+ */
+G12_y : Fq12
+G12_y =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 0, 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 0, 0
+    ]
+
+/**
+ * G12_y + G12_x. Computed using py_ecc.
+ */
+G12_y_plus_x : Fq12
+G12_y_plus_x =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+    , 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+    , 0
+    ]
+
+/**
+ * G12_x - G12_y. Computed using py_ecc.
+ */
+G12_y_minus_x : Fq12
+G12_y_minus_x =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 3649708485634200775230650709724844011666852867146232645112149491884237864755122837569340028785150488085132346256627
+    , 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 2649187917893293847525729476364543410508662633597071726112325855098110880974216161662606647748774743095332354028488
+    , 0
+    ]
+
 /*
  * ==========
  * Properties
@@ -284,6 +340,7 @@ G2_yInverse =
  * Verify that addition is commutative.
  * ```repl
  * :prove fqp_addition_commutative`{2}
+ * :prove fqp_addition_commutative`{12}
  * ```
  */
 fqp_addition_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -305,6 +362,7 @@ property fqp_multiplication_commutative a b =
  *   unless both coefficients are equal.
  * ```repl
  * :prove fqp_subtraction_not_commutative`{2}
+ * :prove fqp_subtraction_not_commutative`{12}
  * ```
  */
 fqp_subtraction_not_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -326,6 +384,7 @@ property fqp_squared_equiv c =
  * Verify that equality is commutative.
  * ```repl
  * :prove fqp_equality_commutative`{2}
+ * :prove fqp_equality_commutative`{12}
  * ```
  */
 fqp_equality_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
