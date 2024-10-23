@@ -69,7 +69,7 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
 reduce_while : {a, n} (fin n, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> Integer -> [n](Z Fq)
 reduce_while b len =
     if len == `(n) then take`{n} b
-    else reduce_while b_reduced (len - 1)
+    else reduce_while b' (len - 1)
     where
         modulus_coeffs =
             // The appending by 'zero' is to help the Cryptol type checker.
@@ -78,9 +78,11 @@ reduce_while b len =
             else repeat`{n} 0
         top = b@(len-1)
         exp = len - `(n) - 1
-        b' = b >> exp
-        modulus_coeffs' = modulus_coeffs >> exp
-        b_reduced = ([bi - (top * modci) | bi <- b' | modci <- modulus_coeffs'] << exp) # zero
+        b' = [compute bj j | bj <- b | j <- [0 .. (a-1)]]
+        compute bj j =
+            if (j >= exp) && (j <= exp + `(n) - 1) then
+                bj - (top * (modulus_coeffs@(j-exp)))
+            else bj
 
 /**
  * Compute the initial polynomial multiplication.
