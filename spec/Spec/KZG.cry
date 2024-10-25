@@ -82,6 +82,14 @@ compute_kzg_proof blob z_bytes = (proof, y) where
     (proof, y') = compute_kzg_proof_impl polynomial (bytes_to_bls_field z_bytes)
     y = split`{BYTES_PER_FIELD_ELEMENT} y'
 
+valid_blob_generator : Blob -> Blob
+valid_blob_generator blob = assert (blob != blob') "error" blob' where 
+    x = [bytes | bytes <- (groupBy`{BYTES_PER_FIELD_ELEMENT} blob)]
+    y = map (\b -> (join b)) x
+    y' = map (\b -> b % `BLS_MODULUS) y
+    x' = [groupBy`{8} poly | poly <- y']
+    blob' = join x'
+
 /**
  * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
