@@ -5,6 +5,7 @@
 module Spec::KZG where
 
 import Common::ModArith
+import Spec::BlsEC::Field
 import Spec::BlsEC::G1
 import Spec::BlsHelpers
 import Spec::BlsSerde
