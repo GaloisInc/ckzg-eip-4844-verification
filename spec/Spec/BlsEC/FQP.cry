@@ -417,9 +417,12 @@ property fqp_addition_commutative a b =
 /**
  * Verify that multiplication is commutative.
  * ```repl
+ * :set prover=cvc5
  * :prove fqp_multiplication_commutative`{2}
  * :prove fqp_multiplication_commutative`{12}
  * ```
+ * NOTE: this proof works for Z3 v4.13 but not v4.8. Takes >50 seconds.
+ *  It is much faster (~5 seconds) with cvc5.
  */
 fqp_multiplication_commutative : {n} (fin n, n <= 12, n >= 2) => FQP n -> FQP n -> Bit
 property fqp_multiplication_commutative a b =
