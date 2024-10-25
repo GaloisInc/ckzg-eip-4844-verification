@@ -16,6 +16,14 @@ import Spec::Polynomials
 import Spec::TrustedSetup
 
 /**
+ * Create the polynomial commitment for the given `Blob`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob_to_kzg_commitment
+ */
+blob_to_kzg_commitment : Blob -> KZGCommitment
+blob_to_kzg_commitment blob =
+    g1_lincomb (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE) (blob_to_polynomial blob)
+
+/**
  * Given `y == p(z)` for a polynomial `p(x)`, compute `q(z)`: the KZG quotient polynomial evaluated at `z` for the
  *  special case where `z` is in roots of unity.
  * For more details, read https://dankradfeist.de/ethereum/2021/06/18/pcs-multiproofs.html section "Dividing
