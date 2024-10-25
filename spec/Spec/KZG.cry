@@ -43,12 +43,6 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral result where
     compute i = if omega i != z' then div_mod (numerator i) (denominator i) else 0
 
 /**
- * Same as for `KZGCommitment`.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
- */
-type KZGProof = Bytes48
-
-/**
  * Helper function for `compute_kzg_proof()` and `compute_blob_kzg_proof()`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
  */
