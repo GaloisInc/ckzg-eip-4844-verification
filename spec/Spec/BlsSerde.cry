@@ -8,6 +8,7 @@ module Spec::BlsSerde where
 import Common::ModArith
 import Common::Utils
 import Spec::BlsEC::Field
+import Spec::BlsEC::FQP
 import Spec::BlsEC::G1
 import Spec::BlsEC::G2
 
@@ -273,8 +274,8 @@ G2_2P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
     cFlag = (1 << 767) // is compressed
     bFlag = (0 << 766) // not infinity
     aFlag = (1 << 765) // because the MSB of G2_2P.yCoeffs.imag is '1'
-    xReal = (toIntegral G2_2P.xCoeffs.real)
-    xImag = (toIntegral G2_2P.xCoeffs.imag) << 384
+    xReal = (toIntegral (G2_2P.xCoeffs@0))
+    xImag = (toIntegral (G2_2P.xCoeffs@1)) << 384
 
 /**
  * Test point for the decompression function `bytes96_to_G2`
@@ -284,8 +285,8 @@ G2_3P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
     cFlag = (1 << 767) // is compressed
     bFlag = (0 << 766) // not infinity
     aFlag = (0 << 765) // because the MSB of G2_3P.yCoeffs.imag is '0'
-    xReal = (toIntegral G2_3P.xCoeffs.real)
-    xImag = (toIntegral G2_3P.xCoeffs.imag) << 384
+    xReal = (toIntegral (G2_3P.xCoeffs@0))
+    xImag = (toIntegral (G2_3P.xCoeffs@1)) << 384
 
 /**
  * Compress the G2 point
@@ -315,10 +316,10 @@ compress_G2 point =
     else
         z1Bits + z2Bits
     where
-        x_re = fromZ point.xCoeffs.real
-        x_im = fromZ point.xCoeffs.imag
-        y_re = fromZ point.yCoeffs.real
-        y_im = fromZ point.yCoeffs.imag
+        x_re = fromZ (point.xCoeffs@0)
+        x_im = fromZ (point.xCoeffs@1)
+        y_re = fromZ (point.yCoeffs@0)
+        y_im = fromZ (point.yCoeffs@1)
         q = toInteger `(Fq)
         // Record the leftmost bit of y_im to the a_flag1
         // If y_im happens to be zero, then use the bit of y_re
@@ -388,9 +389,9 @@ decompress_G2 z =
     q = `(Fq)
     x2 = fromIntegral`{Fq} z2
     // x1 is the imaginary part, x2 is the real part
-    x = { real = x2, imag = x1}
+    x = [x2, x1]
     y = fq2_modular_squareroot (x~^^3 ~+~ b2)
-    (y_re, y_im) = (fromZ y.real, fromZ y.imag)
+    (y_re, y_im) = (fromZ (y@0), fromZ (y@1))
     b2 = FQ2_B2
     condition1 = ((y_im * 2) / q) != (bit_to_integer (a_flag1))
     condition2 = ((y_re * 2) / q) != (bit_to_integer (a_flag1))
@@ -418,11 +419,11 @@ fq2_modular_squareroot value =
         check = candidate_squareroot~^^2 ~/~ value
         candidate_rou_index = (find_eighth_root_of_unity_index check) / 2
         x1 = candidate_squareroot ~/~ (EIGHTH_ROOTS_OF_UNITY@candidate_rou_index)
-        x2 = fq2_neg x1
-        (x1_re, x1_im) = (fromZ x1.real, fromZ x1.imag)
-        (x2_re, x2_im) = (fromZ x2.real, fromZ x2.imag)
+        x2 = fqp_neg x1
+        (x1_re, x1_im) = (fromZ (x1@0), fromZ (x1@1))
+        (x2_re, x2_im) = (fromZ (x2@0), fromZ (x2@1))
 
-FQ2_ONE = {real = 1, imag = 1}
+FQ2_ONE = [1, 1]
 EIGHTH_ROOTS_OF_UNITY = [FQ2_ONE~^^((FQ2_ORDER * k) / 8) | k <- [0..7]]
 EVEN_EIGHTH_ROOTS_OF_UNITY = [EIGHTH_ROOTS_OF_UNITY@i | i <- [0, 2, 4, 6]]
 
