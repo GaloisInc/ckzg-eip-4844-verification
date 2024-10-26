@@ -20,13 +20,16 @@ FQ12_ONE : Fq12
 FQ12_ONE = [1] # zero
 
 /**
- * For each pair of G1, G2 points, run the pairing computation
- *  and check that it is equal to the element "one" of Fq12.
+ * For each pair of G1, G2 points, run the pairing computation and
+ *  compute the product. Finally, run the final exponentiate on the
+ *  product and check that it is equal to the element "one" of Fq12.
  * @see https://github.com/ethereum/consensus-specs/blob/96b1d312a9a3e9f89c4246d0f5f98867f0018348/tests/core/pyspec/eth2spec/utils/bls.py#L224
+ * Positive and negative tests below at `check_pairing_check_valid_pairs`.
  */
-pairing_check : {n} (fin n, n >= 1) => [n](G1Point, G2Point) -> Bit
-pairing_check points = all pairing_equals_one points where
-    pairing_equals_one (p, q) = (pairing q p) ~==~ FQ12_ONE
+pairing_check : {n} (fin n) => [n](G1Point, G2Point) -> Bit
+pairing_check points = final ~==~ FQ12_ONE where
+    final = final_exponentiate prod
+    prod = foldl (~*~) FQ12_ONE [pairing q p False | (p, q) <- points]
 
 /**
  * Cast a point in Fq to Fq12.
@@ -107,19 +110,20 @@ log_ate_loop_count = 62
  * If the final result (after the final exponentiation) is FQ12_ONE, then the pairing was successful.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L84
  * ```repl
- * :prove miller_loop (twist G2) (cast_point_to_fq12 G1) == MILLER_LOOP_G2_G1_FQ12
+ * :prove miller_loop (twist G2) (cast_point_to_fq12 G1) True == MILLER_LOOP_G2_G1_FQ12
  * ```
  * NOTE: this repl test is very, very slow (~2 minutes).
  */
-miller_loop : G12Point -> G12Point -> Fq12
-miller_loop q p =
+miller_loop : G12Point -> G12Point -> Bit -> Fq12
+miller_loop q p do_final_exponentiate =
     if (q == G12_INFINITY) ||
        (p == G12_INFINITY) then FQ12_ONE
     else double_and_add q FQ12_ONE log_ate_loop_count
     where
         double_and_add : G12Point -> Fq12 -> Integer -> Fq12
         double_and_add r f count =
-            if count < 0 then final_exponentiate f
+            if count < 0 then
+                if do_final_exponentiate then final_exponentiate f else f
             else
                 if (ate_loop_count && (2^^count)) != 0 then
                     double_and_add r'' f'' (count - 1)
@@ -147,13 +151,13 @@ final_exponentiate p = p~^^((`(Fq)^^12 - 1) / `(BLS_MODULUS))
  * Pairing computation
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L108
  */
-pairing : G2Point -> G1Point -> Fq12
-pairing q p =
+pairing : G2Point -> G1Point -> Bit -> Fq12
+pairing q p do_final_exponentiate =
     if ~(g2_is_valid_point q) then
         error "Invalid input - point Q is not on the correct curve"
      | ~(g1_is_valid_point p) then
         error "Invalid input - point P is not on the correct curves"
-    else miller_loop (twist q) (cast_point_to_fq12 p)
+    else miller_loop (twist q) (cast_point_to_fq12 p) do_final_exponentiate
 
 /**
  * Computed `miller_loop(twist(normalize(G2)), cast_point_to_fq12(G1))` with py_ecc.
@@ -174,3 +178,34 @@ MILLER_LOOP_G2_G1_FQ12 =
     , 2626389147790168154036854297373352480470342009417426750876875476996308393122833154115295241935326582225976246741447
     , 873321072950766150592434764742436722571574260472569072177205897167854308426485977134306337249021436737462538398830
     ]
+
+VALID_MULTI_PAIRING_POINTS : [2](G1Point, G2Point)
+VALID_MULTI_PAIRING_POINTS = [
+ ({xCoord = 3942577509585645813112967582905379780757916939878725808374136412369021134738667198410219765812816597637590999762994,
+   yCoord = 1088203199345877024923249081294179597401216953118814114064722100932810217381059447963463973664408120385097692508887},
+  {xCoeffs = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160,
+    3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758],
+   yCoeffs = [2017258952934375457849735304558732518256013841723352154472679471057686924117014146018818524865681679396399932211882,
+    3074855889729334937670587859959866275799142626485414915307030157330054773488162299461738339401058098462460928340205]}),
+ ({xCoord = 3169842563198574659482326102479611290543931141198734323136036543093361601969542502223164030575983014844841304587037,
+   yCoord = 2824376326786724983588666803486546854391198626677433522546039002353746810155815190686926212247090141910905313411994},
+  {xCoeffs = [3394380795309742284085231944467807101526256495961930479404919454683737253440393636117553364774847296670461098299470,
+    3662689612798884582269339769986716851963132127553475998239595135217324880631479103766927470793514208588880068422260],
+   yCoeffs = [2578225059880913843555694372733822992497931377620121352151046101281018929119028392378298954064169396102755595303745,
+    2741696937477620340841025265339742110829389137752838655176100907337011149212882755711342068822769734096710415902962]})
+ ]
+
+/**
+ * Test that the pairing_check passes on two valid pairs.
+ * ```repl
+ * :prove check_pairing_check_valid_pairs VALID_MULTI_PAIRING_POINTS True
+ * let good_pair = VALID_MULTI_PAIRING_POINTS@0
+ * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
+ * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
+ * let bad_pair = (bad_g1, g2)
+ * :prove check_pairing_check_valid_pairs [good_pair, bad_pair] False
+ * ```
+ */
+check_pairing_check_valid_pairs : {n} (fin n) => [n](G1Point, G2Point) -> Bit -> Bit
+property check_pairing_check_valid_pairs points expected_result =
+    pairing_check points == expected_result
