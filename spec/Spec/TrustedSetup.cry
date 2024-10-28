@@ -3,6 +3,8 @@
  *  - KZG_SETUP_G1_MONOMIAL
  *  - KZG_SETUP_G1_LAGRANGE
  *  - KZG_SETUP_G2_MONOMIAL
+ * and the type
+ *  - KZG_SETUP_G2_LENGTH
  * @see https://github.com/ethereum/consensus-specs/blob/dev/presets/minimal/trusted_setups/trusted_setup_4096.json
  */
 module Spec::TrustedSetup where
@@ -8218,10 +8220,15 @@ KZG_SETUP_G1_LAGRANGE = [
     0x825a6f586726c68d45f00ad0f5a4436523317939a47713f78fd4fe81cd74236fdac1b04ecd97c2d0267d6f4981d7beb1
     ]
 
+/** 
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#trusted-setup
+ */
+type KZG_SETUP_G2_LENGTH = 65
+
 /**
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#trusted-setup
  */
-KZG_SETUP_G2_MONOMIAL : [65]Bytes96
+KZG_SETUP_G2_MONOMIAL : [KZG_SETUP_G2_LENGTH]Bytes96
 KZG_SETUP_G2_MONOMIAL = [
     0x93e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e024aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8,
     0xb5bfd7dd8cdeb128843bc287230af38926187075cbfbefa81009a2ce615ac53d2914e5870cb452d2afaaab24f3499f72185cbfee53492714734429b7b38608e23926c911cceceac9a36851477ba4c60b087041de621000edc98edada20c1def2,
@@ -8289,3 +8296,4 @@ KZG_SETUP_G2_MONOMIAL = [
     0xa92039a08b5502d5b211a7744099c9f93fa8c90cedcb1d05e92f01886219dd464eb5fb0337496ad96ed09c987da4e5f019035c5b01cc09b2a18b8a8dd419bc5895388a07e26958f6bd26751929c25f89b8eb4a299d822e2d26fec9ef350e0d3c,
     0x92dcc5a1c8c3e1b28b1524e3dd6dbecd63017c9201da9dbe077f1b82adc08c50169f56fc7b5a3b28ec6b89254de3e2fd12838a761053437883c3e01ba616670cea843754548ef84bcc397de2369adcca2ab54cd73c55dc68d87aec3fc2fe4f10
     ]
+
