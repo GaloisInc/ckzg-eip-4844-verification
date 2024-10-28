@@ -193,6 +193,30 @@ bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg fie
     error_msg = "BLS scalar field element must be less than modulus"
 
 /**
+ * Convert a BLS scalar field element to bytes.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_field_to_bytes
+ * Check with Galois
+ * Not sure about KZG_ENDIANNESS = 'big'
+ */
+bls_field_to_bytes : BlsFieldElement -> Bytes32 
+bls_field_to_bytes value = groupBy`{8} value
+
+/**
+ * Convert a Bytes32 number to a UInt256 number.
+ * Check with Galois
+ */
+bytes32_to_uint256 : Bytes32 -> UInt256
+bytes32_to_uint256 bytes = join bytes 
+
+/*
+ * Convert a BLS scalar field element to a UInt256 number.
+ * Check with Galois
+ */
+bls_field_to_uint256 : BlsFieldElement -> UInt256
+bls_field_to_uint256 value = bytes32_to_uint256 (bls_field_to_bytes value)
+
+
+/**
  * Perform BLS validation required by the types `KZGProof` and `KZGCommitment`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#validate_kzg_g1
  * ```repl
