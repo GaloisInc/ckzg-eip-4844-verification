@@ -313,3 +313,14 @@ property test_compute_roots_of_unity =
         , 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
         , 0x73eda753299d7d47a5e80b39939ed33467baa40089fb5bfefffeffff00000001
         ]
+
+
+/**
+ * Check with a bilinear map.
+ * @see https://github.com/ethereum/consensus-specs/blob/85e2452301382a9d099df16f38deac8178355358/tests/core/pyspec/eth2spec/utils/bls.py#L224
+ * Unfinished
+ * Discuss with Galois
+ * Temporarily set to always return True
+ */
+pairing_check : ((G1Point, G2Point), (G1Point, G2Point)) -> Bit
+pairing_check values = True
