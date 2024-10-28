@@ -167,6 +167,22 @@ compute_roots_of_unity order = assert (order == `n) "order must be equal to n" r
         result = compute_powers`{n} root_of_unity'
 
 /**
+ * Bytes used to encode a commitment.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ * Check with Galois
+ * Why do we not need to encode uint64?
+ */
+type BYTES_PER_COMMITMENT = 48
+
+/**
+ * Bytes used to encode a proof.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ * Check with Galois
+ * Why do we not need to encode uint64?
+ */
+type BYTES_PER_PROOF = 48
+
+/**
  * Bytes used to encode a BLS scalar field element.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
  */
