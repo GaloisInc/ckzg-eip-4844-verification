@@ -1,0 +1,17 @@
+Permutations.cry
+    -   What benefits does sequences bring, compared to arrays?
+    -   How do we run unit tests, e.g., Lines 65 - 67?
+    -   We'll just prove up to 2^^4096 --- that seems plenty and is still fast
+        --> Why do we choose 2^^4096?
+        --> Can we prove it with an unbounded numbers, i.e., mathematic numbers?
+    -   What are fences in "Successes: 3, No fences: 3, Failures: 0" after ":load permutations_properties.cry" is executed?
+    -   Line 17: Why do we need size * BYTE_WIDTH >= width n?
+
+proof/bitcode/make
+    -   stdlib.h file not found
+    -   Related: https://stackoverflow.com/questions/77250743/mac-xcode-g-cannot-compile-even-a-basic-c-program-issues-with-standard-libr
+    
+bytes_to_kzg_commitment 
+    -   How to parse "assert (validate_kzg_g1 b) "validate_kzg_g1 failed" b"?
+    -   Why do we not need to convert type of b to KZGCommitment?
+
