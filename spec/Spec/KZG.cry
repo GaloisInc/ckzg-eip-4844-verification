@@ -97,6 +97,9 @@ verify_kzg_proof_impl commitment z y proof = result where
  * Receives inputs as bytes.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
  * Check with Galois
+ * Potential issues in the Python specification: 
+ *      -   KZG_SETUP_G2_MONOMIAL[1] --> KZG_SETUP_G2_MONOMIAL[0]?
+ *      -   bls.multiply(bls.G2(), -z) where z is with type BLSFieldElement, i.e., uint256, but the second argument of bls.multiply is with type int.
  */
 verify_kzg_proof : Bytes48 -> Bytes32 -> Bytes32 -> Bytes48 -> Bit
 verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes = 
