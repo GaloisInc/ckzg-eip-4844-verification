@@ -201,6 +201,35 @@ g2_add p1 p2 =
 /**
  * Multiply a G2 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
+ *  Call `g2_multi` instead if `scalar == BLS_MODULUS`.
+ * The optimization of running scalar multiplication on the inverse and then using the
+ *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
+ * We just have to take the inverse of every `y` coefficient.
+ * ```repl
+ * :prove g2_multi_optimized G2 0 == g2_multi G2 0
+ * :prove g2_multi_optimized G2 1 == g2_multi G2 1
+ * :prove g2_multi_optimized G2 6 == g2_multi G2 6
+ * :prove g2_multi_optimized G2 (`(BLS_MODULUS)-1) == g2_multi G2 (`(BLS_MODULUS)-1)
+ * ```
+ */
+g2_multi_optimized : G2Point -> UInt256 -> G2Point
+g2_multi_optimized point scalar =
+    if scalar < `(BLS_MODULUS) / 2
+        then g2_multi point scalar
+    else
+        { xCoeffs = xcoeffs
+        , yCoeffs = ycoeffs
+        }
+    where
+        inverse_scalar = `(BLS_MODULUS) - scalar
+        inverse_point = g2_multi point inverse_scalar
+        ycoeffs = map (\y -> fromInteger (`(Fq) - (fromZ y))) inverse_point.yCoeffs
+        xcoeffs = inverse_point.xCoeffs
+
+/**
+ * Multiply a G2 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  * ```repl
  * :prove g2_multi G2 0 == G2_INFINITY
  * :prove g2_multi G2 1 == G2

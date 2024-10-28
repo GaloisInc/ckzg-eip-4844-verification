@@ -1,0 +1,458 @@
+/**
+ * These functions are specific to the BLS curve and specifically the
+ *  G12 ECC points with coordinates in the twelfth extension field Fq12.
+ *
+ * The Deneb Python specs has an option to use the py_ecc library for these operations.
+ * This module's functions are based off of py_ecc.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py
+ */
+module Spec::BlsEC::G12 where
+
+import Common::ModArith
+import Common::Utils
+import Spec::BlsEC::Field
+import Spec::BlsEC::FQP
+import Spec::BlsEC::G2
+
+/**
+ * Extension curve over Fq12; same b value as over Fq
+ * @see https://github.com/ethereum/py_ecc/blob/7a623327043e2fec37a45f147d95f0a1b62386d7/py_ecc/bls12_381/bls12_381_curve.py#L33
+ */
+FQ12_B12 : Fq12
+FQ12_B12 = [4] # zero
+
+/**
+ * "Twist" a point in Fq2 into a point in Fq12.
+ * @see https://github.com/ethereum/py_ecc/blob/7a623327043e2fec37a45f147d95f0a1b62386d7/py_ecc/bls12_381/bls12_381_curve.py#L130
+ */
+W : Fq12
+W = [0, 1] # zero
+
+/**
+ * G12 elliptic curve point.
+ * This is the twefth extension field (Fq12) for the field Fq (G1).
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L367
+ *
+ * NOTE: by using the Z type, all modular arithmetic
+ *  is handled automatically and there is no potential
+ *  for any overflow errors.
+ */
+type G12Point =
+    { xCoeffs : Fq12
+    , yCoeffs : Fq12
+    }
+
+/**
+ * Representation of G12 point at infinity.
+ *
+ * NOTE: this isn't actually the point at infinity, but since we
+ *  can't use enums here and all zeros is not on the curve, it's an
+ *  acceptable substitute.
+ */
+G12_INFINITY : G12Point
+G12_INFINITY =
+    { xCoeffs = zero
+    , yCoeffs = zero
+    }
+
+/**
+ * Generator for curve over Fq12.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L44
+ */
+G12 : G12Point
+G12 =
+    { xCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 0
+        , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+        , 0
+        ]
+    , yCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+        , 0
+        , 0
+        ]
+    }
+
+/**
+ * Determines whether or not the given point is on the G12 curve.
+ * The point must satisfy the EC equation: y^^2 = x^^3 + 4
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L71
+ * ```repl
+ * :prove g12_is_valid_point G12
+ * :prove g12_is_valid_point G12_2P
+ * :prove g12_is_valid_point G12_3P
+ * :prove g12_is_valid_point G12_6P
+ * ```
+ */
+g12_is_valid_point : G12Point -> Bit
+g12_is_valid_point point =
+    (y~^^2) ~-~ (x~^^3) == FQ12_B12
+    where
+        x = point.xCoeffs
+        y = point.yCoeffs
+
+/**
+ * Negate a G12 point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L135
+ * ```repl
+ * :prove g12_negate G12 == G12_Negated
+ * :prove g12_negate (g12_negate G12) == G12
+ * ```
+ */
+g12_negate : G12Point -> G12Point
+g12_negate point = newPoint where
+    x = point.xCoeffs
+    y = point.yCoeffs
+    newPoint =
+        { xCoeffs = x
+        , yCoeffs = fqp_neg y
+        }
+
+/**
+ * Double a G12 point.
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
+ * ```repl
+ * :prove g12_double G12 == G12_2P
+ * :prove g12_double G12_3P == G12_6P
+ * ```
+ */
+g12_double : G12Point -> G12Point
+g12_double point = newPoint where
+    x = point.xCoeffs
+    y = point.yCoeffs
+    m = (3 *~ (x~^^2)) ~/~ (2 *~ y)
+    newX = (m~^^2) ~-~ (2 *~ x)
+    newY = (m ~*~ (x ~-~ newX)) ~-~ y
+    newPoint =
+        { xCoeffs = newX
+        , yCoeffs = newY
+        }
+
+/**
+ * Add two G12 points
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
+ * ```repl
+ * :prove g12_add G12 G12 == G12_2P
+ * :prove g12_add G12 G12_2P == G12_3P
+ * :prove g12_add G12_3P G12_3P == G12_6P
+ * ```
+ */
+g12_add : G12Point -> G12Point -> G12Point
+g12_add p1 p2 =
+    if p1 == G12_INFINITY then p2
+    else if p2 == G12_INFINITY then p1
+    else if (x2 == x1) && (y2 == y1) then
+        g12_double p1
+    else
+        { xCoeffs = newX
+        , yCoeffs = newY
+        }
+    where
+    x1 = p1.xCoeffs
+    y1 = p1.yCoeffs
+    x2 = p2.xCoeffs
+    y2 = p2.yCoeffs
+    m = (y2 ~-~ y1) ~/~ (x2 ~-~ x1)
+    newX = m~^^2 ~-~ x1 ~-~ x2
+    newY = m ~*~ (x1 ~-~ newX) ~-~ y1
+
+/**
+ * Multiply a G12 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
+ *  Call `g12_multi` instead if `scalar == BLS_MODULUS`.
+ * The optimization of running scalar multiplication on the inverse and then using the
+ *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
+ * We just have to take the inverse of every `y` coefficient.
+ * ```repl
+ * :prove g12_multi_optimized G12 0 == g12_multi G12 0
+ * :prove g12_multi_optimized G12 1 == g12_multi G12 1
+ * :prove g12_multi_optimized G12 6 == g12_multi G12 6
+ * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-1) == G12_NEG_ONE
+ * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-2) == G12_NEG_TWO
+ * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-3) == G12_NEG_THREE
+ * ```
+ */
+g12_multi_optimized : G12Point -> UInt256 -> G12Point
+g12_multi_optimized point scalar =
+    if scalar < `(BLS_MODULUS) / 2
+        then g12_multi point scalar
+    else
+        { xCoeffs = xcoeffs
+        , yCoeffs = ycoeffs
+        }
+    where
+        inverse_scalar = `(BLS_MODULUS) - scalar
+        inverse_point = g12_multi point inverse_scalar
+        ycoeffs = map (\y -> fromInteger (`(Fq) - (fromZ y))) inverse_point.yCoeffs
+        xcoeffs = inverse_point.xCoeffs
+
+/**
+ * Multiply a G12 point by a scalar
+ * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ * ```repl
+ * :prove g12_multi G12 0 == G12_INFINITY
+ * :prove g12_multi G12 1 == G12
+ * :prove g12_multi G12 2 == G12_2P
+ * :prove g12_multi G12 3 == G12_3P
+ * :prove g12_multi G12 6 == G12_6P
+ * :prove g12_multi G12_2P 3 == g12_multi G12_3P 2
+ * ```
+ */
+g12_multi : G12Point -> UInt256 -> G12Point
+g12_multi point scalar =
+    if scalar == 0 then G12_INFINITY
+        | scalar == 1 then point
+        // If scalar is even, just double
+        | scalar % 2 == 0 then g12_multi (g12_double point) (scalar / 2)
+        // If scalar is odd, double and add
+        else g12_add ((g12_multi (g12_double point) (scalar / 2))) point
+
+/**
+ * Convert a G2 point into a G12 point.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L142
+ * ```repl
+ * :prove twist G2 == G12
+ * ```
+ */
+twist : G2Point -> G12Point
+twist p = {xCoeffs = newX, yCoeffs = newY} where
+    x = p.xCoeffs
+    y = p.yCoeffs
+    // Field isomorphism from Z[p] / x^^2 to Z[p] / x^^2 - 2*x + 2
+    xcoeffs = [(x@0) - (x@1), x@1]
+    ycoeffs = [(y@0) - (y@1), y@1]
+    // Isomorphism into subfield of Z[p] / w^^12 - 2 * w^^6 + 2,
+    // where w^^6 = x
+    nx = [xcoeffs@0] # five_zeros # [xcoeffs@1] # five_zeros
+    ny = [ycoeffs@0] # five_zeros # [ycoeffs@1] # five_zeros
+    // Divide x coord by w^^2 and y coord by w^^3
+    newX = nx ~/~ (W~^^2)
+    newY = ny ~/~ (W~^^3)
+    five_zeros = repeat`{5} 0
+
+/*
+ * ===========
+ * Test Points
+ * ===========
+ */
+
+/**
+ * G12 doubled. Computed using py_ecc: `normalize(double(G12))`.
+ */
+G12_2P : G12Point
+G12_2P =
+    { xCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 0
+        , 3419974069068927546093595533691935972093267703063689549934039433172037728172434967174817854768758291501458544631891
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 3085702637220734738417436494616749403912215658780238013160080261412073281518532063392788241082272664317258671945021
+        , 0
+        ]
+    , yCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 678774053046495337979740195232911687527971909891867263302465188023833943429943242788645503130663197220262587963545
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 847816895216105222315651272001770314991114118284350099884024831234542017398199626189210415118115625674814535309869
+        , 0
+        , 0
+        ]
+    }
+
+/**
+ * G12 tripled. Computed using py_ecc: `normalize(add(G12, double(G12)))`.
+ */
+G12_3P : G12Point
+G12_3P =
+    { xCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 0
+        , 2795155019138475430256695697248607867022196082692926850257941893956680503583886174445899854256891620515274933186478
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 3314282677642727520205697515437815240873236290370797396719235956642557026925566275820787118202399247747445125449282
+        , 0
+        ]
+    , yCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 1713408536894110516522969272885192173669900392782465197506312048399987681703463801235485042423756235640603447122066
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 1832973098578300992451600694419166481095710360972479322215712298699316162770343964433135566775684661337037799447857
+        , 0
+        , 0
+        ]
+    }
+
+/**
+ * G12 multiplied by 6. Computed using py_ecc: `normalize(multiply(G12, 6))`.
+ */
+G12_6P : G12Point
+G12_6P =
+    { xCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 0
+        , 3984640847924757144714972801294669751518204805083279115209564409785869025937099631985667805381121749661329977337231
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 2314522373438651017950322300652866396447889076475953394735913335923815351124264102732910312043710109696230300963340
+        , 0
+        ]
+    , yCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 3638085773299732811703058316322950283836045952826105333022656670096922749263292332009255347182392556648551235304444
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 839816652260065229377110122240619827065205829181829385830561226769366420386289987721906250441510775095951918797144
+        , 0
+        , 0
+        ]
+    }
+
+/**
+ * G12 negated. Computed using py_ecc: `normalize(neg(G12))`.
+ */
+G12_Negated : G12Point
+G12_Negated =
+    { xCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 0
+        , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+        , 0]
+    , yCoeffs =
+        [ 0
+        , 0
+        , 0
+        , 2017258952934375457849735304558732518256013841723352154472679471057686924117014146018818524865681679396399932211882
+        , 0
+        , 0
+        , 0
+        , 0
+        , 0
+        , 2530003246008313436619321190568518957050005802350535323083204411198199749930993008942803721832196041551977634344055
+        , 0
+        , 0
+        ]
+    }
+
+/**
+ * The result of G12 multiplied by BLS_MODULUS - 1.
+ */
+G12_NEG_ONE : G12Point
+G12_NEG_ONE =
+    { xCoeffs =
+        [ 0, 0, 0, 0
+        , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+        , 0, 0, 0, 0, 0
+        , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+        , 0
+        ]
+    , yCoeffs =
+        [ 0, 0, 0
+        , 2017258952934375457849735304558732518256013841723352154472679471057686924117014146018818524865681679396399932211882
+        , 0, 0, 0, 0, 0
+        , 2530003246008313436619321190568518957050005802350535323083204411198199749930993008942803721832196041551977634344055
+        , 0, 0
+        ]
+    }
+
+/**
+ * The result of G12 multiplied by BLS_MODULUS - 2.
+ */
+G12_NEG_TWO : G12Point
+G12_NEG_TWO =
+    { xCoeffs =
+        [ 0, 0, 0, 0
+        , 3419974069068927546093595533691935972093267703063689549934039433172037728172434967174817854768758291501458544631891
+        , 0, 0, 0, 0, 0
+        , 3085702637220734738417436494616749403912215658780238013160080261412073281518532063392788241082272664317258671945021
+        , 0
+        ]
+    , yCoeffs =
+        [ 0, 0, 0
+        , 3323635502175172055438049630502992469028910910047140622029592948100197707060894621654042125998352466817631684596242
+        , 0, 0, 0, 0, 0
+        , 3154592660005562171102138553734133841565768701654657785448033304889489633092638238253477214010900038363079737249918
+        , 0, 0
+        ]
+    }
+
+/**
+ * The result of G12 multiplied by BLS_MODULUS - 3.
+ */
+G12_NEG_THREE : G12Point
+G12_NEG_THREE =
+    { xCoeffs =
+        [ 0, 0, 0, 0
+        , 2795155019138475430256695697248607867022196082692926850257941893956680503583886174445899854256891620515274933186478
+        , 0, 0, 0, 0, 0
+        , 3314282677642727520205697515437815240873236290370797396719235956642557026925566275820787118202399247747445125449282
+        , 0
+        ]
+    , yCoeffs =
+        [ 0, 0, 0
+        , 2289001018327556876894820552850711982886982427156542687825746087724043968787374063207202586705259428397290825437721
+        , 0, 0, 0, 0, 0
+        , 2169436456643366400966189131316737675461172458966528563116345837424715487720493900009552062353331002700856473111930
+        , 0, 0
+        ]
+    }
