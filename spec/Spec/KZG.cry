@@ -76,7 +76,7 @@ compute_kzg_proof blob z_bytes = (proof, y) where
     (proof, y') = compute_kzg_proof_impl polynomial (bytes_to_bls_field z_bytes)
     y = split`{BYTES_PER_FIELD_ELEMENT} y'
    
-/*
+/**
  * Verify KZG proof that ``p(z) == y`` where ``p(z)`` is the polynomial represented by ``polynomial_kzg``.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
  * Check with Galois
@@ -91,3 +91,32 @@ verify_kzg_proof_impl commitment z y proof = result where
     neg_G2 = g2_negate G2
     proof_in_G1 = bytes48_to_G1 proof
     result = pairing_check ((P_minus_y, neg_G2), (proof_in_G1, X_minus_z))
+
+/**
+ * Verify KZG proof that ``p(z) == y`` where ``p(z)`` is the polynomial represented by ``polynomial_kzg``.
+ * Receives inputs as bytes.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
+ * Check with Galois
+ */
+verify_kzg_proof : Bytes48 -> Bytes32 -> Bytes32 -> Bytes48 -> Bit
+verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes = 
+    assert  ((length commitment_bytes) == `(BYTES_PER_COMMITMENT)) 
+            error_msg_for_commitment 
+            assert  ((length z_bytes) == `(BYTES_PER_FIELD_ELEMENT))
+                    error_msg_for_z_bytes
+                    assert  ((length y_bytes) == `(BYTES_PER_FIELD_ELEMENT)) 
+                            error_msg_for_y_bytes
+                            assert  ((length proof_bytes) == `(BYTES_PER_PROOF))
+                                    error_msg_for_proof_bytes
+                                    result where
+                                        error_msg_for_commitment = "The length of commitment must be BYTES_PER_COMMITMENT"
+                                        error_msg_for_z_bytes = "The length of z_bytes must be BYTES_PER_FIELD_ELEMENT"
+                                        error_msg_for_y_bytes = "The length of y_bytes must be BYTES_PER_FIELD_ELEMENT"
+                                        error_msg_for_proof_bytes = "The length of proof_bytes must be BYTES_PER_PROOF"
+                                        commitment = bytes_to_kzg_commitment commitment_bytes
+                                        z = bytes_to_bls_field z_bytes
+                                        y = bytes_to_bls_field y_bytes
+                                        proof = bytes_to_kzg_proof proof_bytes 
+                                        result = verify_kzg_proof_impl commitment z y proof
+
+
