@@ -1,0 +1,2 @@
+proofRes4:  0x92f3f0c583f88448206b06d9502540543a2d952ba875d90e65becb691261d2245e54882fc2b72638ea912903609e26ee
+byteRes4:  b'c-Q{m\x053G\xbf#\xd8\x15U\x90Za\xe1\xa7\\PT\xb3\xf5U@O\xa4>\xa2\n\xfe\x10'

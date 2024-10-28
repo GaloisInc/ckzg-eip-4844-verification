@@ -90,6 +90,9 @@ valid_blob_generator blob = assert (blob != blob') "error" blob' where
     x' = [groupBy`{8} poly | poly <- y']
     blob' = join x'
 
+z_bytes_generator : Bytes32 -> Bytes32
+z_bytes_generator z = z 
+
 /**
  * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
