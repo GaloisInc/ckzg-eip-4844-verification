@@ -79,14 +79,18 @@ compute_kzg_proof blob z_bytes = (proof, y) where
 /**
  * Verify KZG proof that ``p(z) == y`` where ``p(z)`` is the polynomial represented by ``polynomial_kzg``.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
- * Check with Galois
- * Check the index of KZG_SETUP_G2_MONOMIAL --> Should it be KZG_SETUP_G2_MONOMIAL@1 or KZG_SETUP_G2_MONOMIAL@0?
+ * Review with Galois' specification in the branch https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/spec/feature/verify-kzg-proof
+ *      -   Line https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/861c606e5ec2191dd93dd4fb0c3cff32da8bd921/spec/Spec/KZG.cry#L85
+ * Potential issues in the Python specification: 
+ *      1.  The input z in bls.multiply(bls.G2(), -z) is with type BLSFieldElement, i.e., uint256, in the Python specification,
+ *          but the second argument of bls.multiply in the py_ecc library is with type int.
+ *          @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  */
 verify_kzg_proof_impl : KZGCommitment -> BlsFieldElement -> BlsFieldElement -> KZGProof -> Bit
 verify_kzg_proof_impl commitment z y proof = result where
-    G2_multi_neg_z = g2_multi G2 (0 - (bls_field_to_uint256 z))
+    G2_multi_neg_z = g2_multi G2 ((`(BLS_MODULUS) - z) % `(BLS_MODULUS))
     X_minus_z = g2_add (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)) G2_multi_neg_z
-    G1_multi_neg_y = g1_multi G1 (0 - (bls_field_to_uint256 y))
+    G1_multi_neg_y = g1_multi G1 ((`(BLS_MODULUS) - y) % `(BLS_MODULUS))
     P_minus_y = g1_add (bytes48_to_G1 commitment) G1_multi_neg_y
     neg_G2 = g2_negate G2
     proof_in_G1 = bytes48_to_G1 proof
@@ -96,10 +100,8 @@ verify_kzg_proof_impl commitment z y proof = result where
  * Verify KZG proof that ``p(z) == y`` where ``p(z)`` is the polynomial represented by ``polynomial_kzg``.
  * Receives inputs as bytes.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
- * Check with Galois
- * Potential issues in the Python specification: 
- *      -   KZG_SETUP_G2_MONOMIAL[1] --> KZG_SETUP_G2_MONOMIAL[0]?
- *      -   bls.multiply(bls.G2(), -z) where z is with type BLSFieldElement, i.e., uint256, but the second argument of bls.multiply is with type int.
+ * Review with Galois' specification in the branch https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/spec/feature/verify-kzg-proof
+ * Should we go with assert commands?
  */
 verify_kzg_proof : Bytes48 -> Bytes32 -> Bytes32 -> Bytes48 -> Bit
 verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes = 
