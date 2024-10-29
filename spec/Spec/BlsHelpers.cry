@@ -169,7 +169,7 @@ compute_roots_of_unity order = assert (order == `n) "order must be equal to n" r
 /**
  * Bytes used to encode a commitment.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- * Check with Galois
+ * Review with Galois
  * Why do we not need to encode uint64?
  */
 type BYTES_PER_COMMITMENT = 48
@@ -177,7 +177,7 @@ type BYTES_PER_COMMITMENT = 48
 /**
  * Bytes used to encode a proof.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- * Check with Galois
+ * Review with Galois
  * Why do we not need to encode uint64?
  */
 type BYTES_PER_PROOF = 48
@@ -211,7 +211,7 @@ bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg fie
 /**
  * Convert a BLS scalar field element to bytes.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_field_to_bytes
- * Check with Galois
+ * Review with Galois
  * Not sure about KZG_ENDIANNESS = 'big'
  */
 bls_field_to_bytes : BlsFieldElement -> Bytes32 
@@ -219,14 +219,14 @@ bls_field_to_bytes value = groupBy`{8} value
 
 /**
  * Convert a Bytes32 number to a UInt256 number.
- * Check with Galois
+ * Review with Galois
  */
 bytes32_to_uint256 : Bytes32 -> UInt256
 bytes32_to_uint256 bytes = join bytes 
 
 /*
  * Convert a BLS scalar field element to a UInt256 number.
- * Check with Galois
+ * Review with Galois
  */
 bls_field_to_uint256 : BlsFieldElement -> UInt256
 bls_field_to_uint256 value = bytes32_to_uint256 (bls_field_to_bytes value)
@@ -358,9 +358,8 @@ property test_compute_roots_of_unity =
 /**
  * Check with a bilinear map.
  * @see https://github.com/ethereum/consensus-specs/blob/85e2452301382a9d099df16f38deac8178355358/tests/core/pyspec/eth2spec/utils/bls.py#L224
- * Unfinished
- * Discuss with Galois
- * Temporarily set to always return True
+ * Unfinished and always return True
+ * Discuss with Galois' specification in https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/spec/feature/verify-kzg-proof/spec/Spec/BlsEC/Pairing.cry
  */
 pairing_check : ((G1Point, G2Point), (G1Point, G2Point)) -> Bit
 pairing_check values = True
@@ -376,3 +375,13 @@ pairing_check values = True
  */
 hash_to_bls_field: {n} (fin n, n >= 1) => [n][8] -> BlsFieldElement
 hash_to_bls_field data = 0
+
+/**
+ * The two constants FIAT_SHAMIR_PROTOCOL_DOMAIN and RANDOM_CHALLENGE_KZG_BATCH_DOMAIN
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
+ */
+FIAT_SHAMIR_PROTOCOL_DOMAIN : [16][8]
+FIAT_SHAMIR_PROTOCOL_DOMAIN = "FSBLOBVERIFY_V1_" : [16][8]
+RANDOM_CHALLENGE_KZG_BATCH_DOMAIN : [16][8]
+RANDOM_CHALLENGE_KZG_BATCH_DOMAIN = "RCKZGBATCH___V1_" : [16][8]
+
