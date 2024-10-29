@@ -10,6 +10,7 @@ Python:
     verify_blob_kzg_proof
     verify_blob_kzg_proof_batch
     bls_fields_to_bytes
+    compute_blob_kzg_proof
 
 C:
     hash_to_bls_field

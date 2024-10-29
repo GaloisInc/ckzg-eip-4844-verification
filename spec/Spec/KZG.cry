@@ -131,7 +131,7 @@ padding_zeros value = result where
 /**
  * Return the Fiat-Shamir challenge required by the rest of the protocol.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#hash_to_bls_field
- * Check with Galois:
+ * Discuss with Galois:
  *      -   KZG_ENDIANNESS
  *      -   Overflow in data = blob + degree_poly + FIAT_SHAMIR_PROTOCOL_DOMAIN_with_leading_zeros + commitment_in_bytes_with_leading_zeros
  */
