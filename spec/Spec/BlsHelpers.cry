@@ -26,6 +26,12 @@ type BlsFieldElement = [BlsFieldSize]
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
  * NOTE: Cryptol can not perform exponentiation with negative exponents,
  *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
+ * ```repl
+ * :prove bls_modular_inverse 1 == 1
+ * :prove bls_modular_inverse 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :prove bls_modular_inverse 3 == 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
+ * ```
+ * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
 bls_modular_inverse x = toIntegral (modular_inverse x') where
@@ -34,6 +40,12 @@ bls_modular_inverse x = toIntegral (modular_inverse x') where
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
+ * ```repl
+ * :prove bls_div 1 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :prove bls_div 13 1 == 13
+ * :prove bls_div 57 13 == 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
+ * ```
+ * NOTE: we just chose the last value at "random"
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
 bls_div x y = toIntegral (div_mod x' y') where
@@ -68,6 +80,12 @@ compute_powers x
  *   @see https://github.com/ethereum/consensus-specs/blob/85e2452301382a9d099df16f38deac8178355358/tests/core/pyspec/eth2spec/utils/bls.py#L262
  * NOTE: the Python multi_exp handles both G1 and G2 points, and just calls their
  *  corresponding `add` and `multiply` functions. This implementation is for G1 points only.
+ * ```repl
+ * :prove g1_multi_exp`{1} [G1] [1] == G1
+ * :prove g1_multi_exp`{2} [G1, G1] [2, 3] == G1_5P
+ * :prove g1_multi_exp`{2} [G1_3P, G1_2P] [1, 2] == G1_7P
+ * :prove g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] == g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2]
+ * ```
  */
 g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
@@ -139,6 +157,13 @@ type KZGCommitment = Bytes48
  * NOTE: we don't need to check for non-equal lengths for `points` and `scalars`,
  *  because our type parameter `n` enforces that for us.
  * NOTE: the `points` being passed in are compressed G1 points.
+ * ```repl
+ * :prove g1_lincomb [] [] == G1_POINT_AT_INFINITY
+ * :prove g1_lincomb`{1} [G1_1P_COMPRESSED] [1] == G1_1P_COMPRESSED
+ * :prove g1_lincomb`{2} [G1_1P_COMPRESSED, G1_1P_COMPRESSED] [2, 5] == G1_7P_COMPRESSED
+ * :prove g1_lincomb`{3} [G1_2P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 1, 3] == G1_7P_COMPRESSED
+ * :prove g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] == G1_7P_COMPRESSED
+ * ```
  */
 g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
@@ -245,59 +270,6 @@ bytes_to_kzg_proof b =
  * Unit test suite
  * ===============
  */
-
-/**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_bls_modular_inverse 1 1
- * :prove test_bls_modular_inverse 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
- * :prove test_bls_modular_inverse 3 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
- * ```
- * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
- */
-test_bls_modular_inverse : BlsFieldElement -> BlsFieldElement -> Bit
-property test_bls_modular_inverse x expectedY =
-    bls_modular_inverse x == expectedY
-
-/**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_bls_div 1 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
- * :prove test_bls_div 13 1 13
- * :prove test_bls_div 57 13 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
- * ```
- * NOTE: we just chose the last value at "random"
- */
-test_bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement -> Bit
-property test_bls_div x y expected =
-    bls_div x y == expected
-
-/**
- * Unit tests for `g1_multi_exp`.
- * ```repl
- * :prove test_g1_multi_exp`{1} [G1] [1] G1
- * :prove test_g1_multi_exp`{2} [G1, G1] [2, 3] G1_5P
- * :prove test_g1_multi_exp`{2} [G1_3P, G1_2P] [1, 2] G1_7P
- * :prove test_g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] (g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2])
- * ```
- */
-test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
-property test_g1_multi_exp points scalars expected =
-    g1_point_eq (g1_multi_exp points scalars) expected
-
-/**
- * Unit tests for `g1_lincomb`.
- * ```repl
- * :prove test_g1_lincomb [] [] G1_POINT_AT_INFINITY
- * :prove test_g1_lincomb`{1} [G1_1P_COMPRESSED] [1] G1_1P_COMPRESSED
- * :prove test_g1_lincomb`{2} [G1_1P_COMPRESSED, G1_1P_COMPRESSED] [2, 5] G1_7P_COMPRESSED
- * :prove test_g1_lincomb`{3} [G1_2P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 1, 3] G1_7P_COMPRESSED
- * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
- * ```
- */
-test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
-property test_g1_lincomb points scalars commitment =
-    g1_lincomb points scalars == commitment
 
 /**
  * Unit tests for `g1_lincomb`.
