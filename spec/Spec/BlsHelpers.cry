@@ -6,6 +6,7 @@ module Spec::BlsHelpers where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
 import Spec::BlsEC::G2

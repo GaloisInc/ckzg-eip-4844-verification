@@ -10,6 +10,7 @@ module Spec::BlsEC::G1 where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 
 /**
