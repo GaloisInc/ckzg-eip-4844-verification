@@ -364,3 +364,15 @@ property test_compute_roots_of_unity =
  */
 pairing_check : ((G1Point, G2Point), (G1Point, G2Point)) -> Bit
 pairing_check values = True
+
+
+/**
+ * Hash ``data`` and convert the output to a BLS scalar field element.
+ * The output is not uniform over the BLS field.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#hash_to_bls_field
+ * Unfinished
+ * Discuss with Galois
+ * Temporarily set to always return 0
+ */
+hash_to_bls_field: {n} (fin n, n >= 1) => [n][8] -> BlsFieldElement
+hash_to_bls_field data = 0
