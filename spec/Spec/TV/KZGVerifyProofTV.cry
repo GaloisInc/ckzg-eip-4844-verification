@@ -10,7 +10,7 @@ import Spec::KZG
 
 /**
  * ```repl
- * :prove correct_verify_kzg_proof
+ * :check correct_verify_kzg_proof
  * ```
  */
 correct_verify_kzg_proof : Bit

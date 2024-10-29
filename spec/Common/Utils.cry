@@ -14,8 +14,8 @@ type UInt256 = [256]
  * We use this function because SAW cannot convert
  *  the `Bit` type internally to an LLVM integer type.
  * ```repl
- * :prove bit_to_bool True == 1
- * :prove bit_to_bool False == 0
+ * :check bit_to_bool True == 1
+ * :check bit_to_bool False == 0
  * ```
  */
 bit_to_bool : Bit -> [1]
@@ -24,8 +24,8 @@ bit_to_bool b = if b then 1 else 0
 /**
  * Convert a 1-bit value to a `Bit`.
  * ```repl
- * :prove bool_to_bit 1 == True
- * :prove bool_to_bit 0 == False
+ * :check bool_to_bit 1 == True
+ * :check bool_to_bit 0 == False
  * ```
  */
 bool_to_bit : [1] -> Bit
@@ -34,8 +34,8 @@ bool_to_bit b = if b == 1 then True else False
 /**
  * Convert an Integral value of 'n' bits to a `Bit`.
  * ```repl
- * :prove bit_to_integer True == 1
- * :prove bit_to_integer False == 0
+ * :check bit_to_integer True == 1
+ * :check bit_to_integer False == 0
  * ```
  */
 bit_to_integer : Bit -> Integer

@@ -15,7 +15,7 @@ import Spec::BlsEC::Field
  * let expected = [expected_real, expected_imag]
  * let low = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160, 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758, 0]
  * let high = [1, 0, 1]
- * :prove poly_extended_euclidean [1, 0, 0] low [0, 0, 0] high == expected
+ * :check poly_extended_euclidean [1, 0, 0] low [0, 0, 0] high == expected
  * ```
  */
 poly_extended_euclidean : {n} (fin n, n >= 2) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n-1](Z Fq)
@@ -32,7 +32,7 @@ poly_extended_euclidean lm low hm high = take`{n-1} results where
  * let expected = (expected_lm, expected_low)
  * let low = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160, 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758, 0]
  * let high = [1, 0, 1]
- * :prove inv_while [1, 0, 0] low [0, 0, 0] high == expected
+ * :check inv_while [1, 0, 0] low [0, 0, 0] high == expected
  * ```
  */
 inv_while : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq) -> ([n](Z Fq), [n](Z Fq))
@@ -103,7 +103,7 @@ inv_nested_for lm low nm new r = (nm', new') where
 /**
  * This function handles the inner computation of the `inv_nested_for` for each element of each list.
  * ```repl
- * :prove inv_nested_for_compute_value 13 0 [3, 5] [2, 7] == (13 - 3*2)
+ * :check inv_nested_for_compute_value 13 0 [3, 5] [2, 7] == (13 - 3*2)
  * ```
  */
 inv_nested_for_compute_value : {n} (fin n, n >= 1) => Z Fq -> Integer -> [n](Z Fq) -> [n](Z Fq) -> Z Fq
@@ -113,10 +113,10 @@ inv_nested_for_compute_value ni i l r =
 /**
  * This function performs pair-wise multiplication between two polynomials.
  * ```repl
- * :prove poly_pair_multi [13] [13] (-1, 0) == 0
- * :prove poly_pair_multi [13] [13] (0, -1) == 0
- * :prove poly_pair_multi [13] [13] (-1, -1) == 0
- * :prove poly_pair_multi [(2 : Z Fq), (3 : Z Fq)] [(5 : Z Fq), (7 : Z Fq)] (0, 1) == 14
+ * :check poly_pair_multi [13] [13] (-1, 0) == 0
+ * :check poly_pair_multi [13] [13] (0, -1) == 0
+ * :check poly_pair_multi [13] [13] (-1, -1) == 0
+ * :check poly_pair_multi [(2 : Z Fq), (3 : Z Fq)] [(5 : Z Fq), (7 : Z Fq)] (0, 1) == 14
  * ```
  */
 poly_pair_multi : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> (Integer, Integer) -> Z Fq
@@ -128,9 +128,9 @@ poly_pair_multi l r (i, j) =
  * Computes all combinations of (i,j) pairs where i + j == k.
  * We use the pair (-1, -1) to indicate no computation needed to be performed.
  * ```repl
- * :prove inv_nested_for_index_pairs`{3} 0 == [(0, 0), (-1, -1), (-1, -1)]
- * :prove inv_nested_for_index_pairs`{3} 1 == [(1, 0), (0, 1), (-1, -1)]
- * :prove inv_nested_for_index_pairs`{3} 2 == [(2, 0), (1, 1), (0, 2)]
+ * :check inv_nested_for_index_pairs`{3} 0 == [(0, 0), (-1, -1), (-1, -1)]
+ * :check inv_nested_for_index_pairs`{3} 1 == [(1, 0), (0, 1), (-1, -1)]
+ * :check inv_nested_for_index_pairs`{3} 2 == [(2, 0), (1, 1), (0, 2)]
  * ```
  */
 inv_nested_for_index_pairs : {n} (fin n, n >= 1) => Integer -> [n](Integer, Integer)
@@ -141,10 +141,10 @@ inv_nested_for_index_pairs k =
  * Compute the degree of the polynomial.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/utils.py#L43
  * ```repl
- * :prove deg [0, 0, 0] == 0
- * :prove deg [1, 0, 0] == 0
- * :prove deg [0, 1, 0] == 1
- * :prove deg [0, 0, 1] == 2
+ * :check deg [0, 0, 0] == 0
+ * :check deg [1, 0, 0] == 0
+ * :check deg [0, 1, 0] == 1
+ * :check deg [0, 0, 1] == 2
  * ```
  */
 deg : {n} (fin n, n >= 1) => [n](Z Fq) -> Integer
@@ -160,10 +160,10 @@ deg p = compute_d (`(n)-1) where
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/utils.py#L50
  * ```repl
  * let high = [1, 0, 1]
- * :prove poly_rounded_div high high == [1, 0, 0]
+ * :check poly_rounded_div high high == [1, 0, 0]
  * let low = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160, 3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758, 0]
  * let expected = [0, 3760942702196338589502826385415833209682098933908451272344533612462792778154520066649324657897802310897411427023085, 0]
- * :prove poly_rounded_div high low == expected
+ * :check poly_rounded_div high low == expected
  */
 poly_rounded_div : {n} (fin n, n >= 1) => [n](Z Fq) -> [n](Z Fq) -> [n](Z Fq)
 poly_rounded_div a b = compute_outer_loop o0 temp0 start where

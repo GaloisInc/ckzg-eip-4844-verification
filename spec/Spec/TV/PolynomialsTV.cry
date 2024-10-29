@@ -14,7 +14,7 @@ import Spec::Polynomials
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
  * ```repl
- * :prove correct_roots_of_unity_brp
+ * :check correct_roots_of_unity_brp
  * ```
  */
 correct_roots_of_unity_brp : Bit

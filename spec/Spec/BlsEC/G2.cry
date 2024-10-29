@@ -121,10 +121,10 @@ G2_6P =
  * The point must satisfy the EC equation: y^^2 = x^^3 + 4
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L71
  * ```repl
- * :prove g2_is_valid_point G2
- * :prove g2_is_valid_point G2_2P
- * :prove g2_is_valid_point G2_3P
- * :prove g2_is_valid_point G2_6P
+ * :check g2_is_valid_point G2
+ * :check g2_is_valid_point G2_2P
+ * :check g2_is_valid_point G2_3P
+ * :check g2_is_valid_point G2_6P
  * ```
  */
 g2_is_valid_point : G2Point -> Bit
@@ -138,8 +138,8 @@ g2_is_valid_point point =
  * Negate a G2 point.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L135
  * ```repl
- * :prove g2_negate G2 == G2_Negated
- * :prove g2_negate (g2_negate G2) == G2
+ * :check g2_negate G2 == G2_Negated
+ * :check g2_negate (g2_negate G2) == G2
  * ```
  */
 g2_negate : G2Point -> G2Point
@@ -155,8 +155,8 @@ g2_negate point = newPoint where
  * Double a G2 point.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
  * ```repl
- * :prove g2_double G2 == G2_2P
- * :prove g2_double G2_3P == G2_6P
+ * :check g2_double G2 == G2_2P
+ * :check g2_double G2_3P == G2_6P
  * ```
  */
 g2_double : G2Point -> G2Point
@@ -175,9 +175,9 @@ g2_double point = newPoint where
  * Add two G2 points
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
  * ```repl
- * :prove g2_add G2 G2 == G2_2P
- * :prove g2_add G2 G2_2P == G2_3P
- * :prove g2_add G2_3P G2_3P == G2_6P
+ * :check g2_add G2 G2 == G2_2P
+ * :check g2_add G2 G2_2P == G2_3P
+ * :check g2_add G2_3P G2_3P == G2_6P
  * ```
  */
 g2_add : G2Point -> G2Point -> G2Point
@@ -208,10 +208,10 @@ g2_add p1 p2 =
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * We just have to take the inverse of every `y` coefficient.
  * ```repl
- * :prove g2_multi_optimized G2 0 == g2_multi G2 0
- * :prove g2_multi_optimized G2 1 == g2_multi G2 1
- * :prove g2_multi_optimized G2 6 == g2_multi G2 6
- * :prove g2_multi_optimized G2 (`(BLS_MODULUS)-1) == g2_multi G2 (`(BLS_MODULUS)-1)
+ * :check g2_multi_optimized G2 0 == g2_multi G2 0
+ * :check g2_multi_optimized G2 1 == g2_multi G2 1
+ * :check g2_multi_optimized G2 6 == g2_multi G2 6
+ * :check g2_multi_optimized G2 (`(BLS_MODULUS)-1) == g2_multi G2 (`(BLS_MODULUS)-1)
  * ```
  */
 g2_multi_optimized : G2Point -> UInt256 -> G2Point
@@ -232,12 +232,12 @@ g2_multi_optimized point scalar =
  * Multiply a G2 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  * ```repl
- * :prove g2_multi G2 0 == G2_INFINITY
- * :prove g2_multi G2 1 == G2
- * :prove g2_multi G2 2 == G2_2P
- * :prove g2_multi G2 3 == G2_3P
- * :prove g2_multi G2 6 == G2_6P
- * :prove g2_multi G2_2P 3 == g2_multi G2_3P 2
+ * :check g2_multi G2 0 == G2_INFINITY
+ * :check g2_multi G2 1 == G2
+ * :check g2_multi G2 2 == G2_2P
+ * :check g2_multi G2 3 == G2_3P
+ * :check g2_multi G2 6 == G2_6P
+ * :check g2_multi G2_2P 3 == g2_multi G2_3P 2
  * ```
  */
 g2_multi : G2Point -> UInt256 -> G2Point
@@ -252,8 +252,8 @@ g2_multi point scalar =
 /**
  * Helper function for testing point equality.
  * ```repl
- * :prove g2_point_eq G2 G2
- * :prove ~(g2_point_eq G2 G2_6P)
+ * :check g2_point_eq G2 G2
+ * :check ~(g2_point_eq G2 G2_6P)
  * ```
  */
 g2_point_eq : G2Point -> G2Point -> Bit
@@ -264,9 +264,9 @@ g2_point_eq p1 p2 =
  * Determine whether or not the G2 point is a member of the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
  * ```repl
- * :prove (g2_subgroup_check G2_INFINITY) == False
- * :prove (g2_subgroup_check G2) == True
- * :prove (g2_subgroup_check G2_2P) == True
+ * :check (g2_subgroup_check G2_INFINITY) == False
+ * :check (g2_subgroup_check G2) == True
+ * :check (g2_subgroup_check G2_2P) == True
  * ```
  * NOTE: these repl tests are very slow (~10 seconds each for the last two).
  */

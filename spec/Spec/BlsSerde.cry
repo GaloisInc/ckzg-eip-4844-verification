@@ -58,8 +58,8 @@ G1_POINT_AT_INFINITY = 0xc0 # zero
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
  *
  * ```repl
- * :prove get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
- * :prove get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
+ * :check get_flags (0xC0 # (zero:[384-8])) == (True, True, False)
+ * :check get_flags (0xE0 # (zero:[384-8])) == (True, True, True)
  * ```
  * NOTE: `Bytes48 == [384]`
  */
@@ -78,9 +78,9 @@ get_flags z = (c_flag, b_flag, a_flag) where
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L80
  *
 * ```repl
- * :prove decompress_G1 G1_POINT_AT_INFINITY == G1_INFINITY
- * :prove decompress_G1 G1_2P_COMPRESSED == G1_2P
- * :prove decompress_G1 G1_7P_COMPRESSED == G1_7P
+ * :check decompress_G1 G1_POINT_AT_INFINITY == G1_INFINITY
+ * :check decompress_G1 G1_2P_COMPRESSED == G1_2P
+ * :check decompress_G1 G1_7P_COMPRESSED == G1_7P
  * ```
  */
 decompress_G1 : Bytes48 -> G1Point
@@ -131,9 +131,9 @@ decompress_G1 z =
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L58-L77
  *
  * ```repl
- * :prove compress_G1 G1_INFINITY == G1_POINT_AT_INFINITY
- * :prove compress_G1 G1_2P == G1_2P_COMPRESSED
- * :prove compress_G1 G1_7P == G1_7P_COMPRESSED
+ * :check compress_G1 G1_INFINITY == G1_POINT_AT_INFINITY
+ * :check compress_G1 G1_2P == G1_2P_COMPRESSED
+ * :check compress_G1 G1_7P == G1_7P_COMPRESSED
  * ```
  */
 compress_G1 : G1Point -> Bytes48
@@ -168,7 +168,7 @@ property check_compression_decompress_inverse point = precondition ==> statement
  * Make sure the compressed G1 point is valid, i.e. not infinity and in the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/ciphersuites.py#L113
  * ```repl
- * :prove key_validate G1_1P_COMPRESSED == True
+ * :check key_validate G1_1P_COMPRESSED == True
  * // :error key_validate G1_INVALID_POINT_COMPRESSED // Cryptol cannot currently do this
  * ```
  * NOTE: I have manually checked that calling `key_validate` on an invalid compressed point
@@ -295,9 +295,9 @@ G2_3P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L145
  *
  * ```repl
- * :prove compress_G2 G2_INFINITY == G2_POINT_AT_INFINITY
- * :prove compress_G2 G2_2P == G2_2P_COMPRESSED
- * :prove compress_G2 G2_3P == G2_3P_COMPRESSED
+ * :check compress_G2 G2_INFINITY == G2_POINT_AT_INFINITY
+ * :check compress_G2 G2_2P == G2_2P_COMPRESSED
+ * :check compress_G2 G2_3P == G2_3P_COMPRESSED
  * ```
  * The compressed point (z1, z2) has the bit order:
  *  z1: (c_flag1, b_flag1, a_flag1, x1)
@@ -338,9 +338,9 @@ compress_G2 point =
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L175
  *
 * ```repl
- * :prove decompress_G2 G2_POINT_AT_INFINITY == G2_INFINITY
- * :prove decompress_G2 G2_2P_COMPRESSED == G2_2P
- * :prove decompress_G2 G2_3P_COMPRESSED == G2_3P
+ * :check decompress_G2 G2_POINT_AT_INFINITY == G2_INFINITY
+ * :check decompress_G2 G2_2P_COMPRESSED == G2_2P
+ * :check decompress_G2 G2_3P_COMPRESSED == G2_3P
  * ```
  */
 decompress_G2 : Bytes96 -> G2Point
@@ -405,7 +405,7 @@ decompress_G2 z =
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/point_compression.py#L123
  * ```repl
  * let y_squared = G2.xCoeffs~^^3 ~+~ FQ2_B2
- * :prove ((fq2_modular_squareroot y_squared) ~* -1) == G2.yCoeffs
+ * :check ((fq2_modular_squareroot y_squared) ~* -1) == G2.yCoeffs
  * ```
  */
 fq2_modular_squareroot : Fq2 -> Fq2

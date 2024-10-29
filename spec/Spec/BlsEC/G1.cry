@@ -52,12 +52,12 @@ G1 =
  * Determines whether or not the given point is on the G1 curve.
  * The point must satisfy the EC equation: y^^2 = x^^3 + 4
  * ```repl
- * :prove g1_is_valid_point G1
- * :prove g1_is_valid_point G1_2P
- * :prove g1_is_valid_point G1_3P
- * :prove g1_is_valid_point G1_4P
- * :prove g1_is_valid_point G1_5P
- * :prove g1_is_valid_point G1_6P
+ * :check g1_is_valid_point G1
+ * :check g1_is_valid_point G1_2P
+ * :check g1_is_valid_point G1_3P
+ * :check g1_is_valid_point G1_4P
+ * :check g1_is_valid_point G1_5P
+ * :check g1_is_valid_point G1_6P
  * ```
  */
 g1_is_valid_point : G1Point -> Bit
@@ -114,10 +114,10 @@ g1_add p1 p2 =
  * The optimization of running scalar multiplication on the inverse and then using the
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * ```repl
- * :prove g1_multi_optimized G1 0 == G1_INFINITY
- * :prove g1_multi_optimized G1 1 == G1
- * :prove g1_multi_optimized G1 6 == G1_6P
- * :prove g1_multi_optimized G1 (`(BLS_MODULUS)-1) == g1_multi G1 (`(BLS_MODULUS)-1)
+ * :check g1_multi_optimized G1 0 == G1_INFINITY
+ * :check g1_multi_optimized G1 1 == G1
+ * :check g1_multi_optimized G1 6 == G1_6P
+ * :check g1_multi_optimized G1 (`(BLS_MODULUS)-1) == g1_multi G1 (`(BLS_MODULUS)-1)
  * ```
  */
 g1_multi_optimized : G1Point -> UInt256 -> G1Point
@@ -138,10 +138,10 @@ g1_multi_optimized point scalar =
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  * ```repl
- * :prove g1_multi G1 0 == G1_INFINITY
- * :prove g1_multi G1 1 == G1
- * :prove g1_multi G1 6 == G1_6P
- * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
+ * :check g1_multi G1 0 == G1_INFINITY
+ * :check g1_multi G1 1 == G1
+ * :check g1_multi G1 6 == G1_6P
+ * :check g1_multi G1_2P 3 == g1_multi G1_3P 2
  * ```
  */
 g1_multi : G1Point -> UInt256 -> G1Point
@@ -169,9 +169,9 @@ property g1_multis_equiv scalar = precondition ==> statement where
  * Determine whether or not the G1 point is a member of the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
  * ```repl
- * :prove (subgroup_check G1_INFINITY) == False
- * :prove (subgroup_check G1) == True
- * :prove (subgroup_check G1_2P) == True
+ * :check (subgroup_check G1_INFINITY) == False
+ * :check (subgroup_check G1) == True
+ * :check (subgroup_check G1_2P) == True
  * ```
  * NOTE: these repl tests are very slow (~5 seconds).
  */
@@ -232,13 +232,13 @@ g1_point_eq p1 p2 =
 /**
  * Unit tests for `g1_is_valid_point`.
  * ```repl
- * :prove test_g1_is_valid_point G1
- * :prove test_g1_is_valid_point G1_2P
- * :prove test_g1_is_valid_point G1_3P
- * :prove test_g1_is_valid_point G1_4P
- * :prove test_g1_is_valid_point G1_5P
- * :prove test_g1_is_valid_point G1_6P
- * :prove test_g1_is_valid_point G1_7P
+ * :check test_g1_is_valid_point G1
+ * :check test_g1_is_valid_point G1_2P
+ * :check test_g1_is_valid_point G1_3P
+ * :check test_g1_is_valid_point G1_4P
+ * :check test_g1_is_valid_point G1_5P
+ * :check test_g1_is_valid_point G1_6P
+ * :check test_g1_is_valid_point G1_7P
  */
 test_g1_is_valid_point : G1Point -> Bit
 property test_g1_is_valid_point point = g1_is_valid_point point
@@ -246,10 +246,10 @@ property test_g1_is_valid_point point = g1_is_valid_point point
 /**
  * Unit tests for `g1_double`.
  * ```repl
- * :prove test_g1_double G1 G1_2P
- * :prove test_g1_double G1_2P G1_4P
- * :prove test_g1_double G1_3P G1_6P
- * :prove test_g1_double (g1_double G1) G1_4P
+ * :check test_g1_double G1 G1_2P
+ * :check test_g1_double G1_2P G1_4P
+ * :check test_g1_double G1_3P G1_6P
+ * :check test_g1_double (g1_double G1) G1_4P
  * ```
  */
 test_g1_double : G1Point -> G1Point -> Bit
@@ -259,17 +259,17 @@ property test_g1_double p1 p2 =
 /**
  * Unit tests for `g1_add`.
  * ```repl
- * :prove test_g1_add G1 G1_INFINITY G1
- * :prove test_g1_add G1_INFINITY G1_3P G1_3P
- * :prove test_g1_add G1_INFINITY G1_INFINITY G1_INFINITY
- * :prove test_g1_add G1 G1 G1_2P
- * :prove test_g1_add G1 G1_2P G1_3P
- * :prove test_g1_add G1_2P G1 G1_3P
- * :prove test_g1_add G1_3P G1 G1_4P
- * :prove test_g1_add G1_2P G1_2P G1_4P
- * :prove test_g1_add G1 G1_4P G1_5P
- * :prove test_g1_add G1_3P G1_2P G1_5P
- * :prove test_g1_add G1_2P G1_4P G1_6P
+ * :check test_g1_add G1 G1_INFINITY G1
+ * :check test_g1_add G1_INFINITY G1_3P G1_3P
+ * :check test_g1_add G1_INFINITY G1_INFINITY G1_INFINITY
+ * :check test_g1_add G1 G1 G1_2P
+ * :check test_g1_add G1 G1_2P G1_3P
+ * :check test_g1_add G1_2P G1 G1_3P
+ * :check test_g1_add G1_3P G1 G1_4P
+ * :check test_g1_add G1_2P G1_2P G1_4P
+ * :check test_g1_add G1 G1_4P G1_5P
+ * :check test_g1_add G1_3P G1_2P G1_5P
+ * :check test_g1_add G1_2P G1_4P G1_6P
  * ```
  */
 test_g1_add : G1Point -> G1Point -> G1Point -> Bit
@@ -279,12 +279,12 @@ property test_g1_add p1 p2 p3 =
 /**
  * Unit tests for `g1_multi`.
  * ```repl
- * :prove test_g1_multi G1 0 G1_INFINITY
- * :prove test_g1_multi G1 1 G1
- * :prove test_g1_multi G1 2 G1_2P
- * :prove test_g1_multi G1 3 G1_3P
- * :prove test_g1_multi G1 6 G1_6P
- * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
+ * :check test_g1_multi G1 0 G1_INFINITY
+ * :check test_g1_multi G1 1 G1
+ * :check test_g1_multi G1 2 G1_2P
+ * :check test_g1_multi G1 3 G1_3P
+ * :check test_g1_multi G1 6 G1_6P
+ * :check g1_multi G1_2P 3 == g1_multi G1_3P 2
  * ```
  */
 test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit

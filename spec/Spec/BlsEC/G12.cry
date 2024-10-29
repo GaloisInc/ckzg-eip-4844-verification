@@ -97,10 +97,10 @@ G12 =
  * The point must satisfy the EC equation: y^^2 = x^^3 + 4
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L71
  * ```repl
- * :prove g12_is_valid_point G12
- * :prove g12_is_valid_point G12_2P
- * :prove g12_is_valid_point G12_3P
- * :prove g12_is_valid_point G12_6P
+ * :check g12_is_valid_point G12
+ * :check g12_is_valid_point G12_2P
+ * :check g12_is_valid_point G12_3P
+ * :check g12_is_valid_point G12_6P
  * ```
  */
 g12_is_valid_point : G12Point -> Bit
@@ -114,8 +114,8 @@ g12_is_valid_point point =
  * Negate a G12 point.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L135
  * ```repl
- * :prove g12_negate G12 == G12_Negated
- * :prove g12_negate (g12_negate G12) == G12
+ * :check g12_negate G12 == G12_Negated
+ * :check g12_negate (g12_negate G12) == G12
  * ```
  */
 g12_negate : G12Point -> G12Point
@@ -131,8 +131,8 @@ g12_negate point = newPoint where
  * Double a G12 point.
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
  * ```repl
- * :prove g12_double G12 == G12_2P
- * :prove g12_double G12_3P == G12_6P
+ * :check g12_double G12 == G12_2P
+ * :check g12_double G12_3P == G12_6P
  * ```
  */
 g12_double : G12Point -> G12Point
@@ -151,9 +151,9 @@ g12_double point = newPoint where
  * Add two G12 points
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
  * ```repl
- * :prove g12_add G12 G12 == G12_2P
- * :prove g12_add G12 G12_2P == G12_3P
- * :prove g12_add G12_3P G12_3P == G12_6P
+ * :check g12_add G12 G12 == G12_2P
+ * :check g12_add G12 G12_2P == G12_3P
+ * :check g12_add G12_3P G12_3P == G12_6P
  * ```
  */
 g12_add : G12Point -> G12Point -> G12Point
@@ -184,12 +184,12 @@ g12_add p1 p2 =
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * We just have to take the inverse of every `y` coefficient.
  * ```repl
- * :prove g12_multi_optimized G12 0 == g12_multi G12 0
- * :prove g12_multi_optimized G12 1 == g12_multi G12 1
- * :prove g12_multi_optimized G12 6 == g12_multi G12 6
- * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-1) == G12_NEG_ONE
- * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-2) == G12_NEG_TWO
- * :prove g12_multi_optimized G12 (`(BLS_MODULUS)-3) == G12_NEG_THREE
+ * :check g12_multi_optimized G12 0 == g12_multi G12 0
+ * :check g12_multi_optimized G12 1 == g12_multi G12 1
+ * :check g12_multi_optimized G12 6 == g12_multi G12 6
+ * :check g12_multi_optimized G12 (`(BLS_MODULUS)-1) == G12_NEG_ONE
+ * :check g12_multi_optimized G12 (`(BLS_MODULUS)-2) == G12_NEG_TWO
+ * :check g12_multi_optimized G12 (`(BLS_MODULUS)-3) == G12_NEG_THREE
  * ```
  */
 g12_multi_optimized : G12Point -> UInt256 -> G12Point
@@ -210,12 +210,12 @@ g12_multi_optimized point scalar =
  * Multiply a G12 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  * ```repl
- * :prove g12_multi G12 0 == G12_INFINITY
- * :prove g12_multi G12 1 == G12
- * :prove g12_multi G12 2 == G12_2P
- * :prove g12_multi G12 3 == G12_3P
- * :prove g12_multi G12 6 == G12_6P
- * :prove g12_multi G12_2P 3 == g12_multi G12_3P 2
+ * :check g12_multi G12 0 == G12_INFINITY
+ * :check g12_multi G12 1 == G12
+ * :check g12_multi G12 2 == G12_2P
+ * :check g12_multi G12 3 == G12_3P
+ * :check g12_multi G12 6 == G12_6P
+ * :check g12_multi G12_2P 3 == g12_multi G12_3P 2
  * ```
  */
 g12_multi : G12Point -> UInt256 -> G12Point
@@ -231,7 +231,7 @@ g12_multi point scalar =
  * Convert a G2 point into a G12 point.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L142
  * ```repl
- * :prove twist G2 == G12
+ * :check twist G2 == G12
  * ```
  */
 twist : G2Point -> G12Point

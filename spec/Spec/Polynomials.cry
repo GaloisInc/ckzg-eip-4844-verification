@@ -72,7 +72,7 @@ blob_to_polynomial blob = polynomial where
  * The `compute_kzg_proof` needs the bit-reversal permuation of the BLS roots of unity.
  * This is a constant value, so we have precomputed it.
  * ```repl
- * :prove ROOTS_OF_UNITY_BRP == bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
+ * :check ROOTS_OF_UNITY_BRP == bit_reversal_permutation`{len=FIELD_ELEMENTS_PER_BLOB} (compute_roots_of_unity `(FIELD_ELEMENTS_PER_BLOB))
  * ```
  */
 ROOTS_OF_UNITY_BRP : [FIELD_ELEMENTS_PER_BLOB]BlsFieldElement
