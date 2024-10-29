@@ -232,7 +232,7 @@ type KZGProof = Bytes48
  * Convert untrusted bytes into a trusted and validated `KZGProof`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_proof
   * ```repl
- * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * :prove (bytes_to_kzg_proof G1_1P_COMPRESSED) == G1_1P_COMPRESSED
  * ```
  * NOTE: this repl test is slow (couple of seconds).
  */
