@@ -294,8 +294,6 @@ g12_multi point scalar = gp_multi G12_INFINITY point scalar
 /**
  * Multiply a G12 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
- * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
- *  Call `g12_multi` instead if `scalar == BLS_MODULUS`.
  * The optimization of running scalar multiplication on the inverse and then using the
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * We just have to take the inverse of every `y` coefficient.
@@ -304,6 +302,8 @@ g12_multi point scalar = gp_multi G12_INFINITY point scalar
  * :check g2_multi_optimized G2 1 == g2_multi G2 1
  * :check g2_multi_optimized G2 6 == g2_multi G2 6
  * :check g2_multi_optimized G2 (`(BLS_MODULUS)-1) == g2_multi G2 (`(BLS_MODULUS)-1)
+ * :check g2_multi_optimized G2 `(BLS_MODULUS) == g2_multi G2 `(BLS_MODULUS)
+ * :check g2_multi_optimized G2 (`(BLS_MODULUS)+1) == g2_multi G2 (`(BLS_MODULUS)+1)
  * :check g12_multi_optimized G12 0 == g12_multi G12 0
  * :check g12_multi_optimized G12 1 == g12_multi G12 1
  * :check g12_multi_optimized G12 6 == g12_multi G12 6
@@ -314,12 +314,12 @@ g12_multi point scalar = gp_multi G12_INFINITY point scalar
  */
 gp_multi_optimized : {n} (fin n, n <= 12, n >= 2) => GPPoint n -> GPPoint n -> UInt256 -> GPPoint n
 gp_multi_optimized infinity point scalar =
-    if scalar < `(BLS_MODULUS) / 2
-        then gp_multi infinity point scalar
-    else
-        { xCoeffs = xcoeffs
-        , yCoeffs = ycoeffs
-        }
+    if scalar >= `(BLS_MODULUS) then gp_multi infinity point scalar
+     // For the special case of scalars < BLS_MODULUS and
+     //  >= `(BLS_MODULUS) / 2, we can compute the inverse
+     //  and then inverse the coordinantes.
+     | scalar >= `(BLS_MODULUS) / 2 then {xCoeffs = xcoeffs, yCoeffs = ycoeffs}
+     else gp_multi infinity point scalar
     where
         inverse_scalar = `(BLS_MODULUS) - scalar
         inverse_point = gp_multi infinity point inverse_scalar
