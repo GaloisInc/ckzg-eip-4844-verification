@@ -237,10 +237,9 @@ g12_double point = gp_double point
 gp_add : {n} (fin n, n <= 12, n >= 2) => GPPoint n -> GPPoint n -> GPPoint n -> GPPoint n
 gp_add infinity p1 p2 =
     if p1 == infinity then p2
-    else if p2 == infinity then p1
-    else if (x2 == x1) && (y2 == y1) then
-        gp_double p1
-    else
+     | p2 == infinity then p1
+     | p1 == p2 then gp_double p1
+     else
         { xCoeffs = newX
         , yCoeffs = newY
         }
