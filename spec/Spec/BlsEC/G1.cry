@@ -58,6 +58,7 @@ G1 =
  * :check g1_is_valid_point G1_4P
  * :check g1_is_valid_point G1_5P
  * :check g1_is_valid_point G1_6P
+ * :check g1_is_valid_point G1_7P
  * ```
  */
 g1_is_valid_point : G1Point -> Bit
@@ -220,20 +221,6 @@ G1_7P =
     { xCoord = 3872473689207892378470335395114902631176541028916158626161662840934315241539439160301564344905260612642783644023991
     , yCoord = 2547806390474846378491145127515427451279430889101277169890334737406180277792171092197824251632631671609860505999900
     }
-
-/**
- * Unit tests for `g1_is_valid_point`.
- * ```repl
- * :check test_g1_is_valid_point G1
- * :check test_g1_is_valid_point G1_2P
- * :check test_g1_is_valid_point G1_3P
- * :check test_g1_is_valid_point G1_4P
- * :check test_g1_is_valid_point G1_5P
- * :check test_g1_is_valid_point G1_6P
- * :check test_g1_is_valid_point G1_7P
- */
-test_g1_is_valid_point : G1Point -> Bit
-property test_g1_is_valid_point point = g1_is_valid_point point
 
 /**
  * Unit tests for `g1_double`.
