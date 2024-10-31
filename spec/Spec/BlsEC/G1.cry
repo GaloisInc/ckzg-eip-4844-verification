@@ -125,8 +125,6 @@ g1_add p1 p2 =
 /**
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
- * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
- *  Call `g1_multi` instead if `scalar == BLS_MODULUS`.
  * The optimization of running scalar multiplication on the inverse and then using the
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * ```repl
@@ -134,16 +132,18 @@ g1_add p1 p2 =
  * :check g1_multi_optimized G1 1 == G1
  * :check g1_multi_optimized G1 6 == G1_6P
  * :check g1_multi_optimized G1 (`(BLS_MODULUS)-1) == g1_multi G1 (`(BLS_MODULUS)-1)
+ * :check g1_multi_optimized G1 `(BLS_MODULUS) == g1_multi G1 `(BLS_MODULUS)
+ * :check g1_multi_optimized G1 (`(BLS_MODULUS)+1) == g1_multi G1 (`(BLS_MODULUS)+1)
  * ```
  */
 g1_multi_optimized : G1Point -> UInt256 -> G1Point
 g1_multi_optimized point scalar =
-    if scalar < `(BLS_MODULUS) / 2
-        then g1_multi point scalar
-    else
-        { xCoord = x
-        , yCoord = y
-        }
+    if scalar >= `(BLS_MODULUS) then g1_multi point scalar
+     // For the special case of scalars < BLS_MODULUS and
+     //  >= `(BLS_MODULUS) / 2, we can compute the inverse
+     //  and then inverse the coordinantes.
+     | scalar >= `(BLS_MODULUS) / 2 then {xCoord = x, yCoord = y}
+     else g1_multi point scalar
     where
         inverse_scalar = `(BLS_MODULUS) - scalar
         inverse_point = g1_multi point inverse_scalar
@@ -174,12 +174,11 @@ g1_multi point scalar =
  * ```repl
  * :check g1_multis_equiv
  * ```
- * This takes about a minute.
+ * This takes a couple of minutes.
  */
 g1_multis_equiv : UInt256 -> Bit
-property g1_multis_equiv scalar = precondition ==> statement where
-    precondition = scalar < `(BLS_MODULUS)
-    statement = g1_multi G1 scalar == g1_multi_optimized G1 scalar
+property g1_multis_equiv scalar =
+    g1_multi G1 scalar == g1_multi_optimized G1 scalar
 
 /**
  * Determine whether or not the G1 point is a member of the subgroup.
