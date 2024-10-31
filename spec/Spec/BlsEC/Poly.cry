@@ -1,5 +1,5 @@
 /**
- * This module contains polynomial utility functions for polynomial extension field.
+ * This module contains polynomial utility functions for polynomial extension fields.
  */
 module Spec::BlsEC::Poly where
 
