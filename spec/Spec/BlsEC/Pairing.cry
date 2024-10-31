@@ -129,7 +129,6 @@ miller_loop q p do_final_exponentiate =
                     double_and_add r'' f'' (count - 1)
                 else double_and_add r' f' (count - 1)
             where
-                //count' = fromInteger count
                 f' = f ~*~ f ~*~ (linefunc r r p)
                 r' = g12_double r
                 f'' = f' ~*~ (linefunc r' q p)
