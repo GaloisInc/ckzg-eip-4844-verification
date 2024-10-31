@@ -185,14 +185,14 @@ property g1_multis_equiv scalar = precondition ==> statement where
  * Determine whether or not the G1 point is a member of the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
  * ```repl
- * :check (subgroup_check G1_INFINITY) == False
- * :check (subgroup_check G1) == True
- * :check (subgroup_check G1_2P) == True
+ * :check subgroup_check G1_INFINITY == False
+ * :check subgroup_check G1 == True
+ * :check subgroup_check G1_2P == True
  * ```
  * NOTE: these repl tests are very slow (~5 seconds).
  */
 subgroup_check : G1Point -> Bit
-subgroup_check point = G1_INFINITY != (g1_multi point `(BLS_MODULUS))
+subgroup_check point = G1_INFINITY != g1_multi point `(BLS_MODULUS)
 
 /*
  * ===========
