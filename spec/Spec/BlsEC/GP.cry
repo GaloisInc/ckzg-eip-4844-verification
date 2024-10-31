@@ -322,9 +322,9 @@ g12_multi_optimized point scalar = gp_multi_optimized G12_INFINITY point scalar
  * Determine whether or not the G2 point is a member of the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
  * ```repl
- * :check (g2_subgroup_check G2_INFINITY) == False
- * :check (g2_subgroup_check G2) == True
- * :check (g2_subgroup_check G2_2P) == True
+ * :check g2_subgroup_check G2_INFINITY == False
+ * :check g2_subgroup_check G2 == True
+ * :check g2_subgroup_check G2_2P == True
  * ```
  * NOTE: these repl tests are very slow (~10 seconds each for the last two).
  */
