@@ -89,11 +89,10 @@ g1_double point = newPoint where
  */
 g1_add : G1Point -> G1Point -> G1Point
 g1_add p1 p2 =
-    if g1_point_eq p1 G1_INFINITY then p2
-    else if g1_point_eq p2 G1_INFINITY then p1
-    else if (x2 == x1) && (y2 == y1) then
-        g1_double p1
-    else
+    if p1 == G1_INFINITY then p2
+     | p2 == G1_INFINITY then p1
+     | p1 == p2 then g1_double p1
+     else
         { xCoord = newX
         , yCoord = newY
         }
@@ -223,13 +222,6 @@ G1_7P =
     }
 
 /**
- * Helper function for testing point equality.
- */
-g1_point_eq : G1Point -> G1Point -> Bit
-g1_point_eq p1 p2 =
-    (p1.xCoord == p2.xCoord) && (p1.yCoord == p2.yCoord)
-
-/**
  * Unit tests for `g1_is_valid_point`.
  * ```repl
  * :check test_g1_is_valid_point G1
@@ -254,7 +246,7 @@ property test_g1_is_valid_point point = g1_is_valid_point point
  */
 test_g1_double : G1Point -> G1Point -> Bit
 property test_g1_double p1 p2 =
-    g1_point_eq (g1_double p1) p2
+    g1_double p1 == p2
 
 /**
  * Unit tests for `g1_add`.
@@ -274,7 +266,7 @@ property test_g1_double p1 p2 =
  */
 test_g1_add : G1Point -> G1Point -> G1Point -> Bit
 property test_g1_add p1 p2 p3 =
-    g1_point_eq (g1_add p1 p2) p3
+    g1_add p1 p2 == p3
 
 /**
  * Unit tests for `g1_multi`.
@@ -289,4 +281,4 @@ property test_g1_add p1 p2 p3 =
  */
 test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
 property test_g1_multi point scalar expected =
-    g1_point_eq (g1_multi point scalar) expected
+    g1_multi point scalar == expected

@@ -138,7 +138,7 @@ decompress_G1 z =
  */
 compress_G1 : G1Point -> Bytes48
 compress_G1 point =
-    if g1_point_eq point G1_INFINITY then
+    if point == G1_INFINITY then
         // Set c_flag = 1 and b_flag = 1. leave a_flag = x = 0
         fromInteger (POW_2_383 + POW_2_382)
     else
