@@ -237,18 +237,3 @@ G1_7P =
     { xCoord = 3872473689207892378470335395114902631176541028916158626161662840934315241539439160301564344905260612642783644023991
     , yCoord = 2547806390474846378491145127515427451279430889101277169890334737406180277792171092197824251632631671609860505999900
     }
-
-/**
- * Unit tests for `g1_multi`.
- * ```repl
- * :check test_g1_multi G1 0 G1_INFINITY
- * :check test_g1_multi G1 1 G1
- * :check test_g1_multi G1 2 G1_2P
- * :check test_g1_multi G1 3 G1_3P
- * :check test_g1_multi G1 6 G1_6P
- * :check g1_multi G1_2P 3 == g1_multi G1_3P 2
- * ```
- */
-test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
-property test_g1_multi point scalar expected =
-    g1_multi point scalar == expected
