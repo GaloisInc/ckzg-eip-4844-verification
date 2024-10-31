@@ -587,3 +587,20 @@ G12_NEG_THREE =
         , 0, 0
         ]
     }
+
+/*
+ * ==========
+ * Properties
+ * ==========
+ */
+
+/**
+ * Verify that negation twice results in the same value.
+ * ```repl
+ * :prove gp_negation_correct`{2}
+ * :prove gp_negation_correct`{12}
+ * ```
+ */
+gp_negation_correct : {n} (fin n, n >= 1) => GPPoint n -> Bit
+property gp_negation_correct a =
+    gp_negate (gp_negate a) == a
