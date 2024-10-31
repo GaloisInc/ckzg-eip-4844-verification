@@ -429,6 +429,17 @@ property fqp_multiplication_commutative a b =
     a ~*~ b == b ~*~ a
 
 /**
+ * Verify that multiplying by two is same as addition doubling an element.
+ * ```repl
+ * :prove fqp_multi_by_two_is_double`{2}
+ * :prove fqp_multi_by_two_is_double`{12}
+ * ```
+ */
+fqp_multi_by_two_is_double : {n} (fin n, n <= 12, n >= 2) => FQP n -> Bit
+property fqp_multi_by_two_is_double a =
+    a ~* 2 == a ~+~ a
+
+/**
  * Verify that subtraction is not commutative,
  *   unless both coefficients are equal.
  * ```repl
