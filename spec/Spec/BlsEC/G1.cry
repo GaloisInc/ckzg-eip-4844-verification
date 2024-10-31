@@ -170,7 +170,7 @@ g1_multi point scalar =
         else g1_add ((g1_multi (g1_double point) (scalar / 2))) point
 
 /**
- * Randomize tesitng to show the two g1_multi functions are equivalent.
+ * Randomize testing to show the two g1_multi functions are equivalent.
  * ```repl
  * :check g1_multis_equiv
  * ```
