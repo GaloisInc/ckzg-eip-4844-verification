@@ -186,7 +186,7 @@ key_validate bytes =
         point = decompress_G1 bytes
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_INVALID_INFINITY_COMPRESSED : Bytes48
 G1_INVALID_INFINITY_COMPRESSED = c_flag + b_flag + a_flag where
@@ -195,14 +195,14 @@ G1_INVALID_INFINITY_COMPRESSED = c_flag + b_flag + a_flag where
     a_flag = (1 << 381) // invalid a_flag when infinity
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_INVALID_TO_BIG_COMPRESSED : Bytes48
 G1_INVALID_TO_BIG_COMPRESSED = c_flag + `(Fq) + 1 where
     c_flag = (1 << 383) // is compressed
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_INVALID_POINT_COMPRESSED : Bytes48
 G1_INVALID_POINT_COMPRESSED = c_flag + b_flag + a_flag + 13 where
@@ -211,7 +211,7 @@ G1_INVALID_POINT_COMPRESSED = c_flag + b_flag + a_flag + 13 where
     a_flag = (1 << 381) // doesn't matter since invalid point
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_1P_COMPRESSED : Bytes48
 G1_1P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1.xCoord) where
@@ -220,7 +220,7 @@ G1_1P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1.xCoord) where
     a_flag = (0 << 381) // because the MSB of G1.yCoord is '0'
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_2P_COMPRESSED : Bytes48
 G1_2P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_2P.xCoord) where
@@ -229,7 +229,7 @@ G1_2P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_2P.xCoord) where
     a_flag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_3P_COMPRESSED : Bytes48
 G1_3P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_3P.xCoord) where
@@ -238,7 +238,7 @@ G1_3P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_3P.xCoord) where
     a_flag = (0 << 381) // because the MSB of G1_3P.yCoord is '0'
 
 /**
- * Test point for the decompression function `bytes48_to_g1`
+ * Test point for the decompression function `bytes48_to_G1`
  */
 G1_7P_COMPRESSED : Bytes48
 G1_7P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_7P.xCoord) where
