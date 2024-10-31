@@ -47,12 +47,12 @@ G1_POINT_AT_INFINITY = 0xc0 # zero
  * The most-significant three bits of a G1 or G2 encoding should be masked away before
  * the coordinate(s) are interpreted.
  * These bits are used to unambiguously represent the underlying element.
- * The format: (cFlag, bFlag, aFlag, x)
- *  - cFlag: is '1' to indicated a compressed point, '0' otherwise.
- *  - bFlag: is '1' to indicate a point at infinity, '0' otherwise.
- *     - NOTE: the cFlag must also be set to indicate an intentionally
+ * The format: (c_flag, b_flag, a_flag, x)
+ *  - c_flag: is '1' to indicated a compressed point, '0' otherwise.
+ *  - b_flag: is '1' to indicate a point at infinity, '0' otherwise.
+ *     - NOTE: the c_flag must also be set to indicate an intentionally
  *             compressed infinity point.
- *  - aFlag: is used to store the most significant bit of the y-coordinate.
+ *  - a_flag: is used to store the most significant bit of the y-coordinate.
  *  - x: is the x-coordinate of the point.
  *
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls/point_compression.py#L43
@@ -85,16 +85,16 @@ get_flags z = (c_flag, b_flag, a_flag) where
  */
 decompress_G1 : Bytes48 -> G1Point
 decompress_G1 z =
-    // cFlag == 1 indicates the compressed form
+    // c_flag == 1 indicates the compressed form
     // MSB should be 1
-    if ~cFlag then
-        error "decompress_G1: cFlag must be 1"
-     | bFlag != isInfinity then
+    if ~c_flag then
+        error "decompress_G1: c_flag must be 1"
+     | b_flag != isInfinity then
         error "b_flag should be 1"
-     | bFlag then
+     | b_flag then
         // 3 MSBs should be b110
-        if aFlag then
-            error "decompress_G1: a point at infinity should have aFlag == 0"
+        if a_flag then
+            error "decompress_G1: a point at infinity should have a_flag == 0"
         else G1_INFINITY
      // Else, not point at infinity
      // 3 MSBs should be b100 or b101
@@ -102,8 +102,8 @@ decompress_G1 z =
         error "decompress_G1: point value should be less than field modulus"
      | (y^^2) != (x^^3 + b) then
         error "The given point is not on G1: y^^2 = x^^3 + 4"
-     // Choose the y whose leftmost bit is equal to the aFlag
-     | (((fromZ y) * 2) / q) != (bit_to_integer aFlag) then
+     // Choose the y whose leftmost bit is equal to the a_flag
+     | (((fromZ y) * 2) / q) != (bit_to_integer a_flag) then
         { xCoord = x, yCoord = y'}
      else
         { xCoord = x, yCoord = y}
@@ -113,7 +113,7 @@ decompress_G1 z =
         //  we have to use Fq as a value which is not allowable with
         //  Z Fq, so we sometimes need to convert back and forth between
         //  Z Fq and Integer.
-        (cFlag, bFlag, aFlag) = get_flags z
+        (c_flag, b_flag, a_flag) = get_flags z
         xBits = (toInteger z) % POW_2_381
         x = fromInteger xBits
         q = `(Fq)
@@ -189,62 +189,62 @@ key_validate bytes =
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_INVALID_INFINITY_COMPRESSED : Bytes48
-G1_INVALID_INFINITY_COMPRESSED = cFlag + bFlag + aFlag where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (1 << 382) // is infinity
-    aFlag = (1 << 381) // invalid aFlag when infinity
+G1_INVALID_INFINITY_COMPRESSED = c_flag + b_flag + a_flag where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (1 << 382) // is infinity
+    a_flag = (1 << 381) // invalid a_flag when infinity
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_INVALID_TO_BIG_COMPRESSED : Bytes48
-G1_INVALID_TO_BIG_COMPRESSED = cFlag + `(Fq) + 1 where
-    cFlag = (1 << 383) // is compressed
+G1_INVALID_TO_BIG_COMPRESSED = c_flag + `(Fq) + 1 where
+    c_flag = (1 << 383) // is compressed
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_INVALID_POINT_COMPRESSED : Bytes48
-G1_INVALID_POINT_COMPRESSED = cFlag + bFlag + aFlag + 13 where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (0 << 382) // not infinity
-    aFlag = (1 << 381) // doesn't matter since invalid point
+G1_INVALID_POINT_COMPRESSED = c_flag + b_flag + a_flag + 13 where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (0 << 382) // not infinity
+    a_flag = (1 << 381) // doesn't matter since invalid point
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_1P_COMPRESSED : Bytes48
-G1_1P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1.xCoord) where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (0 << 382) // not infinity
-    aFlag = (0 << 381) // because the MSB of G1.yCoord is '0'
+G1_1P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1.xCoord) where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (0 << 382) // not infinity
+    a_flag = (0 << 381) // because the MSB of G1.yCoord is '0'
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_2P_COMPRESSED : Bytes48
-G1_2P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_2P.xCoord) where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (0 << 382) // not infinity
-    aFlag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
+G1_2P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_2P.xCoord) where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (0 << 382) // not infinity
+    a_flag = (1 << 381) // because the MSB of G1_2P.yCoord is '1'
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_3P_COMPRESSED : Bytes48
-G1_3P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_3P.xCoord) where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (0 << 382) // not infinity
-    aFlag = (0 << 381) // because the MSB of G1_3P.yCoord is '0'
+G1_3P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_3P.xCoord) where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (0 << 382) // not infinity
+    a_flag = (0 << 381) // because the MSB of G1_3P.yCoord is '0'
 
 /**
  * Test point for the decompression function `bytes48_to_g1`
  */
 G1_7P_COMPRESSED : Bytes48
-G1_7P_COMPRESSED = cFlag + bFlag + aFlag + (toIntegral G1_7P.xCoord) where
-    cFlag = (1 << 383) // is compressed
-    bFlag = (0 << 382) // not infinity
-    aFlag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'
+G1_7P_COMPRESSED = c_flag + b_flag + a_flag + (toIntegral G1_7P.xCoord) where
+    c_flag = (1 << 383) // is compressed
+    b_flag = (0 << 382) // not infinity
+    a_flag = (1 << 381) // because the MSB of G1_7P.yCoord is '0'
 
 /**
  * Size of a G2 point
@@ -270,23 +270,23 @@ G2_POINT_AT_INFINITY = 0xc0 # zero
  * Test point for the decompression function `bytes96_to_G2`
  */
 G2_2P_COMPRESSED : Bytes96
-G2_2P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
-    cFlag = (1 << 767) // is compressed
-    bFlag = (0 << 766) // not infinity
-    aFlag = (1 << 765) // because the MSB of G2_2P.yCoeffs.imag is '1'
-    xReal = (toIntegral (G2_2P.xCoeffs@0))
-    xImag = (toIntegral (G2_2P.xCoeffs@1)) << 384
+G2_2P_COMPRESSED = c_flag + b_flag + a_flag + x_real + x_imag where
+    c_flag = (1 << 767) // is compressed
+    b_flag = (0 << 766) // not infinity
+    a_flag = (1 << 765) // because the MSB of G2_2P.yCoeffs.imag is '1'
+    x_real = (toIntegral (G2_2P.xCoeffs@0))
+    x_imag = (toIntegral (G2_2P.xCoeffs@1)) << 384
 
 /**
  * Test point for the decompression function `bytes96_to_G2`
  */
 G2_3P_COMPRESSED : Bytes96
-G2_3P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
-    cFlag = (1 << 767) // is compressed
-    bFlag = (0 << 766) // not infinity
-    aFlag = (0 << 765) // because the MSB of G2_3P.yCoeffs.imag is '0'
-    xReal = (toIntegral (G2_3P.xCoeffs@0))
-    xImag = (toIntegral (G2_3P.xCoeffs@1)) << 384
+G2_3P_COMPRESSED = c_flag + b_flag + a_flag + x_real + x_imag where
+    c_flag = (1 << 767) // is compressed
+    b_flag = (0 << 766) // not infinity
+    a_flag = (0 << 765) // because the MSB of G2_3P.yCoeffs.imag is '0'
+    x_real = (toIntegral (G2_3P.xCoeffs@0))
+    x_imag = (toIntegral (G2_3P.xCoeffs@1)) << 384
 
 /**
  * Compress the G2 point
@@ -345,7 +345,7 @@ compress_G2 point =
  */
 decompress_G2 : Bytes96 -> G2Point
 decompress_G2 z =
-    // cFlag == 1 indicates the compressed form
+    // c_flag == 1 indicates the compressed form
     // MSB should be 1
     if ~c_flag1 then
         error "decompress_G2: c_flag1 must be 1"
