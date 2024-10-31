@@ -147,8 +147,16 @@ final_exponentiate : Fq12 -> Fq12
 final_exponentiate p = p~^^((`(Fq)^^12 - 1) / `(BLS_MODULUS))
 
 /**
- * Pairing computation
+ * Pairing computation.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L108
+ * ```repl
+ * :check pairing_check VALID_MULTI_PAIRING_POINTS == True
+ * let good_pair = VALID_MULTI_PAIRING_POINTS@0
+ * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
+ * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
+ * let bad_pair = (bad_g1, g2)
+ * :check pairing_check [good_pair, bad_pair] == False
+ * ```
  */
 pairing : G2Point -> G1Point -> Bit -> Fq12
 pairing q p do_final_exponentiate =
@@ -193,18 +201,3 @@ VALID_MULTI_PAIRING_POINTS = [
    yCoeffs = [2578225059880913843555694372733822992497931377620121352151046101281018929119028392378298954064169396102755595303745,
     2741696937477620340841025265339742110829389137752838655176100907337011149212882755711342068822769734096710415902962]})
  ]
-
-/**
- * Test that the pairing_check passes on two valid pairs.
- * ```repl
- * :check check_pairing_check_valid_pairs VALID_MULTI_PAIRING_POINTS True
- * let good_pair = VALID_MULTI_PAIRING_POINTS@0
- * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
- * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
- * let bad_pair = (bad_g1, g2)
- * :check check_pairing_check_valid_pairs [good_pair, bad_pair] False
- * ```
- */
-check_pairing_check_valid_pairs : {n} (fin n) => [n](G1Point, G2Point) -> Bit -> Bit
-property check_pairing_check_valid_pairs points expected_result =
-    pairing_check points == expected_result
