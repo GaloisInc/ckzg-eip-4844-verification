@@ -71,6 +71,12 @@ g1_is_valid_point point =
 /**
  * Double a G1 point
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
+ * ```repl
+ * :check g1_double G1 == G1_2P
+ * :check g1_double G1_2P == G1_4P
+ * :check g1_double G1_3P == G1_6P
+ * :check g1_double (g1_double G1) == G1_4P
+ * ```
  */
 g1_double : G1Point -> G1Point
 g1_double point = newPoint where
@@ -87,6 +93,16 @@ g1_double point = newPoint where
 /**
  * Add two G1 points
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
+ * ```repl
+ * :check g1_add G1 G1_INFINITY == G1
+ * :check g1_add G1_INFINITY G1_3P == G1_3P
+ * :check g1_add G1_INFINITY G1_INFINITY == G1_INFINITY
+ * :check g1_add G1 G1 == G1_2P
+ * :check g1_add G1 G1_2P == G1_3P
+ * :check g1_add G1 G1_4P == G1_5P
+ * :check g1_add G1_3P G1_2P == G1_5P
+ * :check g1_add G1_2P G1_4P == G1_6P
+ * ```
  */
 g1_add : G1Point -> G1Point -> G1Point
 g1_add p1 p2 =
@@ -221,39 +237,6 @@ G1_7P =
     { xCoord = 3872473689207892378470335395114902631176541028916158626161662840934315241539439160301564344905260612642783644023991
     , yCoord = 2547806390474846378491145127515427451279430889101277169890334737406180277792171092197824251632631671609860505999900
     }
-
-/**
- * Unit tests for `g1_double`.
- * ```repl
- * :check test_g1_double G1 G1_2P
- * :check test_g1_double G1_2P G1_4P
- * :check test_g1_double G1_3P G1_6P
- * :check test_g1_double (g1_double G1) G1_4P
- * ```
- */
-test_g1_double : G1Point -> G1Point -> Bit
-property test_g1_double p1 p2 =
-    g1_double p1 == p2
-
-/**
- * Unit tests for `g1_add`.
- * ```repl
- * :check test_g1_add G1 G1_INFINITY G1
- * :check test_g1_add G1_INFINITY G1_3P G1_3P
- * :check test_g1_add G1_INFINITY G1_INFINITY G1_INFINITY
- * :check test_g1_add G1 G1 G1_2P
- * :check test_g1_add G1 G1_2P G1_3P
- * :check test_g1_add G1_2P G1 G1_3P
- * :check test_g1_add G1_3P G1 G1_4P
- * :check test_g1_add G1_2P G1_2P G1_4P
- * :check test_g1_add G1 G1_4P G1_5P
- * :check test_g1_add G1_3P G1_2P G1_5P
- * :check test_g1_add G1_2P G1_4P G1_6P
- * ```
- */
-test_g1_add : G1Point -> G1Point -> G1Point -> Bit
-property test_g1_add p1 p2 p3 =
-    g1_add p1 p2 == p3
 
 /**
  * Unit tests for `g1_multi`.
