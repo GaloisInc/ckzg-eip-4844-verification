@@ -1,11 +1,19 @@
 /**
- * This module contains test vectors for the `KZG` module function
- *  `compute_kzg_proof`.
+ * This module contains a test vector for the `KZG` module function
+ *  `compute_quotient_eval_within_domain`.
  */
-module KZGComputeQuotientTV where
+module Test::KZG::ComputeQuotient::TV1 where
 
 import Spec::KZG
 
+/**
+ * Verify that the Cryptol spec correctly specifies the `compute_quotient_eval_within_domain` function.
+ * This test vector was generated from :dumptests and added tested against the Deneb Python Spec as well.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
+ * ```repl
+ * :check correct_compute_quotient_eval_within_domain
+ * ```
+ */
 correct_compute_quotient_eval_within_domain : Bit
 property correct_compute_quotient_eval_within_domain =
     compute_quotient_eval_within_domain Z POLY Y == EXPECTED_QZ
