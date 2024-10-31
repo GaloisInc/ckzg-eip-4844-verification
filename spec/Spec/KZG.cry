@@ -8,7 +8,7 @@ import Common::ModArith
 import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
+import Spec::BlsEC::GP
 import Spec::BlsEC::Pairing
 import Spec::BlsHelpers
 import Spec::BlsSerde

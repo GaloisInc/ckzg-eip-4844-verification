@@ -10,7 +10,7 @@ import Common::Utils
 import Spec::BlsEC::Field
 import Spec::BlsEC::FQP
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
+import Spec::BlsEC::GP
 
 /**
  * Size of a G1 point
@@ -310,7 +310,7 @@ G2_3P_COMPRESSED = cFlag + bFlag + aFlag + xReal + xImag where
  */
 compress_G2 : G2Point -> Bytes96
 compress_G2 point =
-    if g2_point_eq point G2_INFINITY then
+    if point == G2_INFINITY then
         // Set c_flag = 1 and b_flag = 1. leave a_flag = x = 0
         (fromInteger (POW_2_383 + POW_2_382)) # (zero:[G1Bits])
     else

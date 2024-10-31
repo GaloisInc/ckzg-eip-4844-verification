@@ -10,8 +10,7 @@ import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::FQP
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
-import Spec::BlsEC::G12
+import Spec::BlsEC::GP
 
 /**
  * Representation for 1.
