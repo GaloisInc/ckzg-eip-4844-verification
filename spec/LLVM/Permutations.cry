@@ -72,15 +72,16 @@ swap values i r =
  */
 
 /**
- * Unit tests for `bit_reversal_permutation_fast_rec`.
+ * Prove that the `bit_reversal_permutation_fast` function is equivalent
+ *  to `bit_reversal_permutation` found in `Spec`.
  * ```repl
- * :prove check_bit_reversal_permutations_equiv`{1, 4}
- * :prove check_bit_reversal_permutations_equiv`{4, 8}
- * :prove check_bit_reversal_permutations_equiv`{8, 256}
+ * :prove bit_reversal_permutations_equiv`{1, 4}
+ * :prove bit_reversal_permutations_equiv`{4, 8}
+ * :prove bit_reversal_permutations_equiv`{8, 256}
  * ```
  */
-check_bit_reversal_permutations_equiv : {size, n}
+bit_reversal_permutations_equiv : {size, n}
     (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
     => [n][size * BYTE_WIDTH] -> Bit
-property check_bit_reversal_permutations_equiv seq =
+property bit_reversal_permutations_equiv seq =
     bit_reversal_permutation`{size * BYTE_WIDTH, n} seq == bit_reversal_permutation_fast`{size, n} seq
