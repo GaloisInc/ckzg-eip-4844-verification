@@ -41,9 +41,9 @@ bls_modular_inverse x = toIntegral (modular_inverse x') where
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
  * ```repl
- * :prove bls_div 1 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
- * :prove bls_div 13 1 == 13
- * :prove bls_div 57 13 == 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
+ * :check bls_div 1 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :check bls_div 13 1 == 13
+ * :check bls_div 57 13 == 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
  * ```
  * NOTE: we just chose the last value at "random"
  */

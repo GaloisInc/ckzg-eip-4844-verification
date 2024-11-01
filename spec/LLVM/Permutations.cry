@@ -75,9 +75,9 @@ swap values i r =
  * Prove that the `bit_reversal_permutation_fast` function is equivalent
  *  to `bit_reversal_permutation` found in `Spec`.
  * ```repl
- * :prove bit_reversal_permutations_equiv`{1, 4}
- * :prove bit_reversal_permutations_equiv`{4, 8}
- * :prove bit_reversal_permutations_equiv`{8, 256}
+ * :check bit_reversal_permutations_equiv`{1, 4}
+ * :check bit_reversal_permutations_equiv`{4, 8}
+ * :check bit_reversal_permutations_equiv`{8, 256}
  * ```
  */
 bit_reversal_permutations_equiv : {size, n}
