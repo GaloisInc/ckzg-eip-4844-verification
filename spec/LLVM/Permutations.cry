@@ -23,6 +23,12 @@ bit_reversal_permutation_fast sequence =
 
 /**
  * Recursive helper function for `bit_reversal_permutation_fast`.
+ * ```repl
+ * :check bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 3 == [0x01, 0x03, 0x02, 0x04]
+ * :check bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 2 == [0x01, 0x03, 0x02, 0x04]
+ * :check bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 1 == [0x01, 0x03, 0x02, 0x04]
+ * :check bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 0 == [0x01, 0x03, 0x02, 0x04]
+ * ```
  */
 bit_reversal_permutation_fast_rec : {size, n, nbits}
     (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n, nbits == width (n - 1))
@@ -41,6 +47,12 @@ bit_reversal_permutation_fast_rec sequence unused_bit_len i =
 /**
  * Helper function for `bit_reversal_permutation_fast`.
  * @see https://github.com/ethereum/c-kzg-4844/blob/430371ed270e97b5b77babc92c0bafa768f68b32/src/common/utils.c#L122
+ * ```repl
+ * :check swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 1 2 == [0x01, 0x03, 0x02, 0x04]
+ * :check swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 2 1 == [0x01, 0x03, 0x02, 0x04]
+ * :check swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 3 3 == [0x01, 0x02, 0x03, 0x04]
+ * ```
+ * NOTE: we just chose these values at "random"
  */
 swap : {size, n}
     (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
@@ -52,42 +64,6 @@ swap values i r =
             if j == r then values@i
             else if j == i then values@r
             else values@j
-
-/*
- * ===============
- * Unit test suite
- * ===============
- */
-
-/**
- * Unit tests for `swap`.
- * ```repl
- * :check test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 1 2 [0x01, 0x03, 0x02, 0x04]
- * :check test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 2 1 [0x01, 0x03, 0x02, 0x04]
- * :check test_swap`{1, 4} [0x01, 0x02, 0x03, 0x04] 3 3 [0x01, 0x02, 0x03, 0x04]
- * ```
- * NOTE: we just chose these values at "random"
- */
-test_swap : {size, n}
-    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n)
-    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size  * BYTE_WIDTH] -> Bit
-property test_swap input i r expected =
-    expected == swap`{size, n} input i r
-
-/**
- * Unit tests for `bit_reversal_permutation_fast_rec`.
- * ```repl
- * :check test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 3 [0x01, 0x03, 0x02, 0x04]
- * :check test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x03, 0x02, 0x04] 62 2 [0x01, 0x03, 0x02, 0x04]
- * :check test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 1 [0x01, 0x03, 0x02, 0x04]
- * :check test_bit_reversal_permutation_fast_rec`{1, 4, 2} [0x01, 0x02, 0x03, 0x04] 62 0 [0x01, 0x03, 0x02, 0x04]
- * ```
- */
-test_bit_reversal_permutation_fast_rec : {size, n, nbits}
-    (fin size, size >= 1, n >= 2, size * BYTE_WIDTH >= width n, 64 >= width n, nbits == width (n - 1))
-    => [n][size * BYTE_WIDTH] -> [64] -> [64] -> [n][size * BYTE_WIDTH] -> Bit
-property test_bit_reversal_permutation_fast_rec input unused_bit_len i expected =
-    expected == bit_reversal_permutation_fast_rec`{size, n, nbits} input unused_bit_len i
 
 /*
  *  ==========
