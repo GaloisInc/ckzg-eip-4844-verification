@@ -1,7 +1,8 @@
 /**
- * This module contains test vectors for the `Polynomials` module.
+ * This module contains a test vector for the `Polynomials` module function
+ *  `evaluate_polynomial_in_evaluation_form` and value `roots_of_unity_brp`.
  */
-module PolynomialsTV where
+module Test::Polynomials::TV1 where
 
 import Spec::BlsHelpers
 import Spec::Permutations
@@ -10,11 +11,12 @@ import Spec::Polynomials
 /**
  * Verify that the Cryptol spec correctly computes the `roots_of_unity_brp`
  *  which is used in multiple functions.
+ * This test vector was tested against the Deneb Python Spec as well.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#evaluate_polynomial_in_evaluation_form
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
  * ```repl
- * :prove correct_roots_of_unity_brp
+ * :check correct_roots_of_unity_brp
  * ```
  */
 correct_roots_of_unity_brp : Bit
@@ -26,7 +28,7 @@ property correct_roots_of_unity_brp = roots_of_unity_brp == ROOTS_OF_UNITY_BRP w
  * This test vector was generated from :dumptests and added tested against the Deneb Python Spec as well.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#evaluate_polynomial_in_evaluation_form
  * ```repl
- * :prove correct_evaluate_polynomial_in_evaluation_form
+ * :check correct_evaluate_polynomial_in_evaluation_form
  * ```
  */
 correct_evaluate_polynomial_in_evaluation_form : Bit

@@ -6,11 +6,11 @@ module Spec::BlsEC::Pairing where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::FQP
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
-import Spec::BlsEC::G12
+import Spec::BlsEC::GP
 
 /**
  * Representation for 1.
@@ -24,7 +24,14 @@ FQ12_ONE = [1] # zero
  *  compute the product. Finally, run the final exponentiate on the
  *  product and check that it is equal to the element "one" of Fq12.
  * @see https://github.com/ethereum/consensus-specs/blob/96b1d312a9a3e9f89c4246d0f5f98867f0018348/tests/core/pyspec/eth2spec/utils/bls.py#L224
- * Positive and negative tests below at `check_pairing_check_valid_pairs`.
+ * ```repl
+ * :check pairing_check VALID_MULTI_PAIRING_POINTS == True
+ * let good_pair = VALID_MULTI_PAIRING_POINTS@0
+ * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
+ * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
+ * let bad_pair = (bad_g1, g2)
+ * :check pairing_check [good_pair, bad_pair] == False
+ * ```
  */
 pairing_check : {n} (fin n) => [n](G1Point, G2Point) -> Bit
 pairing_check points = final ~==~ FQ12_ONE where
@@ -39,7 +46,7 @@ pairing_check points = final ~==~ FQ12_ONE where
  * let expX = [3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507,0,0,0,0,0,0,0,0,0,0,0]
  * let expY = [1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569,0,0,0,0,0,0,0,0,0,0,0]
  * let expected = { xCoeffs = expX, yCoeffs = expY }
- * :prove cast_point_to_fq12 G1 == expected
+ * :check cast_point_to_fq12 G1 == expected
  * ```
  */
 cast_point_to_fq12 : G1Point -> G12Point
@@ -60,16 +67,16 @@ cast_point_to_fq12 p = {xCoeffs = newX, yCoeffs = newY} where
  * let negone = g12_multi_optimized G12 (`(BLS_MODULUS)-1)
  * let negtwo = g12_multi_optimized G12 (`(BLS_MODULUS)-2)
  * let negthree = g12_multi_optimized G12 (`(BLS_MODULUS)-3)
- * :prove linefunc one two one == zero
- * :prove linefunc one two two == zero
- * :prove linefunc one two three != zero
- * :prove linefunc one two negthree == zero
- * :prove linefunc one negone one == zero
- * :prove linefunc one negone negone == zero
- * :prove linefunc one negone two != zero
- * :prove linefunc one one one == zero
- * :prove linefunc one one two != zero
- * :prove linefunc one one negtwo == zero
+ * :check linefunc one two one == zero
+ * :check linefunc one two two == zero
+ * :check linefunc one two three != zero
+ * :check linefunc one two negthree == zero
+ * :check linefunc one negone one == zero
+ * :check linefunc one negone negone == zero
+ * :check linefunc one negone two != zero
+ * :check linefunc one one one == zero
+ * :check linefunc one one two != zero
+ * :check linefunc one one negtwo == zero
  * ```
  * Tests from: https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L66
  */
@@ -110,7 +117,7 @@ log_ate_loop_count = 62
  * If the final result (after the final exponentiation) is FQ12_ONE, then the pairing was successful.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L84
  * ```repl
- * :prove miller_loop (twist G2) (cast_point_to_fq12 G1) True == MILLER_LOOP_G2_G1_FQ12
+ * :check miller_loop (twist G2) (cast_point_to_fq12 G1) True == MILLER_LOOP_G2_G1_FQ12
  * ```
  * NOTE: this repl test is very, very slow (~2 minutes).
  */
@@ -129,7 +136,6 @@ miller_loop q p do_final_exponentiate =
                     double_and_add r'' f'' (count - 1)
                 else double_and_add r' f' (count - 1)
             where
-                //count' = fromInteger count
                 f' = f ~*~ f ~*~ (linefunc r r p)
                 r' = g12_double r
                 f'' = f' ~*~ (linefunc r' q p)
@@ -140,7 +146,7 @@ miller_loop q p do_final_exponentiate =
  * https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L116
  * The py_ecc "field_modulus" is Fq, and "curve_order" is the BLS_MODULUS.
  * ```repl
- * :prove final_exponentiate G12_x == [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ * :check final_exponentiate G12_x == [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
  * ```
  * NOTE: this repl test is very slow (~45 seconds).
  */
@@ -148,8 +154,9 @@ final_exponentiate : Fq12 -> Fq12
 final_exponentiate p = p~^^((`(Fq)^^12 - 1) / `(BLS_MODULUS))
 
 /**
- * Pairing computation
+ * Pairing computation.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L108
+ * The tests in `miller_loop` and `pairing_check` cover this function.
  */
 pairing : G2Point -> G1Point -> Bit -> Fq12
 pairing q p do_final_exponentiate =
@@ -179,6 +186,9 @@ MILLER_LOOP_G2_G1_FQ12 =
     , 873321072950766150592434764742436722571574260472569072177205897167854308426485977134306337249021436737462538398830
     ]
 
+/**
+ * Randomly generated valid proof pair.
+ */
 VALID_MULTI_PAIRING_POINTS : [2](G1Point, G2Point)
 VALID_MULTI_PAIRING_POINTS = [
  ({xCoord = 3942577509585645813112967582905379780757916939878725808374136412369021134738667198410219765812816597637590999762994,
@@ -194,18 +204,3 @@ VALID_MULTI_PAIRING_POINTS = [
    yCoeffs = [2578225059880913843555694372733822992497931377620121352151046101281018929119028392378298954064169396102755595303745,
     2741696937477620340841025265339742110829389137752838655176100907337011149212882755711342068822769734096710415902962]})
  ]
-
-/**
- * Test that the pairing_check passes on two valid pairs.
- * ```repl
- * :prove check_pairing_check_valid_pairs VALID_MULTI_PAIRING_POINTS True
- * let good_pair = VALID_MULTI_PAIRING_POINTS@0
- * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
- * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
- * let bad_pair = (bad_g1, g2)
- * :prove check_pairing_check_valid_pairs [good_pair, bad_pair] False
- * ```
- */
-check_pairing_check_valid_pairs : {n} (fin n) => [n](G1Point, G2Point) -> Bit -> Bit
-property check_pairing_check_valid_pairs points expected_result =
-    pairing_check points == expected_result

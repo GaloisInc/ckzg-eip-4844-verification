@@ -10,6 +10,7 @@ module Spec::BlsEC::G1 where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 
 /**
@@ -51,12 +52,13 @@ G1 =
  * Determines whether or not the given point is on the G1 curve.
  * The point must satisfy the EC equation: y^^2 = x^^3 + 4
  * ```repl
- * :prove g1_is_valid_point G1
- * :prove g1_is_valid_point G1_2P
- * :prove g1_is_valid_point G1_3P
- * :prove g1_is_valid_point G1_4P
- * :prove g1_is_valid_point G1_5P
- * :prove g1_is_valid_point G1_6P
+ * :check g1_is_valid_point G1
+ * :check g1_is_valid_point G1_2P
+ * :check g1_is_valid_point G1_3P
+ * :check g1_is_valid_point G1_4P
+ * :check g1_is_valid_point G1_5P
+ * :check g1_is_valid_point G1_6P
+ * :check g1_is_valid_point G1_7P
  * ```
  */
 g1_is_valid_point : G1Point -> Bit
@@ -69,6 +71,12 @@ g1_is_valid_point point =
 /**
  * Double a G1 point
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L84
+ * ```repl
+ * :check g1_double G1 == G1_2P
+ * :check g1_double G1_2P == G1_4P
+ * :check g1_double G1_3P == G1_6P
+ * :check g1_double (g1_double G1) == G1_4P
+ * ```
  */
 g1_double : G1Point -> G1Point
 g1_double point = newPoint where
@@ -85,14 +93,23 @@ g1_double point = newPoint where
 /**
  * Add two G1 points
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L95
+ * ```repl
+ * :check g1_add G1 G1_INFINITY == G1
+ * :check g1_add G1_INFINITY G1_3P == G1_3P
+ * :check g1_add G1_INFINITY G1_INFINITY == G1_INFINITY
+ * :check g1_add G1 G1 == G1_2P
+ * :check g1_add G1 G1_2P == G1_3P
+ * :check g1_add G1 G1_4P == G1_5P
+ * :check g1_add G1_3P G1_2P == G1_5P
+ * :check g1_add G1_2P G1_4P == G1_6P
+ * ```
  */
 g1_add : G1Point -> G1Point -> G1Point
 g1_add p1 p2 =
-    if g1_point_eq p1 G1_INFINITY then p2
-    else if g1_point_eq p2 G1_INFINITY then p1
-    else if (x2 == x1) && (y2 == y1) then
-        g1_double p1
-    else
+    if p1 == G1_INFINITY then p2
+     | p2 == G1_INFINITY then p1
+     | p1 == p2 then g1_double p1
+     else
         { xCoord = newX
         , yCoord = newY
         }
@@ -108,25 +125,25 @@ g1_add p1 p2 =
 /**
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
- * WARNING: This function cannot be called with a scalar equal to the `BLS_MODULUS`.
- *  Call `g1_multi` instead if `scalar == BLS_MODULUS`.
  * The optimization of running scalar multiplication on the inverse and then using the
  *  inverse of `y` is described here: https://www.mdpi.com/2227-7390/12/6/881, Section 4, second case
  * ```repl
- * :prove g1_multi_optimized G1 0 == G1_INFINITY
- * :prove g1_multi_optimized G1 1 == G1
- * :prove g1_multi_optimized G1 6 == G1_6P
- * :prove g1_multi_optimized G1 (`(BLS_MODULUS)-1) == g1_multi G1 (`(BLS_MODULUS)-1)
+ * :check g1_multi_optimized G1 0 == G1_INFINITY
+ * :check g1_multi_optimized G1 1 == G1
+ * :check g1_multi_optimized G1 6 == G1_6P
+ * :check g1_multi_optimized G1 (`(BLS_MODULUS)-1) == g1_multi G1 (`(BLS_MODULUS)-1)
+ * :check g1_multi_optimized G1 `(BLS_MODULUS) == g1_multi G1 `(BLS_MODULUS)
+ * :check g1_multi_optimized G1 (`(BLS_MODULUS)+1) == g1_multi G1 (`(BLS_MODULUS)+1)
  * ```
  */
 g1_multi_optimized : G1Point -> UInt256 -> G1Point
 g1_multi_optimized point scalar =
-    if scalar < `(BLS_MODULUS) / 2
-        then g1_multi point scalar
-    else
-        { xCoord = x
-        , yCoord = y
-        }
+    if scalar >= `(BLS_MODULUS) then g1_multi point scalar
+     // For the special case of scalars < BLS_MODULUS and
+     //  >= `(BLS_MODULUS) / 2, we can compute the inverse
+     //  and then inverse the coordinantes.
+     | scalar >= `(BLS_MODULUS) / 2 then {xCoord = x, yCoord = y}
+     else g1_multi point scalar
     where
         inverse_scalar = `(BLS_MODULUS) - scalar
         inverse_point = g1_multi point inverse_scalar
@@ -137,10 +154,10 @@ g1_multi_optimized point scalar =
  * Multiply a G1 point by a scalar
  * @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
  * ```repl
- * :prove g1_multi G1 0 == G1_INFINITY
- * :prove g1_multi G1 1 == G1
- * :prove g1_multi G1 6 == G1_6P
- * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
+ * :check g1_multi G1 0 == G1_INFINITY
+ * :check g1_multi G1 1 == G1
+ * :check g1_multi G1 6 == G1_6P
+ * :check g1_multi G1_2P 3 == g1_multi G1_3P 2
  * ```
  */
 g1_multi : G1Point -> UInt256 -> G1Point
@@ -153,34 +170,33 @@ g1_multi point scalar =
         else g1_add ((g1_multi (g1_double point) (scalar / 2))) point
 
 /**
- * Randomize tesitng to show the two g1_multi functions are equivalent.
+ * Randomize testing to show the two g1_multi functions are equivalent.
  * ```repl
  * :check g1_multis_equiv
  * ```
- * This takes about a minute.
+ * This takes a couple of minutes.
  */
 g1_multis_equiv : UInt256 -> Bit
-property g1_multis_equiv scalar = precondition ==> statement where
-    precondition = scalar < `(BLS_MODULUS)
-    statement = g1_multi G1 scalar == g1_multi_optimized G1 scalar
+property g1_multis_equiv scalar =
+    g1_multi G1 scalar == g1_multi_optimized G1 scalar
 
 /**
  * Determine whether or not the G1 point is a member of the subgroup.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls/g2_primitives.py#L34
  * ```repl
- * :prove (subgroup_check G1_INFINITY) == False
- * :prove (subgroup_check G1) == True
- * :prove (subgroup_check G1_2P) == True
+ * :check subgroup_check G1_INFINITY == False
+ * :check subgroup_check G1 == True
+ * :check subgroup_check G1_2P == True
  * ```
  * NOTE: these repl tests are very slow (~5 seconds).
  */
 subgroup_check : G1Point -> Bit
-subgroup_check point = G1_INFINITY != (g1_multi point `(BLS_MODULUS))
+subgroup_check point = G1_INFINITY != g1_multi point `(BLS_MODULUS)
 
 /*
- * ===============
- * Unit test suite
- * ===============
+ * ===========
+ * Test Points
+ * ===========
  */
 
 // All of these points were generated from: http://www.christelbach.com/eccalculator.aspx
@@ -220,72 +236,3 @@ G1_7P =
     { xCoord = 3872473689207892378470335395114902631176541028916158626161662840934315241539439160301564344905260612642783644023991
     , yCoord = 2547806390474846378491145127515427451279430889101277169890334737406180277792171092197824251632631671609860505999900
     }
-
-/**
- * Helper function for testing point equality.
- */
-g1_point_eq : G1Point -> G1Point -> Bit
-g1_point_eq p1 p2 =
-    (p1.xCoord == p2.xCoord) && (p1.yCoord == p2.yCoord)
-
-/**
- * Unit tests for `g1_is_valid_point`.
- * ```repl
- * :prove test_g1_is_valid_point G1
- * :prove test_g1_is_valid_point G1_2P
- * :prove test_g1_is_valid_point G1_3P
- * :prove test_g1_is_valid_point G1_4P
- * :prove test_g1_is_valid_point G1_5P
- * :prove test_g1_is_valid_point G1_6P
- * :prove test_g1_is_valid_point G1_7P
- */
-test_g1_is_valid_point : G1Point -> Bit
-property test_g1_is_valid_point point = g1_is_valid_point point
-
-/**
- * Unit tests for `g1_double`.
- * ```repl
- * :prove test_g1_double G1 G1_2P
- * :prove test_g1_double G1_2P G1_4P
- * :prove test_g1_double G1_3P G1_6P
- * :prove test_g1_double (g1_double G1) G1_4P
- * ```
- */
-test_g1_double : G1Point -> G1Point -> Bit
-property test_g1_double p1 p2 =
-    g1_point_eq (g1_double p1) p2
-
-/**
- * Unit tests for `g1_add`.
- * ```repl
- * :prove test_g1_add G1 G1_INFINITY G1
- * :prove test_g1_add G1_INFINITY G1_3P G1_3P
- * :prove test_g1_add G1_INFINITY G1_INFINITY G1_INFINITY
- * :prove test_g1_add G1 G1 G1_2P
- * :prove test_g1_add G1 G1_2P G1_3P
- * :prove test_g1_add G1_2P G1 G1_3P
- * :prove test_g1_add G1_3P G1 G1_4P
- * :prove test_g1_add G1_2P G1_2P G1_4P
- * :prove test_g1_add G1 G1_4P G1_5P
- * :prove test_g1_add G1_3P G1_2P G1_5P
- * :prove test_g1_add G1_2P G1_4P G1_6P
- * ```
- */
-test_g1_add : G1Point -> G1Point -> G1Point -> Bit
-property test_g1_add p1 p2 p3 =
-    g1_point_eq (g1_add p1 p2) p3
-
-/**
- * Unit tests for `g1_multi`.
- * ```repl
- * :prove test_g1_multi G1 0 G1_INFINITY
- * :prove test_g1_multi G1 1 G1
- * :prove test_g1_multi G1 2 G1_2P
- * :prove test_g1_multi G1 3 G1_3P
- * :prove test_g1_multi G1 6 G1_6P
- * :prove g1_multi G1_2P 3 == g1_multi G1_3P 2
- * ```
- */
-test_g1_multi : G1Point -> UInt256 -> G1Point -> Bit
-property test_g1_multi point scalar expected =
-    g1_point_eq (g1_multi point scalar) expected

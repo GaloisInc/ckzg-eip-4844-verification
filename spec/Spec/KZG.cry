@@ -5,9 +5,10 @@
 module Spec::KZG where
 
 import Common::ModArith
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
+import Spec::BlsEC::GP
 import Spec::BlsEC::Pairing
 import Spec::BlsHelpers
 import Spec::BlsSerde
@@ -29,6 +30,7 @@ blob_to_kzg_commitment blob =
  * For more details, read https://dankradfeist.de/ethereum/2021/06/18/pcs-multiproofs.html section "Dividing
  *  when one of the points is zero". The code below computes q(x_m) for the roots of unity special case.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
+ * NOTE: Test found in 'Test/KZG/ComputeQuotient/TV1.cry'
  */
 compute_quotient_eval_within_domain : BlsFieldElement -> Polynomial -> BlsFieldElement -> BlsFieldElement
 compute_quotient_eval_within_domain z polynomial y = toIntegral result where
@@ -43,8 +45,9 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral result where
     compute i = if omega i != z' then div_mod (numerator i) (denominator i) else 0
 
 /**
- * Helper function for `compute_kzg_proof()` and `compute_blob_kzg_proof()`.
+ * Helper function for `compute_kzg_proof` and `compute_blob_kzg_proof`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
+ * Called by `compute_kzg_proof` for which we have a test vector.
  */
 compute_kzg_proof_impl : Polynomial -> BlsFieldElement -> (KZGProof, BlsFieldElement)
 compute_kzg_proof_impl polynomial z = (proof, y) where
@@ -71,6 +74,7 @@ compute_kzg_proof_impl polynomial z = (proof, y) where
  * Compute KZG proof at point `z` for the polynomial represented by `blob`.
  * Do this by computing the quotient polynomial in evaluation form: q(x) = (p(x) - p(z)) / (x - z).
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof
+ * NOTE: Test found in 'Test/KZG/ComputeProof/TV1.cry'
  */
 compute_kzg_proof : Blob -> Bytes32 -> (KZGProof, Bytes32)
 compute_kzg_proof blob z_bytes = (proof, y) where
@@ -81,6 +85,7 @@ compute_kzg_proof blob z_bytes = (proof, y) where
 /**
  * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
+ * Called by `verify_kzg_proof` for which we have a test vector.
  */
 verify_kzg_proof_impl : KZGCommitment -> BlsFieldElement -> BlsFieldElement -> KZGProof -> Bit
 verify_kzg_proof_impl commitment z y proof = pairing_check points where
@@ -94,6 +99,7 @@ verify_kzg_proof_impl commitment z y proof = pairing_check points where
 /**
  * Verify KZG proof that `p(z) == y` where `p(z)` is the polynomial represented by `polynomial_kzg`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
+ * NOTE: Test found in 'Test/KZG/VerifyProof/TV1.cry'
  */
 verify_kzg_proof : Bytes48 -> Bytes32 -> Bytes32 -> Bytes48 -> Bit
 verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes =

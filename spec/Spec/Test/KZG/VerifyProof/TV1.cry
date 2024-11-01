@@ -1,16 +1,19 @@
 /**
- * This module contains test vectors for the `KZG` module function
- *  `compute_quotient_eval_within_domain`.
+ * This module contains test a vector for the `KZG` module function
+ *  `verify_kzg_proof`.
  */
-module KZGComputeProofTV where
+module Test::KZG::VerifyProof::TV1 where
 
 import Spec::BlsEC::Field
 import Spec::BlsHelpers
 import Spec::KZG
 
 /**
+ * Verify that the Cryptol spec correctly specifies the `verify_kzg_proof` function.
+ * This test vector was generated from :dumptests and added tested against the Deneb Python Spec as well.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof
  * ```repl
- * :prove correct_verify_kzg_proof
+ * :check correct_verify_kzg_proof
  * ```
  */
 correct_verify_kzg_proof : Bit
@@ -27,6 +30,7 @@ Z = groupBy`{8} 0x25ac7e7ff3814fb83d210959785ed36865cd1e321f28bfd9d8da32ed141609
 
 /**
  * COMMITMENT == blob_to_kzg_commitment (groupBy`{8} (join POLY))
+ * This commitment takes a long time to compute (~2 hours), so we have precomputed it.
  */
 COMMITMENT : KZGCommitment
 COMMITMENT = 0x897d48495a5f936779e5ee85e636cbb19d44854e470e28665ae36161f9c5a89336330d4a4ca760ca3fccfd88f9c5c2c9
