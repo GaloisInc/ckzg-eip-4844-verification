@@ -1,0 +1,211 @@
+/**
+ * This module handles the BLS pairing operation and subfunctions.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py
+ */
+module Spec::BlsEC::Pairing where
+
+import Common::ModArith
+import Common::Utils
+import Spec::BlsEC::Field
+import Spec::BlsEC::FQP
+import Spec::BlsEC::G1
+import Spec::BlsEC::G2
+import Spec::BlsEC::G12
+
+/**
+ * Representation for 1.
+ * @see https://github.com/ethereum/py_ecc/blob/9d79633c94a0c76a5b8e838fb5e2e4d9430c9f87/py_ecc/fields/field_elements.py#L359
+ */
+FQ12_ONE : Fq12
+FQ12_ONE = [1] # zero
+
+/**
+ * For each pair of G1, G2 points, run the pairing computation and
+ *  compute the product. Finally, run the final exponentiate on the
+ *  product and check that it is equal to the element "one" of Fq12.
+ * @see https://github.com/ethereum/consensus-specs/blob/96b1d312a9a3e9f89c4246d0f5f98867f0018348/tests/core/pyspec/eth2spec/utils/bls.py#L224
+ * Positive and negative tests below at `check_pairing_check_valid_pairs`.
+ */
+pairing_check : {n} (fin n) => [n](G1Point, G2Point) -> Bit
+pairing_check points = final ~==~ FQ12_ONE where
+    final = final_exponentiate prod
+    prod = foldl (~*~) FQ12_ONE [pairing q p False | (p, q) <- points]
+
+/**
+ * Cast a point in Fq to Fq12.
+ * The x and y coordinates are simply the first coefficient with all other coefficients as zero.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L50
+ * ```repl
+ * let expX = [3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507,0,0,0,0,0,0,0,0,0,0,0]
+ * let expY = [1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569,0,0,0,0,0,0,0,0,0,0,0]
+ * let expected = { xCoeffs = expX, yCoeffs = expY }
+ * :prove cast_point_to_fq12 G1 == expected
+ * ```
+ */
+cast_point_to_fq12 : G1Point -> G12Point
+cast_point_to_fq12 p = {xCoeffs = newX, yCoeffs = newY} where
+    x = p.xCoord
+    y = p.yCoord
+    newX = [x] # zero
+    newY = [y] # zero
+
+/**
+ * Create a function representing the line between `p1` and `p2`,
+ *  and evaluate it at `t`.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L66
+ * ```repl
+ * let one = G12
+ * let two = g12_double G12
+ * let three = g12_multi G12 3
+ * let negone = g12_multi_optimized G12 (`(BLS_MODULUS)-1)
+ * let negtwo = g12_multi_optimized G12 (`(BLS_MODULUS)-2)
+ * let negthree = g12_multi_optimized G12 (`(BLS_MODULUS)-3)
+ * :prove linefunc one two one == zero
+ * :prove linefunc one two two == zero
+ * :prove linefunc one two three != zero
+ * :prove linefunc one two negthree == zero
+ * :prove linefunc one negone one == zero
+ * :prove linefunc one negone negone == zero
+ * :prove linefunc one negone two != zero
+ * :prove linefunc one one one == zero
+ * :prove linefunc one one two != zero
+ * :prove linefunc one one negtwo == zero
+ * ```
+ * Tests from: https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L66
+ */
+linefunc : G12Point -> G12Point -> G12Point -> Fq12
+linefunc p1 p2 t =
+    if (p1 == G12_INFINITY) ||
+       (p2 == G12_INFINITY) ||
+       (t == G12_INFINITY) then // No points-at-infinity allowed
+        error "Invalid input - no points-at-infinity allowed"
+    else
+        if x1 != x2 then m1 ~*~ (xt ~-~ x1) ~-~ (yt ~-~ y1)
+         | y1 == y2 then m2 ~*~ (xt ~-~ x1) ~-~ (yt ~-~ y1)
+         else xt ~-~ x1
+    where
+        x1 = p1.xCoeffs
+        y1 = p1.yCoeffs
+        x2 = p2.xCoeffs
+        y2 = p2.yCoeffs
+        xt = t.xCoeffs
+        yt = t.yCoeffs
+        m1 = (y2 ~-~ y1) ~/~ (x2 ~-~ x1)
+        m2 = 3 *~ (x1~^^2) ~/~ (2 *~ y1)
+
+/**
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L28
+ */
+ate_loop_count : UInt64
+ate_loop_count = 15132376222941642752
+
+/**
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L29
+ */
+log_ate_loop_count : Integer
+log_ate_loop_count = 62
+
+/**
+ * Miller's algorithm that uses a double and add looping construct to compute the pairing.
+ * If the final result (after the final exponentiation) is FQ12_ONE, then the pairing was successful.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L84
+ * ```repl
+ * :prove miller_loop (twist G2) (cast_point_to_fq12 G1) True == MILLER_LOOP_G2_G1_FQ12
+ * ```
+ * NOTE: this repl test is very, very slow (~2 minutes).
+ */
+miller_loop : G12Point -> G12Point -> Bit -> Fq12
+miller_loop q p do_final_exponentiate =
+    if (q == G12_INFINITY) ||
+       (p == G12_INFINITY) then FQ12_ONE
+    else double_and_add q FQ12_ONE log_ate_loop_count
+    where
+        double_and_add : G12Point -> Fq12 -> Integer -> Fq12
+        double_and_add r f count =
+            if count < 0 then
+                if do_final_exponentiate then final_exponentiate f else f
+            else
+                if (ate_loop_count && (2^^count)) != 0 then
+                    double_and_add r'' f'' (count - 1)
+                else double_and_add r' f' (count - 1)
+            where
+                //count' = fromInteger count
+                f' = f ~*~ f ~*~ (linefunc r r p)
+                r' = g12_double r
+                f'' = f' ~*~ (linefunc r' q p)
+                r'' = g12_add r' q
+
+/**
+ * Final exponentiation of the pairing algorithm.
+ * https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L116
+ * The py_ecc "field_modulus" is Fq, and "curve_order" is the BLS_MODULUS.
+ * ```repl
+ * :prove final_exponentiate G12_x == [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ * ```
+ * NOTE: this repl test is very slow (~45 seconds).
+ */
+final_exponentiate : Fq12 -> Fq12
+final_exponentiate p = p~^^((`(Fq)^^12 - 1) / `(BLS_MODULUS))
+
+/**
+ * Pairing computation
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_pairing.py#L108
+ */
+pairing : G2Point -> G1Point -> Bit -> Fq12
+pairing q p do_final_exponentiate =
+    if ~(g2_is_valid_point q) then
+        error "Invalid input - point Q is not on the correct curve"
+     | ~(g1_is_valid_point p) then
+        error "Invalid input - point P is not on the correct curves"
+    else miller_loop (twist q) (cast_point_to_fq12 p) do_final_exponentiate
+
+/**
+ * Computed `miller_loop(twist(normalize(G2)), cast_point_to_fq12(G1))` with py_ecc.
+ * NOTE: this is not a valid KZG proof, it is just a test value.
+ */
+MILLER_LOOP_G2_G1_FQ12 : Fq12
+MILLER_LOOP_G2_G1_FQ12 =
+    [ 3408834164464458755751340723502736743445402614640994055433339214424916442641449510670327077303074893591740399366532
+    , 1017299873256115394687936133146817339783508925356207904663165117501336940438300180831508525168135575931758510829235
+    , 1919447955347661378578718469488414822573562393353397544098339472673901193098010131520945815709482515519580400649694
+    , 233557331756520805040932826416017142246700002714928636467514104620558679338483625829873520553081791155104026612174
+    , 2882199334237819327910933128503231887000342950792587449681715803095618652567681747054312179958427092970985872417068
+    , 579878855790610229145575079003483905368886712027403088810647643659132674704592975818766405092658613973478871626949
+    , 3268798540077874559188095304926415053902298079662269128631117894259354335713488241073281881110999874366368799440511
+    , 2688711983546324406847903726099677850388169649284572370749691792743294691894680263880362424577638309433508620982332
+    , 3520140447471844017044610248175793726488927385800919015247604269617056365166670232096113218155158979455637700602719
+    , 1555267885602801620621747613743921378408444002839854792606782732724136830563310004098024452104661167182680744848589
+    , 2626389147790168154036854297373352480470342009417426750876875476996308393122833154115295241935326582225976246741447
+    , 873321072950766150592434764742436722571574260472569072177205897167854308426485977134306337249021436737462538398830
+    ]
+
+VALID_MULTI_PAIRING_POINTS : [2](G1Point, G2Point)
+VALID_MULTI_PAIRING_POINTS = [
+ ({xCoord = 3942577509585645813112967582905379780757916939878725808374136412369021134738667198410219765812816597637590999762994,
+   yCoord = 1088203199345877024923249081294179597401216953118814114064722100932810217381059447963463973664408120385097692508887},
+  {xCoeffs = [352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160,
+    3059144344244213709971259814753781636986470325476647558659373206291635324768958432433509563104347017837885763365758],
+   yCoeffs = [2017258952934375457849735304558732518256013841723352154472679471057686924117014146018818524865681679396399932211882,
+    3074855889729334937670587859959866275799142626485414915307030157330054773488162299461738339401058098462460928340205]}),
+ ({xCoord = 3169842563198574659482326102479611290543931141198734323136036543093361601969542502223164030575983014844841304587037,
+   yCoord = 2824376326786724983588666803486546854391198626677433522546039002353746810155815190686926212247090141910905313411994},
+  {xCoeffs = [3394380795309742284085231944467807101526256495961930479404919454683737253440393636117553364774847296670461098299470,
+    3662689612798884582269339769986716851963132127553475998239595135217324880631479103766927470793514208588880068422260],
+   yCoeffs = [2578225059880913843555694372733822992497931377620121352151046101281018929119028392378298954064169396102755595303745,
+    2741696937477620340841025265339742110829389137752838655176100907337011149212882755711342068822769734096710415902962]})
+ ]
+
+/**
+ * Test that the pairing_check passes on two valid pairs.
+ * ```repl
+ * :prove check_pairing_check_valid_pairs VALID_MULTI_PAIRING_POINTS True
+ * let good_pair = VALID_MULTI_PAIRING_POINTS@0
+ * let (g1, g2) = VALID_MULTI_PAIRING_POINTS@1
+ * let bad_g1 = g1_multi G1 (`(BLS_MODULUS) - 13)
+ * let bad_pair = (bad_g1, g2)
+ * :prove check_pairing_check_valid_pairs [good_pair, bad_pair] False
+ * ```
+ */
+check_pairing_check_valid_pairs : {n} (fin n) => [n](G1Point, G2Point) -> Bit -> Bit
+property check_pairing_check_valid_pairs points expected_result =
+    pairing_check points == expected_result
