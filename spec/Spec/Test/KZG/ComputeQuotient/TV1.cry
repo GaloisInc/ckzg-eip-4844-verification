@@ -18,7 +18,6 @@ correct_compute_quotient_eval_within_domain : Bit
 property correct_compute_quotient_eval_within_domain =
     compute_quotient_eval_within_domain Z POLY Y == EXPECTED_QZ
 
-EXPECTED_HALF = 0x0ef11a8b3b4a1e585a8bb17efb7cff4ba245bf53cce8960a7dbc70d0056468f0
 EXPECTED_QZ = 0x130eaaa2ddea99acec5dabe387cdd8743a86b6420554ab5de3fd3311be52f974
 Z = 0x4ba919867815f31ce3f90763822d32137fe2c9bfdd21fa27e0830d037ea51285
 Y = 0x306a25ea23bb184e3d2906f4f27ac7c267b8a3b2526041f294464a73fbf9f856
