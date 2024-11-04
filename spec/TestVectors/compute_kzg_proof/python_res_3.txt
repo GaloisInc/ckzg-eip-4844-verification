@@ -1,0 +1,2 @@
+proofRes3:  0xa5b41d5a72a125dccc9a6386ed1153e76e60021717c01ee80145ea5e47ba8dafda67e84de9bc6553597e90f3712d8c17
+byteRes3:  b'\x08\x8eW\xdc\xa4O\xe0\xdc\x11\xc0\xb5$\xd6&\xc1\x86\xa4Qk/\xd5\x11`\x87l@\x90\x80\xeb/\x8f\xde'
