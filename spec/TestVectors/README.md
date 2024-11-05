@@ -9,8 +9,8 @@ From the `spec` directory run the following:
 
 ``` bash
 % cryptol Spec/Polynomials.cry
-┏━╸┏━┓╻ ╻┏━┓╺┳╸┏━┓╻  
-┃  ┣┳┛┗┳┛┣━┛ ┃ ┃ ┃┃  
+┏━╸┏━┓╻ ╻┏━┓╺┳╸┏━┓╻
+┃  ┣┳┛┗┳┛┣━┛ ┃ ┃ ┃┃
 ┗━╸╹┗╸ ╹ ╹   ╹ ┗━┛┗━╸
 version 3.2.0 (1bcb75c)
 https://cryptol.net  :? for help
@@ -27,7 +27,7 @@ Spec::Polynomials> :dumptests result1.txt evaluate_polynomial_in_evaluation_form
 ```
 
 ## Linking to Python Spec
-A patch that adds hard coded test vectors to `consensus-specs` has been created and stored in `add-tests-to-consensus-specs.patch`. 
+A patch that adds hard coded test vectors to `consensus-specs` has been created and stored in `add-tests-to-consensus-specs.patch`.
 
 In order to run these open a copy of `consensus-specs`.
 
@@ -35,9 +35,9 @@ Ensure that you have done the necessary commands to enable running their python 
 
 ```bash
 % make install_test
-% make pyspec          
-% . venv/bin/activate    
-```  
+% make pyspec
+% . venv/bin/activate
+```
 
 Then apply the patch:
 ```bash
@@ -48,4 +48,9 @@ After patch has been applied you should be able to run the tests added an exampl
 ```bash
 % cd tests/core/pyspec
 % python -m pytest -k evaluate_polynomial_in_evaluation_form --fork deneb eth2spec
+```
+
+To revert the patch afterwards:
+```bash
+% git reset --hard origin/dev
 ```
