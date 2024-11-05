@@ -17,9 +17,7 @@ You may also need to install [Yices](https://yices.csl.sri.com).
 For mac users, make sure to install `llvm@16` from Homebrew.
 
 ```bash
-
- $> brew install llvm@16
-
+brew install llvm@16
 ```
 
 You also need to ensure that your CC environment variable is pointing to the installed version above.
