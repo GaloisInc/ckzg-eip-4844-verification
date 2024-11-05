@@ -35,3 +35,29 @@ The table below indicates the Cryptol module where the corresponding Deneb funct
 | compute_blob_kzg_proof | Not yet implemented |
 | verify_blob_kzg_proof  | Not yet implemented |
 | verify_blob_kzg_proof_batch |Not yet implemented |
+
+## Tests
+
+Use `find` to list available tests:
+
+```bash
+$ find Spec/Test -name 'TV*.cry'
+Spec/Test/KZG/ComputeQuotient/TV1.cry
+Spec/Test/KZG/ComputeProof/TV1.cry
+Spec/Test/KZG/VerifyProof/TV1.cry
+Spec/Test/Polynomials/TV1.cry
+```
+
+For example, to run a specific test file:
+
+```bash
+cryptol --command=":check-docstrings" Spec/Test/KZG/VerifyProof/TV1.cry
+```
+
+To run all tests, run the following:
+
+```bash
+for test in $(find Spec/Test -name 'TV*.cry'); do
+    cryptol --command=":check-docstrings" $test
+done
+```
