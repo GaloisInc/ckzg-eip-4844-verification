@@ -4,6 +4,7 @@
  */
 module Test::KZG::VerifyProof::TV1 where
 
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsHelpers
 import Spec::KZG
