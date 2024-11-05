@@ -54,6 +54,38 @@ For example, to run a specific test file:
 cryptol --command=":check-docstrings" Spec/Test/KZG/VerifyProof/TV1.cry
 ```
 
+The output should look something like:
+
+```text
+Loading module Cryptol
+Loading module Spec::BlsEC::Curve
+Loading module Spec::BlsEC::Field
+Loading module Common::ModArith
+Loading module Common::Utils
+Loading module Spec::BlsEC::G1
+Loading module Spec::BlsEC::Poly
+Loading module Spec::BlsEC::FQP
+Loading module Spec::BlsEC::GP
+Loading module Spec::BlsSerde
+Loading module Spec::BlsHelpers
+Loading module Spec::BlsEC::Pairing
+Loading module Spec::Permutations
+Loading module Spec::Polynomials
+Loading module Spec::TrustedSetup
+Loading module Spec::KZG
+Loading module Test::KZG::VerifyProof::TV1
+
+
+Checking Test::KZG::VerifyProof::TV1::correct_verify_kzg_proof
+
+:check correct_verify_kzg_proof
+Using exhaustive testing.
+Testing... Passed 1 tests.
+Q.E.D.
+
+Successes: 1, No fences: 6, Failures: 0
+```
+
 To run all tests, run the following:
 
 ```bash
