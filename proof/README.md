@@ -10,7 +10,7 @@ You will also need to install the Java Runtime Environment (this is required for
 
 You will also need to have Clang installed.
 
-You may also need to install [Yices](https://yices.csl.sri.com).
+You may also need to install [Yices](https://yices.csl.sri.com) and [CVC5](https://cvc5.github.io).
 
 ### MacOS
 
