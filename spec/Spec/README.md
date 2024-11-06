@@ -33,5 +33,5 @@ The table below indicates the Cryptol module where the corresponding Deneb funct
 | compute_kzg_proof_impl | Spec::KZG       |
 | compute_quotient_eval_within_domain | Spec::KZG |
 | compute_blob_kzg_proof | Spec::KZG |
-| verify_blob_kzg_proof  | Not yet implemented |
+| verify_blob_kzg_proof  | Spec::KZG |
 | verify_blob_kzg_proof_batch |Not yet implemented |

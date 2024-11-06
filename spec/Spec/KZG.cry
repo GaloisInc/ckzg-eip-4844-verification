@@ -194,5 +194,26 @@ compute_blob_kzg_proof blob commitment_bytes =
                         (proof, e) = compute_kzg_proof_impl polynomial evaluation_challenge
                         result = proof
 
-
-
+/**
+ * Given a blob, return the KZG proof that is used to verify it against the commitment.
+ * This method does not verify that the commitment is correct with respect to `blob`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_blob_kzg_proof
+ */
+verify_blob_kzg_proof: Blob -> Bytes48 -> Bytes48 -> Bit
+verify_blob_kzg_proof blob commitment_bytes proof_bytes =
+    assert  ((length blob) == `(BYTES_PER_BLOB)) 
+            error_msg_for_blob 
+            assert  ((length commitment_bytes) == `(BYTES_PER_COMMITMENT))
+                    error_msg_for_commitment_bytes
+                    assert  ((length proof_bytes) == `(BYTES_PER_PROOF))
+                            error_msg_for_proof_bytes
+                            result where
+                                error_msg_for_blob = "The length of blob must be BYTES_PER_BLOB"
+                                error_msg_for_commitment_bytes = "The length of commitment_bytes be BYTES_PER_COMMITMENT"
+                                error_msg_for_proof_bytes = "The length of proof_bytes must be BYTES_PER_PROOF"
+                                commitment = bytes_to_kzg_commitment commitment_bytes
+                                polynomial = blob_to_polynomial blob
+                                evaluation_challenge = compute_challenge blob commitment
+                                y = evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge
+                                proof = bytes_to_kzg_proof proof_bytes
+                                result = verify_kzg_proof_impl commitment evaluation_challenge y proof
