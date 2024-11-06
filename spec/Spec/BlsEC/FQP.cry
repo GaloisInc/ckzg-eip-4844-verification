@@ -21,6 +21,11 @@ type FQP n = [n](Z Fq)
 type Fq2 = FQP 2
 
 /**
+ * A G12 point is comprised of two Fq12 elements, or sets of coefficients, each of degree twelve.
+ */
+type Fq12 = FQP 12
+
+/**
  * The modulus coefficients for the quadratic extension field Fq2.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L30
  */
@@ -28,10 +33,20 @@ FQ2_MODULUS_COEFFICIENTS : Fq2
 FQ2_MODULUS_COEFFICIENTS = [1, 0]
 
 /**
+ * The modulus coefficients for the twelfth extension field Fq12.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L31
+ */
+FQ12_MODULUS_COEFFICIENTS : Fq12
+FQ12_MODULUS_COEFFICIENTS = [2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0]
+
+/**
  * Addition of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L232
  * ```repl
- * :prove G2_y ~+~ G2_x == G2_y_plus_x
+ * :check G2_y ~+~ G2_x == G2_y_plus_x
+ * :check G12_y ~+~ G12_x == G12_y_plus_x
+ * :check G12_x ~*~ G12_x == G12_xSquared
+ * :check G12_x ~*~ G12_x ~*~ G12_x == G12_xCubed
  * ```
  */
 (~+~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
@@ -41,7 +56,8 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
  * Subtraction of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L240
  * ```repl
- * :prove G2_y ~-~ G2_x == G2_y_minus_x
+ * :check G2_y ~-~ G2_x == G2_y_minus_x
+ * :check G12_y ~-~ G12_x == G12_y_minus_x
  * ```
  */
 (~-~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> FQP n
@@ -51,37 +67,34 @@ FQ2_MODULUS_COEFFICIENTS = [1, 0]
  * Multiplication of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L251
  * ```repl
- * :prove G2_x ~*~ G2_x == G2_xSquared
- * :prove G2_x ~*~ G2_x ~*~ G2_x == G2_xCubed
+ * :check G2_x ~*~ G2_x == G2_xSquared
+ * :check G2_x ~*~ G2_x ~*~ G2_x == G2_xCubed
  * ```
  */
-(~*~) : {n} (fin n, n >= 2) => FQP n -> FQP n -> FQP n
-(~*~) coeffs1 coeffs2 = reduce_while b (2 * `(n) - 1) where
+(~*~) : {n} (fin n, n <= 12, n >= 2) => FQP n -> FQP n -> FQP n
+(~*~) coeffs1 coeffs2 = reduce_while b modulus_coeffs (2 * `(n) - 1) where
     b = poly_multi coeffs1 coeffs2
 
-reduce_while : {a, n} (fin n, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> Integer -> [n](Z Fq)
-reduce_while b len =
+reduce_while : {a, n} (fin n, n <= 12, n >= 2, fin a, a == 2 * n - 1) => [a](Z Fq) -> [n](Z Fq) -> Integer -> [n](Z Fq)
+reduce_while b mod_coeffs len =
     if len == `(n) then take`{n} b
-    else reduce_while b_reduced (len - 1)
+    else reduce_while b' mod_coeffs (len - 1)
     where
-        modulus_coeffs =
-            // The appending by 'zero' is to help the Cryptol type checker.
-            // It actually evaulates to an empty bitvector.
-            if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
-            else repeat`{n} 0
         top = b@(len-1)
         exp = len - `(n) - 1
-        b' = b >> exp
-        modulus_coeffs' = modulus_coeffs >> exp
-        b_reduced = ([bi - (top * modci) | bi <- b' | modci <- modulus_coeffs'] << exp) # zero
+        b' = [compute bj j | bj <- b | j <- [0 .. (a-1)]]
+        compute bj j =
+            if (j >= exp) && (j <= exp + `(n) - 1) then
+                bj - (top * (mod_coeffs@(j-exp)))
+            else bj
 
 /**
  * Compute the initial polynomial multiplication.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L253
  * ```repl
- * :prove poly_multi [2, 3] [5, 7] == [10, 29, 21]
+ * :check poly_multi [2, 3] [5, 7] == [10, 29, 21]
  * let expected = [8,22,39,87,130,149,133,153,233,278,178,188,276,239,207,125,94,88,51,35,41,28,30]
- * :prove poly_multi [2,3,3,1,2,5,6,1,2,5,3,5] [4,5,6,25,12,1,4,6,2,1,2,6] == expected
+ * :check poly_multi [2,3,3,1,2,5,6,1,2,5,3,5] [4,5,6,25,12,1,4,6,2,1,2,6] == expected
  * ```
  */
 poly_multi : {n, a} (fin n, 2 * n >= 1, fin a, a == 2 * n - 1) => FQP n -> FQP n -> FQP a
@@ -94,8 +107,8 @@ poly_multi l r =
  * Multiplication of an integer and a set of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L249
  * ```repl
- * :prove G2_x ~* 2 == G2_xDoubled
- * :prove 2 *~ G2_x == G2_xDoubled
+ * :check G2_x ~* 2 == G2_xDoubled
+ * :check 2 *~ G2_x == G2_xDoubled
  * ```
  */
 (*~) : {n} (fin n, n >= 1) => Integer -> FQP n -> FQP n
@@ -109,30 +122,29 @@ poly_multi l r =
  * Division of two sets of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L280
  * ```repl
- * :prove G2_x ~/~ G2_x == [1, 0]
- * :prove G2_y ~/~ G2_x == G2_y_div_mod_x
+ * :check G2_x ~/~ G2_x == [1, 0]
+ * :check G2_y ~/~ G2_x == G2_y_div_mod_x
+ * :check G12_x ~/~ G12_x == [1] # zero
+ * :check G12_y ~/~ G12_x == G12_y_div_mod_x
  * ```
  */
-(~/~) : {n} (fin n, n >= 2) => FQP n -> FQP n -> FQP n
+(~/~) : {n} (fin n, n <= 12, n >= 2) => FQP n -> FQP n -> FQP n
 (~/~) coeffs1 coeffs2 = coeffs1 ~*~ (fqp_inv coeffs2)
 
 /**
  * Compute the inverse of a Fq2 element.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L302
  * ```repl
- * :prove fqp_inv G2_x == G2_xInverse
- * :prove fqp_inv (fqp_inv G2_x) == G2_x
- * :prove fqp_inv G2_y == G2_yInverse
- * :prove fqp_inv (fqp_inv G2_y) == G2_y
+ * :check fqp_inv G2_x == G2_xInverse
+ * :check fqp_inv (fqp_inv G2_x) == G2_x
+ * :check fqp_inv G2_y == G2_yInverse
+ * :check fqp_inv (fqp_inv G2_y) == G2_y
+ * :check fqp_inv G12_x == G12_xInverse
+ * :check fqp_inv (fqp_inv G12_x) == G12_x
  * ```
  */
-fqp_inv : {n} (fin n, n >= 2) => FQP n -> FQP n
+fqp_inv : {n} (fin n, n <= 12, n >= 2) => FQP n -> FQP n
 fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
-    modulus_coeffs =
-        // The appending by 'zero' is to help the Cryptol type checker.
-        // It actually evaulates to an empty bitvector.
-        if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
-        else n_zeros
     lm = [1] # n_zeros
     hm = [0] # n_zeros
     low = coeffs # [0]
@@ -140,16 +152,32 @@ fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
     n_zeros = repeat`{n} 0
 
 /**
+ * The modulus coefficients of the polynomial extension fields.
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_properties.py#L30-L31
+ */
+modulus_coeffs : {n} (fin n, n <= 12, n >= 2) => FQP n
+modulus_coeffs =
+    // The appending by 'zero' is to help the Cryptol type checker.
+    // It actually evaluates to an empty bitvector.
+    if `(n) == 2 then FQ2_MODULUS_COEFFICIENTS # zero
+     | `(n) == 12 then take`{n} FQ12_MODULUS_COEFFICIENTS
+    else zero
+
+/**
  * Exponentiation of a set of coeffsicients by a scalar.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L291
  * ```repl
- * :prove G2_x~^^0 == [1, 0]
- * :prove G2_x~^^1 == G2_x
- * :prove G2_x~^^2 == G2_xSquared
- * :prove G2_x~^^3 == G2_xCubed
+ * :check G2_x~^^0 == [1, 0]
+ * :check G2_x~^^1 == G2_x
+ * :check G2_x~^^2 == G2_xSquared
+ * :check G2_x~^^3 == G2_xCubed
+ * :check G12_x~^^0 == [1] # zero
+ * :check G12_x~^^1 == G12_x
+ * :check G12_x~^^2 == G12_xSquared
+ * :check G12_x~^^3 == G12_xCubed
  * ```
  */
-(~^^) : {n} (fin n, n >= 2) => FQP n -> Integer -> FQP n
+(~^^) : {n} (fin n, n <= 12, n >= 2) => FQP n -> Integer -> FQP n
 (~^^) coeffs scalar =
     if scalar == 0 then
         [1] # zero
@@ -164,7 +192,8 @@ fqp_inv coeffs = poly_extended_euclidean`{n+1} lm low hm high where
  * Negate the set of coefficients.
  * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/fields/field_elements.py#L355
  * ```repl
- * :prove fqp_neg (fqp_neg G2_x) == G2_x
+ * :check fqp_neg (fqp_neg G2_x) == G2_x
+ * :check fqp_neg (fqp_neg G12_x) == G12_x
  * ```
  */
 fqp_neg : {n} (fin n, n >= 1) => FQP n -> FQP n
@@ -173,7 +202,8 @@ fqp_neg coeffs = [-ci | ci <- coeffs]
 /**
  * Equality of two sets of coefficients.
  * ```repl
- * :prove G2_x ~==~ G2_x
+ * :check G2_x ~==~ G2_x
+ * :check G12_x ~==~ G12_x
  * ```
  */
 (~==~) : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -269,6 +299,104 @@ G2_yInverse =
     , 1450185639544495128598198914056492809111071767684112182252696543466687995844478949870392653614483391964324409513904
     ]
 
+/**
+ * X coefficients for generator for the curve over Fq12.
+ */
+G12_x : Fq12
+G12_x =
+    [ 0, 0, 0, 0
+    , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+    , 0, 0, 0, 0, 0
+    , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+    , 0
+    ]
+
+/**
+ * Y coefficients for generator for the curve over Fq12.
+ */
+G12_y : Fq12
+G12_y =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 0, 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 0, 0
+    ]
+
+/**
+ * G12_y + G12_x. Computed using py_ecc.
+ */
+G12_y_plus_x : Fq12
+G12_y_plus_x =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 352701069587466618187139116011060144890029952792775240219908644239793785735715026873347600343865175952761926303160
+    , 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 1353221637328373545892060349371360746048220186341936159219732281025920769516621702780080981380240920942561918531299
+    , 0
+    ]
+
+/**
+ * G12_x - G12_y. Computed using py_ecc.
+ */
+G12_y_minus_x : Fq12
+G12_y_minus_x =
+    [ 0, 0, 0
+    , 1985150602287291935568054521177171638300868978215655730859378665066344726373823718423869104263333984641494340347905
+    , 3649708485634200775230650709724844011666852867146232645112149491884237864755122837569340028785150488085132346256627
+    , 0, 0, 0, 0
+    , 1472406309213353956798468635167385199506877017588472562248853724925831900559844855499883907296819622485916638215732
+    , 2649187917893293847525729476364543410508662633597071726112325855098110880974216161662606647748774743095332354028488
+    , 0
+    ]
+
+/**
+ * G12_x squared. Computed using py_ecc.
+ */
+G12_xSquared : Fq12
+G12_xSquared =
+    [ 0, 0
+    , 1997086149283677522843833040423074048426674013790346437450988890364808601048656494674186077061491944389142492819694
+    , 0, 0, 0, 0, 0
+    , 558131476139751367058311005529085335650004058570450752629517146665768302617048450626625097886729935784513790785781
+    , 0, 0, 0
+    ]
+
+/**
+ * G12_x cubed. Computed using py_ecc.
+ */
+G12_xCubed : Fq12
+G12_xCubed =
+    [ 3341065098200961989598748404381324054605449840948293400785922068969583005812936621662354076014412578129291257715484
+    , 0, 0, 0, 0, 0
+    , 3398402205508355001729823773604352792963539889981388796224142831270396407108357255853836542123378726684229921247154
+    , 0, 0, 0, 0, 0
+    ]
+
+/**
+ * G12_x / G12_y. Computed using py_ecc.
+ */
+G12_y_div_mod_x : Fq12
+G12_y_div_mod_x =
+    [ 0, 0, 0, 0, 0
+    , 2645964961145567287646174681515652840605182444869364111679220104429646387260976011822898928226591963576020240426619
+    , 0, 0, 0, 0, 0
+    , 2506320172577994506258220874942502955664217219847453398140531096237990743617509481331063832123500549068674362096172
+    ]
+
+/**
+ * G12_x inverse. Computed using py_ecc.
+ */
+G12_xInverse : Fq12
+G12_xInverse =
+    [ 0, 0
+    , 1730471002742493480111726292949161466072993978438463788028594421591099082398631928222300214242262711361673151288254
+    , 0, 0, 0, 0, 0
+    , 3495453419063574139925455551631318136524378768480668459768684498547208492074727172949503320416899422709399085629096
+    , 0, 0, 0
+    ]
+
 /*
  * ==========
  * Properties
@@ -279,6 +407,7 @@ G2_yInverse =
  * Verify that addition is commutative.
  * ```repl
  * :prove fqp_addition_commutative`{2}
+ * :prove fqp_addition_commutative`{12}
  * ```
  */
 fqp_addition_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -288,18 +417,34 @@ property fqp_addition_commutative a b =
 /**
  * Verify that multiplication is commutative.
  * ```repl
+ * :set prover=cvc5
  * :prove fqp_multiplication_commutative`{2}
+ * :prove fqp_multiplication_commutative`{12}
  * ```
+ * NOTE: this proof works for Z3 v4.13 but not v4.8. Takes >50 seconds.
+ *  It is much faster (~5 seconds) with cvc5.
  */
-fqp_multiplication_commutative : {n} (fin n, n >= 2) => FQP n -> FQP n -> Bit
+fqp_multiplication_commutative : {n} (fin n, n <= 12, n >= 2) => FQP n -> FQP n -> Bit
 property fqp_multiplication_commutative a b =
     a ~*~ b == b ~*~ a
+
+/**
+ * Verify that multiplying by two is same as addition doubling an element.
+ * ```repl
+ * :prove fqp_multi_by_two_is_double`{2}
+ * :prove fqp_multi_by_two_is_double`{12}
+ * ```
+ */
+fqp_multi_by_two_is_double : {n} (fin n, n <= 12, n >= 2) => FQP n -> Bit
+property fqp_multi_by_two_is_double a =
+    a ~* 2 == a ~+~ a
 
 /**
  * Verify that subtraction is not commutative,
  *   unless both coefficients are equal.
  * ```repl
  * :prove fqp_subtraction_not_commutative`{2}
+ * :prove fqp_subtraction_not_commutative`{12}
  * ```
  */
 fqp_subtraction_not_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit
@@ -311,9 +456,10 @@ property fqp_subtraction_not_commutative a b = precondition ==> statement where
  * Verify that squaring is that same using either multiplication or exponentiation.
  * ```repl
  * :prove fqp_squared_equiv`{2}
+ * :prove fqp_squared_equiv`{12}
  * ```
  */
-fqp_squared_equiv : {n} (fin n, n >= 2) => FQP n -> Bit
+fqp_squared_equiv : {n} (fin n, n <= 12, n >= 2) => FQP n -> Bit
 property fqp_squared_equiv c =
     c~^^2 == c ~*~ c
 
@@ -321,6 +467,7 @@ property fqp_squared_equiv c =
  * Verify that equality is commutative.
  * ```repl
  * :prove fqp_equality_commutative`{2}
+ * :prove fqp_equality_commutative`{12}
  * ```
  */
 fqp_equality_commutative : {n} (fin n, n >= 1) => FQP n -> FQP n -> Bit

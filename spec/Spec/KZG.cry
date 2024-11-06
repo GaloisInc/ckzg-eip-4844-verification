@@ -5,10 +5,11 @@
 module Spec::KZG where
 
 import Common::ModArith
-import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
+import Spec::BlsEC::GP
+import Spec::BlsEC::Pairing
 import Spec::BlsHelpers
 import Spec::BlsSerde
 import Spec::Permutations
@@ -16,11 +17,20 @@ import Spec::Polynomials
 import Spec::TrustedSetup
 
 /**
+ * Create the polynomial commitment for the given `Blob`.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob_to_kzg_commitment
+ */
+blob_to_kzg_commitment : Blob -> KZGCommitment
+blob_to_kzg_commitment blob =
+    g1_lincomb (bit_reversal_permutation KZG_SETUP_G1_LAGRANGE) (blob_to_polynomial blob)
+
+/**
  * Given `y == p(z)` for a polynomial `p(x)`, compute `q(z)`: the KZG quotient polynomial evaluated at `z` for the
  *  special case where `z` is in roots of unity.
  * For more details, read https://dankradfeist.de/ethereum/2021/06/18/pcs-multiproofs.html section "Dividing
  *  when one of the points is zero". The code below computes q(x_m) for the roots of unity special case.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_quotient_eval_within_domain
+ * NOTE: Test found in 'Test/KZG/ComputeQuotient/TV1.cry'
  */
 compute_quotient_eval_within_domain : BlsFieldElement -> Polynomial -> BlsFieldElement -> BlsFieldElement
 compute_quotient_eval_within_domain z polynomial y = toIntegral result where
@@ -35,14 +45,9 @@ compute_quotient_eval_within_domain z polynomial y = toIntegral result where
     compute i = if omega i != z' then div_mod (numerator i) (denominator i) else 0
 
 /**
- * Same as for `KZGCommitment`.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
- */
-type KZGProof = Bytes48
-
-/**
- * Helper function for `compute_kzg_proof()` and `compute_blob_kzg_proof()`.
+ * Helper function for `compute_kzg_proof` and `compute_blob_kzg_proof`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof_impl
+ * Called by `compute_kzg_proof` for which we have a test vector.
  */
 compute_kzg_proof_impl : Polynomial -> BlsFieldElement -> (KZGProof, BlsFieldElement)
 compute_kzg_proof_impl polynomial z = (proof, y) where
@@ -69,6 +74,7 @@ compute_kzg_proof_impl polynomial z = (proof, y) where
  * Compute KZG proof at point `z` for the polynomial represented by `blob`.
  * Do this by computing the quotient polynomial in evaluation form: q(x) = (p(x) - p(z)) / (x - z).
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_kzg_proof
+ * NOTE: Test found in 'Test/KZG/ComputeProof/TV1.cry'
  */
 compute_kzg_proof : Blob -> Bytes32 -> (KZGProof, Bytes32)
 compute_kzg_proof blob z_bytes = (proof, y) where
@@ -122,7 +128,7 @@ verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes =
                                         z = bytes_to_bls_field z_bytes
                                         y = bytes_to_bls_field y_bytes
                                         proof = bytes_to_kzg_proof proof_bytes 
-                                        result = verify_kzg_proof_impl commitment z y proof
+                                        result = verify_kzg_proof_impl (commitment) (z) (y) (proof)
 
 padding_zeros : [16][8] -> [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
 padding_zeros value = result where
@@ -143,3 +149,27 @@ compute_challenge blob commitment = result where
     commitment_in_bytes_with_leading_zeros = (zero : [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB - 48][8]) # commitment_in_bytes
     data = blob + degree_poly + FIAT_SHAMIR_PROTOCOL_DOMAIN_with_leading_zeros + commitment_in_bytes_with_leading_zeros
     result = hash_to_bls_field(data)
+
+
+/*
+ * ======================
+ * Test Vector Generators
+ * ======================
+ */
+
+/**
+ * This function is used to generate a random, but valid data `Blob`.
+ */
+valid_blob_generator : Blob -> Blob
+valid_blob_generator blob = assert (blob != blob') "error" blob' where
+    x = [bytes | bytes <- (groupBy`{BYTES_PER_FIELD_ELEMENT} blob)]
+    y = map (\b -> (join b)) x
+    y' = map (\b -> b % `BLS_MODULUS) y
+    x' = [groupBy`{8} poly | poly <- y']
+    blob' = join x'
+
+/**
+ * This function is used to generate a random, valid Z bytes.
+ */
+z_bytes_generator : Bytes32 -> Bytes32
+z_bytes_generator z = z

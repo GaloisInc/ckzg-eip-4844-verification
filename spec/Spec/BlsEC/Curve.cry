@@ -1,0 +1,11 @@
+/**
+ * This module contains contants and types specific to the BLS12-381 curve.
+ */
+module Spec::BlsEC::Curve where
+
+/**
+ * The subgroup modulus. Also known as the curver order.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ * @see https://github.com/ethereum/py_ecc/blob/70c194edd8d1eb1457805442f0162499dbc0aac5/py_ecc/bls12_381/bls12_381_curve.py#L17
+ */
+type BLS_MODULUS = 52435875175126190479447740508185965837690552500527637822603658699938581184513

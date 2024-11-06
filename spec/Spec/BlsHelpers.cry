@@ -6,9 +6,10 @@ module Spec::BlsHelpers where
 
 import Common::ModArith
 import Common::Utils
+import Spec::BlsEC::Curve
 import Spec::BlsEC::Field
 import Spec::BlsEC::G1
-import Spec::BlsEC::G2
+import Spec::BlsEC::GP
 import Spec::BlsSerde
 
 /**
@@ -25,6 +26,12 @@ type BlsFieldElement = [BlsFieldSize]
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_modular_inverse
  * NOTE: Cryptol can not perform exponentiation with negative exponents,
  *  we cannot just execute `x^^(-1) % BLS_MODULUS` like the Python spec does.
+ * ```repl
+ * :check bls_modular_inverse 1 == 1
+ * :check bls_modular_inverse 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :check bls_modular_inverse 3 == 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
+ * ```
+ * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
  */
 bls_modular_inverse : BlsFieldElement -> BlsFieldElement
 bls_modular_inverse x = toIntegral (modular_inverse x') where
@@ -33,6 +40,12 @@ bls_modular_inverse x = toIntegral (modular_inverse x') where
 /**
  * Divide two field elements: x by y
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#div
+ * ```repl
+ * :check bls_div 1 2 == 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
+ * :check bls_div 13 1 == 13
+ * :check bls_div 57 13 == 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
+ * ```
+ * NOTE: we just chose the last value at "random"
  */
 bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement
 bls_div x y = toIntegral (div_mod x' y') where
@@ -44,10 +57,10 @@ bls_div x y = toIntegral (div_mod x' y') where
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_powers
  * ```repl
  * let expected_powers = [1, 3, 3^^2, 3^^3, 3^^4, 3^^5, 3^^6, ((3^^7):BlsFieldElement)]
- * :prove compute_powers`{8} 3 == expected_powers
- * :prove compute_powers`{0} 3 == []
- * :prove compute_powers`{1} 7 == [1:BlsFieldElement]
- * :prove compute_powers`{2} 7 == [1:BlsFieldElement, 7]
+ * :check compute_powers`{8} 3 == expected_powers
+ * :check compute_powers`{0} 3 == []
+ * :check compute_powers`{1} 7 == [1:BlsFieldElement]
+ * :check compute_powers`{2} 7 == [1:BlsFieldElement, 7]
  * ```
  */
 compute_powers : {n} (fin n, width n <= 64) => BlsFieldElement -> [n]BlsFieldElement
@@ -67,6 +80,12 @@ compute_powers x
  *   @see https://github.com/ethereum/consensus-specs/blob/85e2452301382a9d099df16f38deac8178355358/tests/core/pyspec/eth2spec/utils/bls.py#L262
  * NOTE: the Python multi_exp handles both G1 and G2 points, and just calls their
  *  corresponding `add` and `multiply` functions. This implementation is for G1 points only.
+ * ```repl
+ * :check g1_multi_exp`{1} [G1] [1] == G1
+ * :check g1_multi_exp`{2} [G1, G1] [2, 3] == G1_5P
+ * :check g1_multi_exp`{2} [G1_3P, G1_2P] [1, 2] == G1_7P
+ * :check g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] == g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2]
+ * ```
  */
 g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point
 g1_multi_exp points scalars = results!0 where
@@ -76,9 +95,9 @@ g1_multi_exp points scalars = results!0 where
  * Deserialize the G1 bytes into a G1 point
  * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L337
  * ```repl
- * :prove bytes48_to_G1 G1_POINT_AT_INFINITY == G1_INFINITY
- * :prove bytes48_to_G1 G1_2P_COMPRESSED == G1_2P
- * :prove bytes48_to_G1 G1_7P_COMPRESSED == G1_7P
+ * :check bytes48_to_G1 G1_POINT_AT_INFINITY == G1_INFINITY
+ * :check bytes48_to_G1 G1_2P_COMPRESSED == G1_2P
+ * :check bytes48_to_G1 G1_7P_COMPRESSED == G1_7P
  * ```
  * NOTE: We're not testing any of the invalid points since they throw runtime errors,
  *  and Cryptol does not have a way to expect that. One can manually test to verify
@@ -91,9 +110,9 @@ bytes48_to_G1 bytes = decompress_G1 bytes
  * Serialize the G1 point into G1 bytes
  * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L315
  * ```repl
- * :prove g1_to_bytes48 G1_INFINITY == G1_POINT_AT_INFINITY
- * :prove g1_to_bytes48 G1_2P == G1_2P_COMPRESSED
- * :prove g1_to_bytes48 G1_7P == G1_7P_COMPRESSED
+ * :check g1_to_bytes48 G1_INFINITY == G1_POINT_AT_INFINITY
+ * :check g1_to_bytes48 G1_2P == G1_2P_COMPRESSED
+ * :check g1_to_bytes48 G1_7P == G1_7P_COMPRESSED
  * ```
  */
 g1_to_bytes48 : G1Point -> Bytes48
@@ -103,9 +122,9 @@ g1_to_bytes48 point = compress_G1 point
  * Deserialize the G2 bytes into a G2 point
  * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L337
  * ```repl
- * :prove bytes96_to_G2 G2_POINT_AT_INFINITY == G2_INFINITY
- * :prove bytes96_to_G2 G2_2P_COMPRESSED == G2_2P
- * :prove bytes96_to_G2 G2_3P_COMPRESSED == G2_3P
+ * :check bytes96_to_G2 G2_POINT_AT_INFINITY == G2_INFINITY
+ * :check bytes96_to_G2 G2_2P_COMPRESSED == G2_2P
+ * :check bytes96_to_G2 G2_3P_COMPRESSED == G2_3P
  * ```
  * NOTE: We're not testing any of the invalid points since they throw runtime errors,
  *  and Cryptol does not have a way to expect that. One can manually test to verify
@@ -118,9 +137,9 @@ bytes96_to_G2 bytes = decompress_G2 bytes
  * Serialize the G2 point into G2 bytes
  * @see https://github.com/ethereum/consensus-specs/blob/dcdcf25d8152cd078a9888eeddda4a550e1de009/tests/core/pyspec/eth2spec/utils/bls.py#L315
  * ```repl
- * :prove g2_to_bytes96 G2_INFINITY == G2_POINT_AT_INFINITY
- * :prove g2_to_bytes96 G2_2P == G2_2P_COMPRESSED
- * :prove g2_to_bytes96 G2_3P == G2_3P_COMPRESSED
+ * :check g2_to_bytes96 G2_INFINITY == G2_POINT_AT_INFINITY
+ * :check g2_to_bytes96 G2_2P == G2_2P_COMPRESSED
+ * :check g2_to_bytes96 G2_3P == G2_3P_COMPRESSED
  * ```
  */
 g2_to_bytes96 : G2Point -> Bytes96
@@ -138,6 +157,13 @@ type KZGCommitment = Bytes48
  * NOTE: we don't need to check for non-equal lengths for `points` and `scalars`,
  *  because our type parameter `n` enforces that for us.
  * NOTE: the `points` being passed in are compressed G1 points.
+ * ```repl
+ * :check g1_lincomb [] [] == G1_POINT_AT_INFINITY
+ * :check g1_lincomb`{1} [G1_1P_COMPRESSED] [1] == G1_1P_COMPRESSED
+ * :check g1_lincomb`{2} [G1_1P_COMPRESSED, G1_1P_COMPRESSED] [2, 5] == G1_7P_COMPRESSED
+ * :check g1_lincomb`{3} [G1_2P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 1, 3] == G1_7P_COMPRESSED
+ * :check g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] == G1_7P_COMPRESSED
+ * ```
  */
 g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment
 g1_lincomb points scalars
@@ -198,7 +224,7 @@ type Bytes32 = [BYTES_PER_FIELD_ELEMENT][8]
  * ```repl
  * let bytes = [0x73,0xed,0xa7,0x53,0x29,0x9d,0x7d,0x48,0x33,0x39,0xd8,0x08,0x09,0xa1,0xd8,0x05,0x53,0xbd,0xa4,0x02,0xff,0xfe,0x5b,0xfe,0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00]
  * let field_element = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
- * :prove bytes_to_bls_field bytes == field_element
+ * :check bytes_to_bls_field bytes == field_element
  * ```
  */
 bytes_to_bls_field : Bytes32 -> BlsFieldElement
@@ -219,7 +245,7 @@ bls_field_to_bytes value = groupBy`{8} value
  * Perform BLS validation required by the types `KZGProof` and `KZGCommitment`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#validate_kzg_g1
  * ```repl
- * :prove validate_kzg_g1 G1_1P_COMPRESSED
+ * :check validate_kzg_g1 G1_1P_COMPRESSED
  * // :error key_validate G1_INVALID_POINT_COMPRESSED // Cryptol cannot currently do this
  * ```
  * NOTE: I have manually checked that calling `key_validate` on an invalid compressed point
@@ -236,7 +262,7 @@ validate_kzg_g1 b =
  * Convert untrusted bytes into a trusted and validated `KZGCommitment`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_commitment
  * ```repl
- * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * :check (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
  * ```
  * NOTE: this repl test is slow (couple of seconds).
  */
@@ -254,7 +280,7 @@ type KZGProof = Bytes48
  * Convert untrusted bytes into a trusted and validated `KZGProof`.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bytes_to_kzg_proof
   * ```repl
- * :prove (bytes_to_kzg_commitment G1_1P_COMPRESSED) == G1_1P_COMPRESSED
+ * :check (bytes_to_kzg_proof G1_1P_COMPRESSED) == G1_1P_COMPRESSED
  * ```
  * NOTE: this repl test is slow (couple of seconds).
  */
@@ -269,62 +295,9 @@ bytes_to_kzg_proof b =
  */
 
 /**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_bls_modular_inverse 1 1
- * :prove test_bls_modular_inverse 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
- * :prove test_bls_modular_inverse 3 0x4d491a377113a8daccd13ab0066be558e27e6d5755543d54aaaaaaaa00000001
- * ```
- * NOTE: we just chose the values at "random." Checked against: https://planetcalc.com/3298/.
- */
-test_bls_modular_inverse : BlsFieldElement -> BlsFieldElement -> Bit
-property test_bls_modular_inverse x expectedY =
-    bls_modular_inverse x == expectedY
-
-/**
- * Unit tests for `bls_modular_inverse`.
- * ```repl
- * :prove test_bls_div 1 2 0x39f6d3a994cebea4199cec0404d0ec02a9ded2017fff2dff7fffffff80000001
- * :prove test_bls_div 13 1 13
- * :prove test_bls_div 57 13 0x1ac0b075a72457fcf8210a7802390a776218122813b0da27276276272762762c
- * ```
- * NOTE: we just chose the last value at "random"
- */
-test_bls_div : BlsFieldElement -> BlsFieldElement -> BlsFieldElement -> Bit
-property test_bls_div x y expected =
-    bls_div x y == expected
-
-/**
- * Unit tests for `g1_multi_exp`.
- * ```repl
- * :prove test_g1_multi_exp`{1} [G1] [1] G1
- * :prove test_g1_multi_exp`{2} [G1, G1] [2, 3] G1_5P
- * :prove test_g1_multi_exp`{2} [G1_3P, G1_2P] [1, 2] G1_7P
- * :prove test_g1_multi_exp`{3} [G1_4P, G1_2P, G1_3P] [2, 3, 5] (g1_multi_exp`{2} [G1_5P, G1_7P] [3, 2])
- * ```
- */
-test_g1_multi_exp : {len} (fin len, len >= 1) => [len]G1Point -> [len]UInt256 -> G1Point -> Bit
-property test_g1_multi_exp points scalars expected =
-    g1_point_eq (g1_multi_exp points scalars) expected
-
-/**
  * Unit tests for `g1_lincomb`.
  * ```repl
- * :prove test_g1_lincomb [] [] G1_POINT_AT_INFINITY
- * :prove test_g1_lincomb`{1} [G1_1P_COMPRESSED] [1] G1_1P_COMPRESSED
- * :prove test_g1_lincomb`{2} [G1_1P_COMPRESSED, G1_1P_COMPRESSED] [2, 5] G1_7P_COMPRESSED
- * :prove test_g1_lincomb`{3} [G1_2P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 1, 3] G1_7P_COMPRESSED
- * :prove test_g1_lincomb`{3} [G1_3P_COMPRESSED, G1_2P_COMPRESSED, G1_1P_COMPRESSED] [1, 2, 0] G1_7P_COMPRESSED
- * ```
- */
-test_g1_lincomb : {n} (fin n) => [n]KZGCommitment -> [n]BlsFieldElement -> KZGCommitment -> Bit
-property test_g1_lincomb points scalars commitment =
-    g1_lincomb points scalars == commitment
-
-/**
- * Unit tests for `g1_lincomb`.
- * ```repl
- * :prove test_compute_roots_of_unity
+ * :check test_compute_roots_of_unity
  * ```
  */
 test_compute_roots_of_unity : Bit
