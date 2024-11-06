@@ -207,8 +207,6 @@ type BYTES_PER_PROOF = 48
 /**
  * Bytes used to encode a BLS scalar field element.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
- * Discuss with Galois
- *      -   Why is it safe to remove uint64 which is  used in the Python specification?
  */
 type BYTES_PER_FIELD_ELEMENT = 32
 
@@ -235,8 +233,6 @@ bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg fie
 /**
  * Convert a BLS scalar field element to bytes.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_field_to_bytes
- * Discuss with Galois
- *      -   The encoding of KZG_ENDIANNESS = 'big' in Cryptol
  */
 bls_field_to_bytes : BlsFieldElement -> Bytes32 
 bls_field_to_bytes value = groupBy`{8} value
@@ -312,22 +308,9 @@ property test_compute_roots_of_unity =
 
 
 /**
- * Check with a bilinear map.
- * @see https://github.com/ethereum/consensus-specs/blob/85e2452301382a9d099df16f38deac8178355358/tests/core/pyspec/eth2spec/utils/bls.py#L224
- * Unfinished and always return True
- * Discuss with Galois the specification of pairing_check 
- * @see https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/spec/feature/verify-kzg-proof/spec/Spec/BlsEC/Pairing.cry
- */
-pairing_check : ((G1Point, G2Point), (G1Point, G2Point)) -> Bit
-pairing_check values = True
-
-
-/**
  * Hash ``data`` and convert the output to a BLS scalar field element.
  * The output is not uniform over the BLS field.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#hash_to_bls_field
- * Unfinished
- * Discuss with Galois how to specify this function
  * Temporarily set to always return 0
  */
 hash_to_bls_field: {n} (fin n, n >= 1) => [n][8] -> BlsFieldElement
