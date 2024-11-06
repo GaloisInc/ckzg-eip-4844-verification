@@ -110,10 +110,7 @@ compute_kzg_proof blob z_bytes = (proof, y) where
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_impl
  * Review with Galois' specification in the branch https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/spec/feature/verify-kzg-proof
  *      -   Line https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/861c606e5ec2191dd93dd4fb0c3cff32da8bd921/spec/Spec/KZG.cry#L85
- * Potential issues in the Python specification: 
- *      1.  The input z in bls.multiply(bls.G2(), -z) is with type BLSFieldElement, i.e., uint256, in the Python specification,
- *          but the second argument of bls.multiply in the py_ecc library is with type int.
- *          @see https://github.com/ethereum/py_ecc/blob/main/py_ecc/bls12_381/bls12_381_curve.py#L114
+ *      -   It seems that the specification in the branch main misses a calling of pairing_check
  */
 verify_kzg_proof_impl : KZGCommitment -> BlsFieldElement -> BlsFieldElement -> KZGProof -> Bit
 verify_kzg_proof_impl commitment z y proof = result where
@@ -180,7 +177,7 @@ compute_challenge blob commitment = result where
 /**
  * Given a blob, return the KZG proof that is used to verify it against the commitment.
  * This method does not verify that the commitment is correct with respect to `blob`.
- * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_challenge
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_blob_kzg_proof
  */
 compute_blob_kzg_proof: Blob -> Bytes48 -> KZGProof
 compute_blob_kzg_proof blob commitment_bytes = 
