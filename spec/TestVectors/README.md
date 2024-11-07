@@ -34,20 +34,20 @@ In order to run these open a copy of `consensus-specs`.
 Ensure that you have done the necessary commands to enable running their python tests:
 
 ```bash
-% make install_test
-% make pyspec
-% . venv/bin/activate
+make install_test
+make pyspec
+. venv/bin/activate
 ```
 
 Then apply the patch:
 ```bash
-% git am < add-tests-to-consensus-specs.patch
+git am < add-tests-to-consensus-specs.patch
 ```
 
 After patch has been applied you should be able to run the tests added an example for `evaluate_polynomial_in_evaluation_form` is given below:
 ```bash
-% cd tests/core/pyspec
-% python -m pytest -k evaluate_polynomial_in_evaluation_form --fork deneb eth2spec
+cd tests/core/pyspec
+python -m pytest -k evaluate_polynomial_in_evaluation_form --fork deneb eth2spec
 ```
 
 To revert the patch afterwards:

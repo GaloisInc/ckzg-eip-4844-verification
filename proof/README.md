@@ -10,16 +10,14 @@ You will also need to install the Java Runtime Environment (this is required for
 
 You will also need to have Clang installed.
 
-You may also need to install [Yices](https://yices.csl.sri.com).
+You may also need to install [Yices](https://yices.csl.sri.com) and [CVC5](https://cvc5.github.io).
 
 ### MacOS
 
 For mac users, make sure to install `llvm@16` from Homebrew.
 
 ```bash
-
- $> brew install llvm@16
-
+brew install llvm@16
 ```
 
 You also need to ensure that your CC environment variable is pointing to the installed version above.
