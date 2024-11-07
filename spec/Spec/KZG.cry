@@ -246,7 +246,7 @@ appendAll xs = ys ! 0
  *          then Cryptol complains that the following constraints must hold n == k. 
  *          How can we avoid this complain?
  */
-verify_kzg_proof_batch : {k} (fin k, k >= 2, 64 >= width k) => [k]KZGCommitment -> [k]BlsFieldElement -> [k]BlsFieldElement -> [k]KZGProof -> Bit
+verify_kzg_proof_batch : {k} (fin k, 64 >= width k) => [k]KZGCommitment -> [k]BlsFieldElement -> [k]BlsFieldElement -> [k]KZGProof -> Bit
 verify_kzg_proof_batch commitments zs ys proofs = result where
     degree_poly = groupBy`{8,2} `(FIELD_ELEMENTS_PER_BLOB)
     num_commitments = groupBy`{8, 8} `(k)
@@ -263,3 +263,19 @@ verify_kzg_proof_batch commitments zs ys proofs = result where
     C_minus_y_lincomb = g1_lincomb (C_minus_y_as_KZGCommitments) (r_powers)
     result = pairing_check [((bytes48_to_G1 proof_lincomb), (g2_negate (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)))),
                             ((g1_add (bytes48_to_G1 C_minus_y_lincomb) (bytes48_to_G1 proof_z_lincomb)), G2)]
+
+/**
+ * Given a list of blobs and blob KZG proofs, verify that they correspond to the provided commitments.
+ * Will return True if there are zero blobs/commitments/proofs.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_blob_kzg_proof_batch
+ * Just assumpt that the input parameters have the same length k and k is represented with 64 bits.
+ * The second assumption is required by verify_kzg_proof_batch.
+ */
+verify_blob_kzg_proof_batch : {k} (fin k, 64 >= width k) => [k]Blob -> [k]Bytes48 -> [k]Bytes48 -> Bit
+verify_blob_kzg_proof_batch blobs commitments_bytes proofs_bytes = result where
+    commitments = [ bytes_to_kzg_commitment commitment_bytes | commitment_bytes <- commitments_bytes ]
+    polynomials = [ blob_to_polynomial blob | blob <- blobs ] 
+    evaluation_challenges = [ compute_challenge blob commitment | blob <- blobs | commitment <- commitments ] 
+    ys = [ evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge | polynomial <- polynomials | evaluation_challenge <- evaluation_challenges ]
+    proofs = [ bytes_to_kzg_proof proof_bytes | proof_bytes <- proofs_bytes]
+    result = verify_kzg_proof_batch commitments evaluation_challenges ys proofs
