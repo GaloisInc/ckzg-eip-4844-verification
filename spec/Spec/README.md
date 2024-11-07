@@ -8,30 +8,30 @@ operations needed. These modules are found in `BlsEC`.
 
 The table below indicates the Cryptol module where the corresponding Deneb function is implemented.
 
-| Deneb Function     | Cryptol Module      |
-|--------------------|---------------------|
-| is_power_of_two    | Spec::Permutations  |
-| reverse_bits       | Spec::Permutations  |
-| bit_reversal_permutation | Spec::Permutations |
-| multi_exp          | Spec::BlsHelpers    |
-| bytes_to_bls_field | Spec::BlsHelpers    |
-| bls_field_to_bytes | Spec::BlsHelpers    |
-| validate_kzg_g1    | Spec::BlsHelpers    |
-| bytes_to_kzg_commitment | Spec::BlsHelpers |
-| bytes_to_kzg_proof | Spec::BlsHelpers    |
-| compute_challenge  | Spec::KZG           |
-| g1_lincomb         | Spec::BlsHelpers    |
-| compute_powers     | Spec::BlsHelpers    |
-| compute_roots_of_unity | Spec::BlsHelpers |
-| blob_to_polynomial | Spec::Polynomials   |
-| evaluate_polynomial_in_evaluation_form   | Spec::Polynomials |
-| blob_to_kzg_commitment | Spec::KZG       |
-| verify_kzg_proof       | Spec::KZG       |
-| verify_kzg_proof_impl  | Spec::KZG       |
-| verify_kzg_proof_batch | Not yet implemented |
-| compute_kzg_proof      | Spec::KZG       |
-| compute_kzg_proof_impl | Spec::KZG       |
-| compute_quotient_eval_within_domain | Spec::KZG |
-| compute_blob_kzg_proof | Spec::KZG |
-| verify_blob_kzg_proof  | Spec::KZG |
-| verify_blob_kzg_proof_batch |Not yet implemented |
+| Deneb Function                            | Cryptol Module      |
+|-------------------------------------------|---------------------|
+| is_power_of_two                           | Spec::Permutations  |
+| reverse_bits                              | Spec::Permutations  |
+| bit_reversal_permutation                  | Spec::Permutations  |
+| multi_exp                                 | Spec::BlsHelpers    |
+| bytes_to_bls_field                        | Spec::BlsHelpers    |
+| bls_field_to_bytes                        | Spec::BlsHelpers    |
+| validate_kzg_g1                           | Spec::BlsHelpers    |
+| bytes_to_kzg_commitment                   | Spec::BlsHelpers    |
+| bytes_to_kzg_proof                        | Spec::BlsHelpers    |
+| compute_challenge                         | Spec::KZG           |
+| g1_lincomb                                | Spec::BlsHelpers    |
+| compute_powers                            | Spec::BlsHelpers    |
+| compute_roots_of_unity                    | Spec::BlsHelpers    |
+| blob_to_polynomial                        | Spec::Polynomials   |
+| evaluate_polynomial_in_evaluation_form    | Spec::Polynomials   |
+| blob_to_kzg_commitment                    | Spec::KZG           |
+| verify_kzg_proof                          | Spec::KZG           |
+| verify_kzg_proof_impl                     | Spec::KZG           |
+| verify_kzg_proof_batch                    | Spec::KZG           |
+| compute_kzg_proof                         | Spec::KZG           |
+| compute_kzg_proof_impl                    | Spec::KZG           |
+| compute_quotient_eval_within_domain       | Spec::KZG           |
+| compute_blob_kzg_proof                    | Spec::KZG           |
+| verify_blob_kzg_proof                     | Spec::KZG           |
+| verify_blob_kzg_proof_batch               | Spec::KZG           |
