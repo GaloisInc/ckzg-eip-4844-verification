@@ -217,3 +217,49 @@ verify_blob_kzg_proof blob commitment_bytes proof_bytes =
                                 y = evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge
                                 proof = bytes_to_kzg_proof proof_bytes
                                 result = verify_kzg_proof_impl commitment evaluation_challenge y proof
+
+/**
+ * A function that sums up a given sequence of elements.
+ * Review with Galois about an overflow problem in sumAll.
+ */
+appendAll : {n, a} (fin n, fin a) => [n][a] -> [a]
+appendAll xs = ys ! 0
+    where ys = [0] # [ x+y | x <- xs
+                           | y <- ys
+                    ]
+
+/**
+ * Verify multiple KZG proofs efficiently.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_batch
+ * Add an additional assumption that k is represented with 64 bits.
+ * This additional assumption is required by compute_powers
+ * Discuss with Galois:
+ *      -   If verify_kzg_proof_batch has the following signature 
+ *              verify_kzg_proof_batch : {k, l, m, n} (fin k, fin l, fin m, fin n, k >= 2, 64 >= width k) => [k]KZGCommitment -> [l]BlsFieldElement -> [m]BlsFieldElement -> [n]KZGProof -> Bit
+ *          and the following assertions are used 
+ *               assert  (`(k) == `(l))
+ *                      error_msg_for_commitments_zs
+ *                      assert  (`(k) == `(m))
+ *                              error_msg_for_commitments_ys
+ *                              assert  (`(k) == `(n))
+ *                                       error_msg_for_commitments_proofs
+ *          then Cryptol complains that the following constraints must hold n == k. 
+ *          How can we avoid this complain?
+ */
+verify_kzg_proof_batch : {k} (fin k, k >= 2, 64 >= width k) => [k]KZGCommitment -> [k]BlsFieldElement -> [k]BlsFieldElement -> [k]KZGProof -> Bit
+verify_kzg_proof_batch commitments zs ys proofs = result where
+    degree_poly = groupBy`{8,2} `(FIELD_ELEMENTS_PER_BLOB)
+    num_commitments = groupBy`{8, 8} `(k)
+    data_1 = RANDOM_CHALLENGE_KZG_BATCH_DOMAIN # degree_poly # num_commitments
+    data_2 = [ c # z # y # p | c <- commitments | z <- zs | y <- ys | p <- proofs ]
+    data = data_1 # (groupBy`{8} (join data_2))
+    r = hash_to_bls_field data
+    r_powers = compute_powers`{k} r 
+    proof_lincomb = g1_lincomb proofs r_powers
+    proof_z_lincomb = g1_lincomb proofs ([z * r_power | z <- zs | r_power <- r_powers])
+    C_minus_ys = [ g1_add (bytes48_to_G1 commitment) (g1_multi G1 ((`(BLS_MODULUS) - y) % `(BLS_MODULUS))) 
+                    | commitment <- commitments | y <- ys ] 
+    C_minus_y_as_KZGCommitments = [ g1_to_bytes48 x | x <- C_minus_ys ]
+    C_minus_y_lincomb = g1_lincomb (C_minus_y_as_KZGCommitments) (r_powers)
+    result = pairing_check [((bytes48_to_G1 proof_lincomb), (g2_negate (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)))),
+                            ((g1_add (bytes48_to_G1 C_minus_y_lincomb) (bytes48_to_G1 proof_z_lincomb)), G2)]
