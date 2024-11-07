@@ -49,3 +49,8 @@ After patch has been applied you should be able to run the tests added an exampl
 cd tests/core/pyspec
 python -m pytest -k evaluate_polynomial_in_evaluation_form --fork deneb eth2spec
 ```
+
+To revert the patch afterwards:
+```bash
+% git reset --hard origin/dev
+```

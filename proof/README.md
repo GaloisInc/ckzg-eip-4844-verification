@@ -61,7 +61,7 @@ cp ../../c-kzg-4844/src/ckzg.bc ckzg.bc
 To execute a SAW script and check the proofs, run the following command:
 
 ```bash
-saw file.saw
+CRYPTOLPATH="$(pwd)/../spec/" saw <file>.saw
 ```
 
 Any dependent Cryptol modules will be compiled first, and any errors will immediately end the executation and be reported.
@@ -71,7 +71,7 @@ Any dependent Cryptol modules will be compiled first, and any errors will immedi
 Running the following command:
 
 ```bash
-saw permutations.saw
+CRYPTOLPATH="$(pwd)/../spec/" saw permutations.saw
 ```
 
 Results in output similar to:
@@ -92,4 +92,12 @@ Results in output similar to:
 [14:45:20.492]   variant `Symbol "reverse_bits"`
 [14:45:20.631] Checking proof obligations reverse_bits_limited ...
 [14:45:20.857] Proof succeeded! reverse_bits_limited
+```
+
+### Run all proofs
+
+To check all available proofs, run the following Makefile command:
+
+```bash
+make proofs
 ```

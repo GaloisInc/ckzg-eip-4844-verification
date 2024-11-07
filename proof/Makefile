@@ -14,5 +14,5 @@ WORKING_DIRECTORY = $(shell pwd)
 
 $(PROOF_SCRIPTS):
 	@echo "[+] running proofs in for" $@
-# We need to tell Cryptol to search in all subdirectories of 'spec'
+	@# We need to tell Cryptol to search in all subdirectories of 'spec'
 	CRYPTOLPATH="${WORKING_DIRECTORY}/../spec/" saw $@.saw
