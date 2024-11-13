@@ -55,11 +55,17 @@ evaluate_polynomial_in_evaluation_form polynomial z =
             evaluation = result * r * inverse_width
 
 /**
+ * The constant BYTES_PER_BLOB is the number of bytes in a blob.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+type BYTES_PER_BLOB = BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB
+
+/**
  * The BLS basic data blob
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#custom-types
  * Also @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
  */
-type Blob = [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
+type Blob = [BYTES_PER_BLOB][8]
 
 /**
  * Convert a blob to list of BLS field scalars.
