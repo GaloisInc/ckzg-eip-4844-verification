@@ -118,16 +118,12 @@ padding_zeros value = result where
 /**
  * Return the Fiat-Shamir challenge required by the rest of the protocol.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_challenge
- * Discuss with Galois:
- *      -   Overflow in data = blob + degree_poly + FIAT_SHAMIR_PROTOCOL_DOMAIN_with_leading_zeros + commitment_in_bytes_with_leading_zeros
  */
 compute_challenge: Blob -> KZGCommitment -> BlsFieldElement
 compute_challenge blob commitment = result where
-    degree_poly = groupBy`{8,BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB} `(FIELD_ELEMENTS_PER_BLOB)
-    FIAT_SHAMIR_PROTOCOL_DOMAIN_with_leading_zeros = (zero : [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB - 16][8]) # FIAT_SHAMIR_PROTOCOL_DOMAIN
-    commitment_in_bytes = groupBy`{8, 48} commitment
-    commitment_in_bytes_with_leading_zeros = (zero : [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB - 48][8]) # commitment_in_bytes
-    data = blob + degree_poly + FIAT_SHAMIR_PROTOCOL_DOMAIN_with_leading_zeros + commitment_in_bytes_with_leading_zeros
+    degree_poly = groupBy`{8, 16} `(FIELD_ELEMENTS_PER_BLOB)
+    commitment_bytes = groupBy`{8} commitment
+    data = FIAT_SHAMIR_PROTOCOL_DOMAIN # degree_poly # blob # commitment_bytes
     result = hash_to_bls_field(data)
 
 /**
@@ -136,19 +132,11 @@ compute_challenge blob commitment = result where
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_blob_kzg_proof
  */
 compute_blob_kzg_proof: Blob -> Bytes48 -> KZGProof
-compute_blob_kzg_proof blob commitment_bytes = 
-    assert  ((length blob) == `(BYTES_PER_BLOB)) 
-            error_msg_for_blob 
-            assert  ((length commitment_bytes) == `(BYTES_PER_COMMITMENT))
-                    error_msg_for_commitment_bytes
-                    result where
-                        error_msg_for_blob = "The length of blob must be BYTES_PER_BLOB"
-                        error_msg_for_commitment_bytes = "The length of commitment_bytes be BYTES_PER_COMMITMENT"
-                        commitment = bytes_to_kzg_commitment commitment_bytes
-                        polynomial = blob_to_polynomial blob
-                        evaluation_challenge = compute_challenge blob commitment
-                        (proof, e) = compute_kzg_proof_impl polynomial evaluation_challenge
-                        result = proof
+compute_blob_kzg_proof blob commitment_bytes = proof where
+    commitment = bytes_to_kzg_commitment commitment_bytes
+    polynomial = blob_to_polynomial blob
+    evaluation_challenge = compute_challenge blob commitment
+    (proof, e) = compute_kzg_proof_impl polynomial evaluation_challenge
 
 /**
  * Given a blob, return the KZG proof that is used to verify it against the commitment.
@@ -157,22 +145,12 @@ compute_blob_kzg_proof blob commitment_bytes =
  */
 verify_blob_kzg_proof: Blob -> Bytes48 -> Bytes48 -> Bit
 verify_blob_kzg_proof blob commitment_bytes proof_bytes =
-    assert  ((length blob) == `(BYTES_PER_BLOB)) 
-            error_msg_for_blob 
-            assert  ((length commitment_bytes) == `(BYTES_PER_COMMITMENT))
-                    error_msg_for_commitment_bytes
-                    assert  ((length proof_bytes) == `(BYTES_PER_PROOF))
-                            error_msg_for_proof_bytes
-                            result where
-                                error_msg_for_blob = "The length of blob must be BYTES_PER_BLOB"
-                                error_msg_for_commitment_bytes = "The length of commitment_bytes be BYTES_PER_COMMITMENT"
-                                error_msg_for_proof_bytes = "The length of proof_bytes must be BYTES_PER_PROOF"
-                                commitment = bytes_to_kzg_commitment commitment_bytes
-                                polynomial = blob_to_polynomial blob
-                                evaluation_challenge = compute_challenge blob commitment
-                                y = evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge
-                                proof = bytes_to_kzg_proof proof_bytes
-                                result = verify_kzg_proof_impl commitment evaluation_challenge y proof
+    verify_kzg_proof_impl commitment evaluation_challenge y proof where
+        commitment = bytes_to_kzg_commitment commitment_bytes
+        polynomial = blob_to_polynomial blob
+        evaluation_challenge = compute_challenge blob commitment
+        y = evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge
+        proof = bytes_to_kzg_proof proof_bytes
 
 
 /**
@@ -180,21 +158,9 @@ verify_blob_kzg_proof blob commitment_bytes proof_bytes =
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_kzg_proof_batch
  * Add an additional assumption that k is represented with 64 bits.
  * This additional assumption is required by compute_powers
- * Discuss with Galois:
- *      -   If verify_kzg_proof_batch has the following signature 
- *              verify_kzg_proof_batch : {k, l, m, n} (fin k, fin l, fin m, fin n, k >= 2, 64 >= width k) => [k]KZGCommitment -> [l]BlsFieldElement -> [m]BlsFieldElement -> [n]KZGProof -> Bit
- *          and the following assertions are used 
- *               assert  (`(k) == `(l))
- *                      error_msg_for_commitments_zs
- *                      assert  (`(k) == `(m))
- *                              error_msg_for_commitments_ys
- *                              assert  (`(k) == `(n))
- *                                       error_msg_for_commitments_proofs
- *          then Cryptol complains that the following constraints must hold n == k. 
- *          How can we avoid this complain?
  */
 verify_kzg_proof_batch : {k} (fin k, 64 >= width k) => [k]KZGCommitment -> [k]BlsFieldElement -> [k]BlsFieldElement -> [k]KZGProof -> Bit
-verify_kzg_proof_batch commitments zs ys proofs = result where
+verify_kzg_proof_batch commitments zs ys proofs = pairing_check points where
     degree_poly = groupBy`{8,2} `(FIELD_ELEMENTS_PER_BLOB)
     num_commitments = groupBy`{8, 8} `(k)
     data_1 = RANDOM_CHALLENGE_KZG_BATCH_DOMAIN # degree_poly # num_commitments
@@ -208,26 +174,23 @@ verify_kzg_proof_batch commitments zs ys proofs = result where
                     | commitment <- commitments | y <- ys ] 
     C_minus_y_as_KZGCommitments = [ g1_to_bytes48 x | x <- C_minus_ys ]
     C_minus_y_lincomb = g1_lincomb (C_minus_y_as_KZGCommitments) (r_powers)
-    result = pairing_check [((bytes48_to_G1 proof_lincomb), (g2_negate (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)))),
+    points = [((bytes48_to_G1 proof_lincomb), (g2_negate (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)))),
                             ((g1_add (bytes48_to_G1 C_minus_y_lincomb) (bytes48_to_G1 proof_z_lincomb)), G2)]
 
 /**
  * Given a list of blobs and blob KZG proofs, verify that they correspond to the provided commitments.
  * Will return True if there are zero blobs/commitments/proofs.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#verify_blob_kzg_proof_batch
- * Just assumpt that the input parameters have the same length k and k is represented with 64 bits.
- * The second assumption is required by verify_kzg_proof_batch.
+ * The input parameters are required to have the same length `k` and `k` is represented with 64 bits.
+ * The second assumption is also required by `verify_kzg_proof_batch`.
  */
 verify_blob_kzg_proof_batch : {k} (fin k, 64 >= width k) => [k]Blob -> [k]Bytes48 -> [k]Bytes48 -> Bit
-verify_blob_kzg_proof_batch blobs commitments_bytes proofs_bytes = result where
+verify_blob_kzg_proof_batch blobs commitments_bytes proofs_bytes = verify_kzg_proof_batch commitments evaluation_challenges ys proofs where
     commitments = [ bytes_to_kzg_commitment commitment_bytes | commitment_bytes <- commitments_bytes ]
     polynomials = [ blob_to_polynomial blob | blob <- blobs ] 
     evaluation_challenges = [ compute_challenge blob commitment | blob <- blobs | commitment <- commitments ] 
     ys = [ evaluate_polynomial_in_evaluation_form polynomial evaluation_challenge | polynomial <- polynomials | evaluation_challenge <- evaluation_challenges ]
     proofs = [ bytes_to_kzg_proof proof_bytes | proof_bytes <- proofs_bytes]
-    result = verify_kzg_proof_batch commitments evaluation_challenges ys proofs
-
-
 
 /*
  * ======================

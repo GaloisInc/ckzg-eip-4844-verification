@@ -19,7 +19,6 @@ The table below indicates the Cryptol module where the corresponding Deneb funct
 | validate_kzg_g1                        | Spec::BlsHelpers    |
 | bytes_to_kzg_commitment                | Spec::BlsHelpers    |
 | bytes_to_kzg_proof                     | Spec::BlsHelpers    |
-| compute_challenge                      | Not yet implemented |
 | g1_lincomb                             | Spec::BlsHelpers    |
 | compute_powers                         | Spec::BlsHelpers    |
 | compute_roots_of_unity                 | Spec::BlsHelpers    |
@@ -28,13 +27,15 @@ The table below indicates the Cryptol module where the corresponding Deneb funct
 | blob_to_kzg_commitment                 | Spec::KZG           |
 | verify_kzg_proof                       | Spec::KZG           |
 | verify_kzg_proof_impl                  | Spec::KZG           |
-| verify_kzg_proof_batch                 | Not yet implemented |
+| verify_kzg_proof_batch                 | Spec::KZG           |
+| compute_challenge                      | Spec::KZG           |
 | compute_kzg_proof                      | Spec::KZG           |
 | compute_kzg_proof_impl                 | Spec::KZG           |
 | compute_quotient_eval_within_domain    | Spec::KZG           |
-| compute_blob_kzg_proof                 | Not yet implemented |
-| verify_blob_kzg_proof                  | Not yet implemented |
-| verify_blob_kzg_proof_batch            | Not yet implemented |
+| compute_blob_kzg_proof                 | Spec::KZG           |
+| verify_blob_kzg_proof                  | Spec::KZG           |
+| verify_blob_kzg_proof_batch            | Spec::KZG           |
+
 
 ## Tests
 
