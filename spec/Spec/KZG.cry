@@ -109,13 +109,6 @@ verify_kzg_proof commitment_bytes z_bytes y_bytes proof_bytes =
                           (bytes_to_kzg_proof proof_bytes)
 
 /**
- *  Add zeros.
- */
-padding_zeros : [16][8] -> [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB][8]
-padding_zeros value = result where
-    result = (zero : [BYTES_PER_FIELD_ELEMENT * FIELD_ELEMENTS_PER_BLOB - 16][8]) # value
-
-/**
  * Return the Fiat-Shamir challenge required by the rest of the protocol.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#compute_challenge
  */
