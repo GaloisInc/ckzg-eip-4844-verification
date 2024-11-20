@@ -117,7 +117,7 @@ compute_challenge blob commitment = result where
     degree_poly = groupBy`{8, 16} `(FIELD_ELEMENTS_PER_BLOB)
     commitment_bytes = groupBy`{8} commitment
     data = FIAT_SHAMIR_PROTOCOL_DOMAIN # degree_poly # blob # commitment_bytes
-    result = hash_to_bls_field(data)
+    result = hash_to_bls_field data
 
 /**
  * Given a blob, return the KZG proof that is used to verify it against the commitment.
