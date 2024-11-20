@@ -154,7 +154,7 @@ verify_blob_kzg_proof blob commitment_bytes proof_bytes =
  */
 verify_kzg_proof_batch : {k} (fin k, 64 >= width k) => [k]KZGCommitment -> [k]BlsFieldElement -> [k]BlsFieldElement -> [k]KZGProof -> Bit
 verify_kzg_proof_batch commitments zs ys proofs = pairing_check points where
-    degree_poly = groupBy`{8,2} `(FIELD_ELEMENTS_PER_BLOB)
+    degree_poly = groupBy`{8, 8} `(FIELD_ELEMENTS_PER_BLOB)
     num_commitments = groupBy`{8, 8} `(k)
     data_1 = RANDOM_CHALLENGE_KZG_BATCH_DOMAIN # degree_poly # num_commitments
     data_2 = [ c # z # y # p | c <- commitments | z <- zs | y <- ys | p <- proofs ]
