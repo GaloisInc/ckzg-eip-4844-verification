@@ -166,7 +166,7 @@ verify_kzg_proof_batch commitments zs ys proofs = pairing_check points where
     C_minus_ys = [ g1_add (bytes48_to_G1 commitment) (g1_multi G1 ((`(BLS_MODULUS) - y) % `(BLS_MODULUS))) 
                     | commitment <- commitments | y <- ys ] 
     C_minus_y_as_KZGCommitments = [ g1_to_bytes48 x | x <- C_minus_ys ]
-    C_minus_y_lincomb = g1_lincomb (C_minus_y_as_KZGCommitments) (r_powers)
+    C_minus_y_lincomb = g1_lincomb C_minus_y_as_KZGCommitments r_powers
     points = [((bytes48_to_G1 proof_lincomb), (g2_negate (bytes96_to_G2 (KZG_SETUP_G2_MONOMIAL@1)))),
                             ((g1_add (bytes48_to_G1 C_minus_y_lincomb) (bytes48_to_G1 proof_z_lincomb)), G2)]
 
