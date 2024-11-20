@@ -193,6 +193,18 @@ compute_roots_of_unity order = assert (order == `n) "order must be equal to n" r
         result = compute_powers`{n} root_of_unity'
 
 /**
+ * Bytes used to encode a commitment.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+type BYTES_PER_COMMITMENT = 48
+
+/**
+ * Bytes used to encode a proof.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
+ */
+type BYTES_PER_PROOF = 48
+
+/**
  * Bytes used to encode a BLS scalar field element.
  * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#constants
  */
@@ -217,6 +229,13 @@ bytes_to_bls_field : Bytes32 -> BlsFieldElement
 bytes_to_bls_field bytes = assert (field_element < `(BLS_MODULUS)) error_msg field_element where
     field_element = join bytes // Crytol is big endian
     error_msg = "BLS scalar field element must be less than modulus"
+
+/**
+ * Convert a BLS scalar field element to bytes.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#bls_field_to_bytes
+ */
+bls_field_to_bytes : BlsFieldElement -> Bytes32 
+bls_field_to_bytes value = groupBy`{8} value
 
 /**
  * Perform BLS validation required by the types `KZGProof` and `KZGCommitment`.
@@ -286,3 +305,22 @@ property test_compute_roots_of_unity =
         , 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000
         , 0x73eda753299d7d47a5e80b39939ed33467baa40089fb5bfefffeffff00000001
         ]
+
+
+/**
+ * Hash `data` and convert the output to a BLS scalar field element.
+ * The output is not uniform over the BLS field.
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#hash_to_bls_field
+ * TODO: Temporarily set to always return 0; need to use SHA2-256
+ */
+hash_to_bls_field: {n} (fin n, n >= 1) => [n][8] -> BlsFieldElement
+hash_to_bls_field data = 0
+
+/**
+ * The two constants FIAT_SHAMIR_PROTOCOL_DOMAIN and RANDOM_CHALLENGE_KZG_BATCH_DOMAIN
+ * @see https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#blob
+ */
+FIAT_SHAMIR_PROTOCOL_DOMAIN : [16][8]
+FIAT_SHAMIR_PROTOCOL_DOMAIN = "FSBLOBVERIFY_V1_" : [16][8]
+RANDOM_CHALLENGE_KZG_BATCH_DOMAIN : [16][8]
+RANDOM_CHALLENGE_KZG_BATCH_DOMAIN = "RCKZGBATCH___V1_" : [16][8]
