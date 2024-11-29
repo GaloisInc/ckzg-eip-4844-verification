@@ -28,6 +28,8 @@
    \colorbox{MyGray}{\usebox{\@tempboxa}}
 }\makeatother
 
+\newcommand{\tht}[1]{\footnote{\textcolor{brown}{THT: #1}}}
+
 \setlength{\parskip}{0.6em}
 \setlength{\abovecaptionskip}{0.5em}
 
@@ -79,7 +81,8 @@ Thanh-Hai Tran \texttt{thanhhai1302@gmail.com}
 \newpage
 
 \section{Final Report}
-The goal of this final report is to detail the outcomes, lessons learned, and path forward at the completion of this grant, to establish the basis for formally verifying that the c-kzg implementation is equivalent to its stated reference,
+The goal of this final report is to detail the outcomes, lessons learned, and path forward at the completion of this grant, to establish the basis for formally verifying that 
+the \href{https://github.com/ethereum/c-kzg-4844}{c-kzg implementation} is equivalent to its stated reference,
 the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md}{Polynomial Commitments section of the Python Deneb consensus specification} (Python KZG Specification, hereafter) which encodes the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
 
 All software artifacts, the specifications, proofs, Makefiles, and documentation are found in this open-source GitHub \href{https://github.com/GaloisInc/ckzg-eip-4844-verification}{repository}.
@@ -99,6 +102,7 @@ The main results of our work are as follows:
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/Spec}{Cryptol specification}
           of the Python KZG Specification
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/Spec/BlsEC}{Cryptol specification}
+          \tht{README is missing.}
           of the elliptic curve operations required by the Python KZG Specification.
           We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/Spec/BlsSerde.cry}{Cryptol specification}
@@ -106,6 +110,7 @@ The main results of our work are as follows:
           We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/TestVectors}{test bench}
           from randomized inputs to show correctness of the Cryptol specification and the Python KZG Specification
+          \tht{Can you please add more details how the test bench were generated and selected?}
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/proof}{SAW proof script}
           that proves a couple of the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
           {"bit-reversal permutation" functions} in the Cryptol specification equivalent to the c-kzg functions
@@ -215,6 +220,7 @@ There is some more work needed to finalize the Cryptol specification:
     \item The BLS helper function \texttt{hash\_to\_bls\_field} is currently a placeholder
           \begin{enumerate}
                 \item We need to include a SHA2-256 implementation in our repo and then call the hash function on the data bytes
+                \tht{It is good to provide some ideas whether Cryptol is enough expressive to specify a SHA2-256 implementation.}
           \end{enumerate}
     \item The following KZG functions have not been included in our Python test bench
           \begin{enumerate}
@@ -226,7 +232,9 @@ There is some more work needed to finalize the Cryptol specification:
           \end{enumerate}
 \end{enumerate}
 
-Because the Cryptol specification took longer than anticipated, we were only able to use SAW to formally verify
+Because the Cryptol specification took longer than anticipated
+\tht{Can you please describes challenges in writing the Crypto specification that make it longer than expected?}
+, we were only able to use SAW to formally verify
 some of the functions defined in the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-Reversal Permutations section}
 of the Python KZG Specification.
 
@@ -236,6 +244,7 @@ which will then be small enough for us to proof equivalent to the functions in C
 a software decomposition task that will be necessary to further the SAW formal verification. We have used this
 methodology in the first author's previous work (\href{https://link.springer.com/chapter/10.1007/978-3-030-76384-8_5}{NFM 2021} and
 \href{https://link.springer.com/chapter/10.1007/978-3-030-76384-8_5}{SPIN 2022}).
+\tht{It seems a typo as both links are the same.}
 
 The following describes the proof development process:
 \begin{enumerate}
@@ -250,7 +259,9 @@ The following describes the proof development process:
                       \end{enumerate}
                 \item If the proof does not complete, repeat a through c
           \end{enumerate}
-    \item Repeat 1 and 2 for next function to formally verify
+    \item Repeat 1 and 2
+      \tht{It looks like an infinite loop as we are at 2 and need to repeat 2}
+      for next function to formally verify 
 \end{enumerate}
 
 In order to truly determine the feasibilty of using SAW to prove equivalence of the c-kzg library for the KZG commitment
@@ -261,7 +272,7 @@ and \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polyn
 of the Python KZG Specification.
 
 The overall formal verification process can be visualized with the following diagram:
-\includegraphics[width=\textwidth]{Proof Equivalence Diagram.png}
+\includegraphics[width=\textwidth]{Proof-Equivalence-Diagram.png}
 
 \section{Conclusion}
 
@@ -271,5 +282,6 @@ Cryptol (which has proof language capabilities) and SAW.
 
 The repository artifacts show a proof of concept from end-to-end for formally verifying the c-kzg
 library using SAW.
+\tht{Do you have any idea of the estimated time to completely verify the c-kzg implementation?}
 
 \end{document}
