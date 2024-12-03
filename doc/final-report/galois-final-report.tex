@@ -215,7 +215,8 @@ There is some more work needed to finalize the Cryptol specification:
 \begin{enumerate}
     \item The BLS helper function \texttt{hash\_to\_bls\_field} is currently a placeholder
           \begin{enumerate}
-                \item We need to include a SHA2-256 implementation in our repo and then call the hash function on the data bytes
+                \item We need to include a SHA2-256 implementation in our repo and then call the hash function on the data bytes.
+                      Galois (and others) have previously implemented and verified SHA2 with Cryptol and SAW.
           \end{enumerate}
     \item The following KZG functions have not been included in our Python test bench
           \begin{enumerate}
