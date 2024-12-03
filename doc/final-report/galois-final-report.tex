@@ -253,7 +253,7 @@ methodology in the first author's previous work (\href{https://link.springer.com
 The following describes the proof development process:
 \begin{enumerate}
     \item Create a SAW proof to show equivalence between a c-kzg function F and its corresponding Cryptol specification function S.
-          If the proof cannot complete, do the following:
+    \item If the proof cannot complete, do the following:
           \begin{enumerate}
                 \item Decompose F into subparts (split out the inner computation of loops into subfunctions)
                 \item Create a SAW proof of equivalence between F and decomposed F
