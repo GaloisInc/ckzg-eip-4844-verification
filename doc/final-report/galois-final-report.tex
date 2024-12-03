@@ -107,6 +107,11 @@ The main results of our work are as follows:
           We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/TestVectors}{test bench}
           from randomized inputs to show correctness of the Cryptol specification and the Python KZG Specification
+          \begin{itemize}
+                \item The test inputs were generated using the \texttt{:dumptests} REPL command in Cryptol.
+                This is Cryptol's built-in randomized, fuzz testing generator. We added these tests into our Cryptol source
+                \item We also created a Git patch file that adds these tests to the Python KZG Specification test bench
+          \end{itemize}
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/proof}{SAW proof script}
           that proves a couple of the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
           {"bit-reversal permutation" functions} in the Cryptol specification equivalent to the c-kzg functions
