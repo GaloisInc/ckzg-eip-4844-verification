@@ -81,7 +81,7 @@ Thanh-Hai Tran \texttt{thanhhai1302@gmail.com}
 \section{Final Report}
 The goal of this final report is to detail the outcomes, lessons learned, and path forward at the completion of this grant, to establish the basis for formally verifying that
 the \href{https://github.com/ethereum/c-kzg-4844}{c-kzg implementation} is equivalent to its stated reference,
-the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md}{Polynomial Commitments section of the Python Deneb consensus specification} (Python KZG Specification, hereafter) which encodes the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
+the \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md}{Polynomial Commitments section of the Python Deneb consensus specification} (Python KZG Specification, hereafter) which encodes the \href{https://www.iacr.org/archive/asiacrypt2010/6477178/6477178.pdf}{KZG commitment scheme}.
 
 All software artifacts, the specifications, proofs, Makefiles, and documentation are found in this open-source GitHub \href{https://github.com/GaloisInc/ckzg-eip-4844-verification}{repository}.
 
@@ -89,7 +89,7 @@ During this grant, we were able to analyze the Python KZG Specification; create 
 for the Python KZG Specification in \href{https://cryptol.net}{Cryptol}; show correctness of our Cryptol
 specification through some proofs, a test bench, and visual inspection; and, finally, create proofs in
 the \href{https://saw.galois.com}{Software Analysis Workbench (SAW)} for some of the
-\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
+\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
 {"bit-reversal permutation" functions} defined in the Python KZG Specification to show equivalence of
 the corresponding Cryptol and c-kzg functions.
 
@@ -113,7 +113,7 @@ The main results of our work are as follows:
                 \item We also created a Git patch file that adds these tests to the Python KZG Specification test bench
           \end{itemize}
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/proof}{SAW proof script}
-          that proves a couple of the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
+          that proves a couple of the \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
           {"bit-reversal permutation" functions} in the Cryptol specification equivalent to the c-kzg functions
     \item An additional, \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/LLVM}{partial Cryptol specification}
           for some of the functions in 1 written to match the Python KZG Specificatiothat did not complete
@@ -140,71 +140,71 @@ to the corresponding Cryptol function for reference.
         \hline
         \textbf{Category} & \textbf{Python KZG Specification} & \textbf{Cryptol} \\
         \hline
-        \multirow{3}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-reversal permutation}}
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#is_power_of_two}{is\_power\_of\_two}
+        \multirow{3}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-reversal permutation}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#is_power_of_two}{is\_power\_of\_two}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/Permutations.cry\#L15}{is\_power\_of\_two} \\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#reverse_bits}{reverse\_bits}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#reverse_bits}{reverse\_bits}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/Permutations.cry\#L36}{reverse\_bits} \\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit_reversal_permutation}{bit\_reversal\_permutation}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit_reversal_permutation}{bit\_reversal\_permutation}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/Permutations.cry\#L61}{bit\_reversal\_permutation} \\
         \hline
-        \multirow{14}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls12-381-helpers}{BLS12-381 helpers}}
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#multi_exp}{multi\_exp}
+        \multirow{14}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bls12-381-helpers}{BLS12-381 helpers}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#multi_exp}{multi\_exp}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsEC/G1.cry\#L163}{g1\_mul}
             , \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsEC/GP.cry\#L274}{g2\_mul}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#hash_to_bls_field}{hash\_to\_bls\_field}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#hash_to_bls_field}{hash\_to\_bls\_field}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L316}{hash\_to\_bls\_field}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_bls_field}{bytes\_to\_bls\_field}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bytes_to_bls_field}{bytes\_to\_bls\_field}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L228}{bytes\_to\_bls\_field}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls_field_to_bytes}{bls\_field\_to\_bytes}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bls_field_to_bytes}{bls\_field\_to\_bytes}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L237}{bls\_field\_to\_bytes}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#validate_kzg_g1}{validate\_kzg\_g1}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#validate_kzg_g1}{validate\_kzg\_g1}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L252}{validate\_kzg\_g1}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_commitment}{bytes\_to\_kzg\_commitment}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_commitment}{bytes\_to\_kzg\_commitment}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L265}{bytes\_to\_kzg\_commitment}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_proof}{bytes\_to\_kzg\_proof}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bytes_to_kzg_proof}{bytes\_to\_kzg\_proof}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L283}{bytes\_to\_kzg\_proof}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_polynomial}{blob\_to\_polynomial}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#blob_to_polynomial}{blob\_to\_polynomial}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/Polynomials.cry\#L74}{blob\_to\_polynomial}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_challenge}{compute\_challenge}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_challenge}{compute\_challenge}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L115}{compute\_challenge}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls_modular_inverse}{bls\_modular\_inverse}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bls_modular_inverse}{bls\_modular\_inverse}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L36}{bls\_modular\_inverse}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#div}{div}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#div}{div}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L50}{bls\_div}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#g1_lincomb}{g1\_lincomb}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#g1_lincomb}{g1\_lincomb}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L168}{g1\_lincomb}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_powers}{compute\_powers}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_powers}{compute\_powers}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L66}{compute\_powers}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_roots_of_unity}{compute\_roots\_of\_unity}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_roots_of_unity}{compute\_roots\_of\_unity}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/BlsHelpers.cry\#L188}{compute\_roots\_of\_unity}\\
         \hline
-        \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#polynomials}{Polynomials}}
-            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#evaluate_polynomial_in_evaluation_form}{evaluate\_polynomial\\\_in\_evaluation\_form}}
+        \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#polynomials}{Polynomials}}
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#evaluate_polynomial_in_evaluation_form}{evaluate\_polynomial\\\_in\_evaluation\_form}}
             & \multirow{2}{10em}{\href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/Polynomials.cry\#L35}{evaluate\_polynomial\\\_in\_evaluation\_form}}\\
             & & \\ %blank so that we can get a second row used by the really long function names above
         \hline
-        \multirow{11}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#kzg}{KZG}}
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#blob_to_kzg_commitment}{blob\_to\_kzg\_commitment}
+        \multirow{11}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#kzg}{KZG}}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#blob_to_kzg_commitment}{blob\_to\_kzg\_commitment}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L23}{blob\_to\_kzg\_commitment}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof}{verify\_kzg\_proof}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#verify_kzg_proof}{verify\_kzg\_proof}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L104}{verify\_kzg\_proof}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_impl}{verify\_kzg\_proof\_impl}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_impl}{verify\_kzg\_proof\_impl}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L91}{verify\_kzg\_proof\_impl}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_batch}{verify\_kzg\_proof\_batch}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#verify_kzg_proof_batch}{verify\_kzg\_proof\_batch}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L139}{verify\_kzg\_proof\_batch}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof}{compute\_kzg\_proof}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_kzg_proof}{compute\_kzg\_proof}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L79}{compute\_kzg\_proof}\\
-            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_quotient_eval_within_domain}{compute\_quotient\\\_eval\_within\_domain}}
+            & \multirow{2}{10em}{\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_quotient_eval_within_domain}{compute\_quotient\\\_eval\_within\_domain}}
             & \multirow{2}{10em}{\href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L35}{compute\_quotient\\\_eval\_within\_domain}}\\
             & & \\ %blank so that we can get a second row used by the really long function names above
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_kzg_proof_impl}{compute\_kzg\_proof\_impl}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_kzg_proof_impl}{compute\_kzg\_proof\_impl}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L52}{compute\_kzg\_proof\_impl}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#compute_blob_kzg_proof}{compute\_blob\_kzg\_proof}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#compute_blob_kzg_proof}{compute\_blob\_kzg\_proof}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L127}{compute\_blob\_kzg\_proof}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof}{verify\_blob\_kzg\_proof}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof}{verify\_blob\_kzg\_proof}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L139}{verify\_blob\_kzg\_proof}\\
-            & \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof_batch}{verify\_blob\_kzg\_proof\_batch}
+            & \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#verify_blob_kzg_proof_batch}{verify\_blob\_kzg\_proof\_batch}
             & \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/be7f8802aac340da5b4db3ca5709fd74516ec24b/spec/Spec/KZG.cry\#L155}{verify\_blob\_kzg\_proof\_batch}\\
         \hline
     \end{tabular}
@@ -240,7 +240,7 @@ our purposes. Thus, we had to create all of the code in
 \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/Spec/BlsEC}{BlsEC}.
 
 Because the Cryptol specification took longer than anticipated, we were only able to use SAW to formally verify
-some of the functions defined in the \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-Reversal Permutations section}
+some of the functions defined in the \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-Reversal Permutations section}
 of the Python KZG Specification.
 
 While doing this we determined that the c-kzg code needs to be modified for the proofs to complete.
@@ -268,9 +268,9 @@ The following describes the proof development process:
 
 In order to truly determine the feasibilty of using SAW to prove equivalence of the c-kzg library for the KZG commitment
 scheme functions to our Cryptol Specification we will need to use the above methodology on the remaining functions in
-\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-Reversal Permutations},
-\href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md\#bls12-381-helpers}{BLS12-381 helpers},
-and \href{https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/polynomial-commitments.md#polynomials}{Polynomials},
+\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}{Bit-Reversal Permutations},
+\href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bls12-381-helpers}{BLS12-381 helpers},
+and \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md#polynomials}{Polynomials},
 of the Python KZG Specification.
 
 We will need to make some more process on the SAW proofs before we can give a reasonable estimate
