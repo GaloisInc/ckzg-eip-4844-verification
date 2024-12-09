@@ -87,7 +87,7 @@ All software artifacts, the specifications, proofs, Makefiles, and documentation
 
 During this grant, we were able to analyze the Python KZG Specification; create a formal specification
 for the Python KZG Specification in \href{https://cryptol.net}{Cryptol}; show correctness of our Cryptol
-specification through some proofs, a test bench, and visual inspection; and, finally, create proofs in
+specification through a test bench and visual inspection; create arithmetic properties proofs for our polynomial extension fields and curve in the Cryptol spec; and, finally, create proofs in
 the \href{https://saw.galois.com}{Software Analysis Workbench (SAW)} for some of the
 \href{https://github.com/ethereum/consensus-specs/blob/68d32accf945a84f69d4c779cb6c71223a311eac/specs/deneb/polynomial-commitments.md\#bit-reversal-permutation}
 {"bit-reversal permutation" functions} defined in the Python KZG Specification to show equivalence of
@@ -101,7 +101,9 @@ The main results of our work are as follows:
           of the Python KZG Specification
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/tree/main/spec/Spec/BlsEC}{Cryptol specification}
           of the elliptic curve operations required by the Python KZG Specification.
-          We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation
+          We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation.
+          This includes proofs for some arithmetic properties of the polynomial extension
+          fields (e.g. commutativity of multiplication)
     \item A \href{https://github.com/GaloisInc/ckzg-eip-4844-verification/blob/main/spec/Spec/BlsSerde.cry}{Cryptol specification}
           for the serialization and deserialization of EC Points used by the Python KZG Specification.
           We modeled the \href{https://github.com/ethereum/py_ecc}{py\_ecc} implementation
